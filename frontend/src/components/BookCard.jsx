@@ -1,14 +1,21 @@
 import React from "react";
 import "../App.css";
 
-export default function BookCard({ bookData }) {
+export default function BookCard({ bookData, onClick }) {
   const book = bookData.attributes || bookData;
   const images = book.image || [];
   const age = book.age || "Unknown";
   const language = book.language || "Unknown";
 
   return (
-    <div className="col-6 col-md-3">
+    <div className="col-6 col-md-3"
+      onClick={onClick}
+      role="button"
+      tabIndex="0"
+      onKeyDown={(e) => { if (e.key === "Enter") onClick?.(); }}
+      style={{ cursor: "pointer" }}
+      aria-label={`Open details for ${book.title}`}
+    >
       <div className="card h-100 shadow-sm" style={{ fontSize: "0.85rem" }}>
         <div className="position-relative">
           <img
@@ -43,11 +50,8 @@ export default function BookCard({ bookData }) {
 
         <div className="text-muted small px-2 mt-1">
           Owner:{" "}
-          <a href="#" className="text-decoration-none text-secondary">
             {book.owner?.username || "Unknown"}
-          </a>
         </div>
-
         <div className="card-body py-2 px-2">
           <h6 className="card-title mb-1 truncate-2">{book.title}</h6>
           <p className="card-text text-muted mb-1 truncate-2">{book.author}</p>

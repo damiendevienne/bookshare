@@ -3,12 +3,16 @@ import axios from "axios";
 import Header from "./components/Header";
 import BookCard from "./components/BookCard";
 import FilterPanel from "./components/FilterPanel";
+import BookModal from "./components/BookModal";
+
 import "./App.css";
 
 function App() {
   const [books, setBooks] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState({ age: "", available: "", language: "" });
+  const [selectedBook, setSelectedBook] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     axios
@@ -51,11 +55,24 @@ function App() {
       <div className="container py-4">
         <div className="row g-3">
           {filteredBooks.map((b) => (
-            <BookCard key={b.id} bookData={b} />
+            <BookCard
+            key={b.id}
+            bookData={b}
+            onClick={() => {
+              setSelectedBook(b);
+              setShowModal(true);
+            }}
+          />
           ))}
         </div>
       </div>
-    </>
+
+      {/* Modal */}
+      <BookModal
+        selectedBook={selectedBook}
+        showModal={showModal}
+        onClose={() => setShowModal(false)}
+      />    </>
   );
 }
 
