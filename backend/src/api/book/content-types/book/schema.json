@@ -1,0 +1,58 @@
+{
+  "kind": "collectionType",
+  "collectionName": "books",
+  "info": {
+    "singularName": "book",
+    "pluralName": "books",
+    "displayName": "Book"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "author": {
+      "type": "string"
+    },
+    "description": {
+      "type": "blocks"
+    },
+    "available": {
+      "type": "boolean"
+    },
+    "image": {
+      "type": "media",
+      "multiple": true,
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ]
+    },
+    "language": {
+      "type": "enumeration",
+      "enum": [
+        "FR",
+        "EN",
+        "GR"
+      ]
+    },
+    "age": {
+      "type": "enumeration",
+      "enum": [
+        "kids",
+        "adults"
+      ]
+    },
+    "owner": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "books"
+    }
+  }
+}
