@@ -1,0 +1,232 @@
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "bootstrap/dist/js/bootstrap.bundle.min.js";
+import "./App.css";
+
+function App() {
+  const [books, setBooks] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState({
+    age: "",
+    available: "",
+    language: "",
+  });
+
+  useEffect(() => {
+    axios
+      .get("http://localhost:1337/api/books?populate=*")
+      .then((res) => setBooks(res.data.data))
+      .catch((err) => console.error("Error fetching books:", err));
+  }, []);
+
+  const normalize = (str) =>
+    str
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+
+  const filteredBooks = books.filter((b) => {
+    const book = b.attributes || b;
+    const title = normalize(book.title || "");
+    const author = normalize(book.author || "");
+    const term = normalize(searchTerm);
+
+    if (term && !title.includes(term) && !author.includes(term)) return false;
+
+    if (filters.age && book.age !== filters.age) return false;
+
+    if (filters.available) {
+      if (filters.available === "yes" && !book.available) return false;
+      if (filters.available === "no" && book.available) return false;
+    }
+
+    if (filters.language && book.language !== filters.language) return false;
+
+    return true;
+  });
+
+  const activeFilterCount = Object.values(filters).filter((v) => v).length;
+
+
+  return (
+    <>
+      {/* Header sticky */}
+      <header className="sticky-top bg-white shadow-sm py-3">
+        <div className="container text-center">
+          <h1 className="fs-3 mb-2">📚 BookShare Heraklion</h1>
+          <div className="d-flex justify-content-center align-items-center">
+            <input
+              type="text"
+              className="form-control"
+              style={{ maxWidth: "400px" }}
+              placeholder="Search by title or author..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <span
+              className="ms-2 position-relative"
+              style={{ cursor: "pointer" }}
+              data-bs-toggle="offcanvas"
+              data-bs-target="#filterCanvas"
+              aria-controls="filterCanvas"
+            >
+              <img src="/images/filtre.png" alt="Filter" style={{ height: "24px" }} />
+              
+              {activeFilterCount > 0 && (
+                <span
+                  className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-secondary"
+                  style={{ fontSize: "0.6rem", padding: "0.15em 0.3em" }}
+                >
+                  {activeFilterCount}
+                </span>
+              )}
+            </span>
+          </div>
+        </div>
+      </header>
+
+      {/* Offcanvas filtre réduit */}
+      <div
+        className="offcanvas offcanvas-end"
+        tabIndex="-1"
+        id="filterCanvas"
+        aria-labelledby="filterCanvasLabel"
+        style={{ width: "250px" }}
+      >
+        <div className="offcanvas-header">
+          <h5 id="filterCanvasLabel">Filter books</h5>
+          <button
+            type="button"
+            className="btn-close text-reset"
+            data-bs-dismiss="offcanvas"
+            aria-label="Close"
+          ></button>
+        </div>
+        <div className="offcanvas-body">
+          {/* Age */}
+          <div className="mb-3">
+            <label className="form-label">Age</label>
+            <select
+              className="form-select"
+              value={filters.age}
+              onChange={(e) =>
+                setFilters({ ...filters, age: e.target.value })
+              }
+            >
+              <option value="">All</option>
+              <option value="kids">Kids</option>
+              <option value="adults">Adults</option>
+            </select>
+          </div>
+
+          {/* Language */}
+          <div className="mb-3">
+            <label className="form-label">Language</label>
+            <select
+              className="form-select"
+              value={filters.language}
+              onChange={(e) =>
+                setFilters({ ...filters, language: e.target.value })
+              }
+            >
+              <option value="">All</option>
+              <option value="FR">FR</option>
+              <option value="EN">EN</option>
+              <option value="GR">GR</option>
+            </select>
+          </div>
+
+          {/* Availability */}
+          <div className="mb-3">
+            <label className="form-label">Availability</label>
+            <select
+              className="form-select"
+              value={filters.available}
+              onChange={(e) =>
+                setFilters({ ...filters, available: e.target.value })
+              }
+            >
+              <option value="">All</option>
+              <option value="yes">Available</option>
+              <option value="no">Not available</option>
+            </select>
+          </div>
+
+        </div>
+      </div>
+
+      {/* Contenu principal */}
+      <div className="container py-4">
+        <div className="row g-3">
+          {filteredBooks.map((b) => {
+            const book = b.attributes || b;
+            const images = book.image || [];
+            const age = book.age || "Unknown";
+            const language = book.language || "Unknown";
+
+            return (
+              <div key={b.id} className="col-6 col-md-3">
+                <div
+                  className="card h-100 shadow-sm"
+                  style={{ fontSize: "0.85rem" }}
+                >
+                  <div className="position-relative">
+                    <img
+                      src={
+                        images.length > 0
+                          ? "http://localhost:1337" +
+                            (images[0].url || images[0].attributes?.url)
+                          : "/images/open-book.png"
+                      }
+                      className="d-block w-100"
+                      alt={book.title}
+                      style={{
+                        height: "180px",
+                        objectFit: "cover",
+                        borderRadius: "0.5rem 0.5rem 0 0",
+                      }}
+                    />
+
+                    {/* Badges overlay */}
+                    <span className="badge bg-warning text-dark badge-overlay-top-right position-absolute">
+                      {language}
+                    </span>
+                    <span
+                      className={`badge badge-overlay-bottom-left position-absolute ${
+                        book.available ? "bg-success" : "bg-secondary"
+                      }`}
+                    >
+                      {book.available ? "Available" : "Not available"}
+                    </span>
+                    <span className="badge bg-info text-dark badge-overlay-top-left position-absolute">
+                      {age}
+                    </span>
+                  </div>
+
+                  {/* Owner info */}
+                  <div className="text-muted small px-2 mt-1">
+                    Owner:{" "}
+                    <a href="#" className="text-decoration-none text-secondary">
+                      {book.owner?.username || "Unknown"}
+                    </a>
+                  </div>
+
+                  {/* Book info */}
+                  <div className="card-body py-2 px-2">
+                    <h6 className="card-title mb-1 truncate-2">{book.title}</h6>
+                    <p className="card-text text-muted mb-1 truncate-2">
+                      {book.author}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </>
+  );
+}
+
+export default App;

@@ -1,0 +1,32 @@
+.truncate-2 {
+  display: -webkit-box !important;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  line-height: 1.3em;
+  max-height: 2.6em; /* line-height × number of lines */
+}
+
+.badge-overlay-top-right {
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+  font-size: 0.7rem;
+}
+
+.badge-overlay-top-left {
+  top: 8px;
+  left: 8px;
+  z-index: 10;
+  font-size: 0.7rem;
+}
+
+.badge-overlay-bottom-left {
+  bottom: 8px;
+  left: 8px;
+  z-index: 10;
+  font-size: 0.7rem;
+}
+
