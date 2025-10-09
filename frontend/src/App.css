@@ -17,6 +17,7 @@
 }
 
 .badge-overlay-top-left {
+  background-color: bisque !important;
   top: 8px;
   left: 8px;
   z-index: 10;
@@ -30,3 +31,36 @@
   font-size: 0.7rem;
 }
 
+.modal-subtitle {
+  margin-top: 0.4rem; /* or 0.5rem for slightly more space */
+  color: #6c757d; /* optional: a muted gray like Bootstrap's text-muted */
+  font-weight: 500; /* optional */
+}
+
+.modal-header {
+  padding-bottom: 0 !important;
+}
+
+.owner {
+  font-size: 0.75rem; /* Slightly smaller font size */
+  font-weight: 800;
+  color: #6c757d; /* Muted text color */
+}
+
+.logo-img {
+  width: 100%;
+  max-width: 500px;
+  height: auto;
+}
+
+@media (min-width: 768px) {
+  .logo-img {
+    width: 60%;
+  }
+}
+
+@media (min-width: 1200px) {
+  .logo-img {
+    width: 40%;
+  }
+}

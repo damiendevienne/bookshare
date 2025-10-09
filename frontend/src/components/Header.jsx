@@ -4,7 +4,15 @@ export default function Header({ searchTerm, setSearchTerm, activeFilterCount })
   return (
     <header className="sticky-top bg-white shadow-sm py-3">
       <div className="container text-center">
-        <h1 className="fs-3 mb-2">📚 BookShare Heraklion</h1>
+        {/*<h1 className="fs-3 mb-2">📚 BookShare Heraklion</h1>*/}
+        <div className="text-center my-4">
+          <img
+            className="logo-img img-fluid"
+            src="/images/logo.png"
+            alt="App logo"
+          />
+          <div style={{ paddingTop: "10px" }}> Find books in your language around you </div>
+        </div>
         <div className="d-flex justify-content-center align-items-center">
           <input
             type="text"

@@ -33,7 +33,7 @@ export default function BookCard({ bookData, onClick }) {
             }}
           />
 
-          <span className="badge bg-warning text-dark badge-overlay-top-right position-absolute">
+          <span className="badge bg-warning badge-overlay-top-right position-absolute">
             {language}
           </span>
           <span
@@ -43,7 +43,7 @@ export default function BookCard({ bookData, onClick }) {
           >
             {book.available ? "Available" : "Not available"}
           </span>
-          <span className="badge bg-info text-dark badge-overlay-top-left position-absolute">
+          <span className="badge bg-primary badge-overlay-top-left position-absolute">
             {age}
           </span>
         </div>

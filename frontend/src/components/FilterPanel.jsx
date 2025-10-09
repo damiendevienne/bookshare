@@ -18,6 +18,7 @@ export default function FilterPanel({ filters, setFilters }) {
           aria-label="Close"
         ></button>
       </div>
+
       <div className="offcanvas-body">
         {/* Age */}
         <div className="mb-3">
@@ -60,6 +61,30 @@ export default function FilterPanel({ filters, setFilters }) {
             <option value="yes">Available</option>
             <option value="no">Not available</option>
           </select>
+        </div>
+
+        {/* 🆕 Owner */}
+        <div className="mb-3">
+          <label className="form-label">Owner</label>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Enter owner's username"
+            value={filters.owner || ""}
+            onChange={(e) => setFilters({ ...filters, owner: e.target.value })}
+          />
+        </div>
+
+        {/* 🆕 Reset button */}
+        <div className="d-grid">
+          <button
+            className="btn btn-outline-secondary"
+            onClick={() =>
+              setFilters({ age: "", available: "", language: "", owner: "" })
+            }
+          >
+            Reset all filters
+          </button>
         </div>
       </div>
     </div>

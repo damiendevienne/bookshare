@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import Header from "./components/Header";
 import BookCard from "./components/BookCard";
@@ -10,9 +10,15 @@ import "./App.css";
 function App() {
   const [books, setBooks] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filters, setFilters] = useState({ age: "", available: "", language: "" });
+  const [filters, setFilters] = useState({ age: "", available: "", language: "", owner: "" });
   const [selectedBook, setSelectedBook] = useState(null);
   const [showModal, setShowModal] = useState(false);
+
+  const handleFilterByOwner = (ownerUsername) => {
+    setFilters((prev) => ({ ...prev, owner: ownerUsername }));
+    setShowModal(false); // close modal when user clicks on owner
+  };
+
 
   useEffect(() => {
     axios
@@ -21,26 +27,57 @@ function App() {
       .catch((err) => console.error(err));
   }, []);
 
-  const normalize = (str) =>
-    str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+  // Compute counts only when books change
+  const ownerCounts = useMemo(() => {
+    const counts = {};
+    books.forEach((b) => {
+      const ownerId = b.attributes?.owner?.id || b.owner?.id;
+      if (!ownerId) return;
+      counts[ownerId] = (counts[ownerId] || 0) + 1;
+    });
+    console.log("Owner counts is computed now");
+    return counts;
+  }, [books]);
+
+
+  function normalize(str) {
+    return str
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, ""); // removes accents
+  }
 
   const filteredBooks = books.filter((b) => {
     const book = b.attributes || b;
     const title = normalize(book.title || "");
     const author = normalize(book.author || "");
     const term = normalize(searchTerm);
-
+  
+    // Normalize owner name (for consistent comparison)
+    const ownerName = normalize(book.owner?.username || "");
+    const ownerFilter = normalize(filters.owner || "");
+  
+    // Search term logic
     if (term && !title.includes(term) && !author.includes(term)) return false;
+  
+    // Age filter
     if (filters.age && book.age !== filters.age) return false;
+  
+    // Availability filter
     if (filters.available) {
       if (filters.available === "yes" && !book.available) return false;
       if (filters.available === "no" && book.available) return false;
     }
+  
+    // Language filter
     if (filters.language && book.language !== filters.language) return false;
-
+  
+    // 🆕 Owner filter (accent & case insensitive + partial match)
+    if (ownerFilter && !ownerName.includes(ownerFilter)) return false;
+  
     return true;
   });
-
   const activeFilterCount = Object.values(filters).filter((v) => v).length;
 
   return (
@@ -72,6 +109,8 @@ function App() {
         selectedBook={selectedBook}
         showModal={showModal}
         onClose={() => setShowModal(false)}
+        onFilterByOwner={handleFilterByOwner}
+        ownerCounts={ownerCounts}
       />    </>
   );
 }
