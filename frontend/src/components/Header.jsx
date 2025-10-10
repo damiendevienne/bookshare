@@ -11,7 +11,7 @@ export default function Header({ searchTerm, setSearchTerm, activeFilterCount })
             src="/images/logo.png"
             alt="App logo"
           />
-          <div style={{ paddingTop: "10px" }}> Find books in your language around you </div>
+          <div style={{ paddingTop: "10px" }}> Exchange books in your language with people around </div>
         </div>
         <div className="d-flex justify-content-center align-items-center">
           <input

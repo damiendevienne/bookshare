@@ -4,6 +4,8 @@ import Header from "./components/Header";
 import BookCard from "./components/BookCard";
 import FilterPanel from "./components/FilterPanel";
 import BookModal from "./components/BookModal";
+import Footer from "./components/Footer";
+import LoginModal from "./components/LoginModal";
 
 import "./App.css";
 
@@ -13,6 +15,31 @@ function App() {
   const [filters, setFilters] = useState({ age: "", available: "", language: "", owner: "" });
   const [selectedBook, setSelectedBook] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  //login new const
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    !!localStorage.getItem("jwt")
+  );
+  const [showLogin, setShowLogin] = useState(false);
+  const [user, setUser] = useState(
+    JSON.parse(localStorage.getItem("user")) || null
+  );
+
+  const handleLoginSuccess = (user, jwt) => {
+    setIsLoggedIn(true);
+    setUser(user);
+  };
+
+  const handleLoginToggle = () => {
+    if (isLoggedIn) {
+      // Logout
+      localStorage.removeItem("jwt");
+      localStorage.removeItem("user");
+      setIsLoggedIn(false);
+      setUser(null);
+    } else {
+      setShowLogin(true);
+    }
+  };
 
   const handleFilterByOwner = (ownerUsername) => {
     setFilters((prev) => ({ ...prev, owner: ownerUsername }));
@@ -111,7 +138,17 @@ function App() {
         onClose={() => setShowModal(false)}
         onFilterByOwner={handleFilterByOwner}
         ownerCounts={ownerCounts}
-      />    </>
+      />
+      <Footer
+        isLoggedIn={isLoggedIn}
+        onLoginToggle={handleLoginToggle}
+        user={user}
+      />
+      <LoginModal
+        show={showLogin}
+        onClose={() => setShowLogin(false)}
+        onLoginSuccess={handleLoginSuccess}
+      />  </>
   );
 }
 
