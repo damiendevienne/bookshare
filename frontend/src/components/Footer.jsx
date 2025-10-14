@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { Heart, BookOpen, LogIn, UserRoundX } from "lucide-react";
+import MyBooksModal from "./mybooks/MyBooksModal";
+
 
 export default function Footer({ isLoggedIn, user = {}, onLoginToggle }) {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-
+  const [showMyBooks, setShowMyBooks] = useState(false);
   const handleUserClick = () => {
     // If logged in, ask for confirmation before logout
     if (isLoggedIn) {
@@ -42,10 +44,10 @@ export default function Footer({ isLoggedIn, user = {}, onLoginToggle }) {
             <button
               className="btn btn-link text-secondary d-flex flex-column align-items-center"
               style={{ textDecoration: "none" }}
-              disabled
+              onClick={() => setShowMyBooks(true)}
             >
-              <BookOpen size={22} />
-              <small>My Books</small>
+              <BookOpen size={22} color="purple" />
+              <small style={{color:"purple"}}>My Books</small>
             </button>
           )}
 
@@ -57,8 +59,8 @@ export default function Footer({ isLoggedIn, user = {}, onLoginToggle }) {
           >
             {isLoggedIn ? (
               <>
-                <UserRoundX size={22} color="blue" />
-                <small>{user?.username || "User"}</small>
+                <UserRoundX size={22} color="purple" />
+                <small style={{color:"purple"}}>{user?.username || "User"}</small>
               </>
             ) : (
               <>
@@ -106,6 +108,14 @@ export default function Footer({ isLoggedIn, user = {}, onLoginToggle }) {
             </div>
           </div>
         </div>
+      )}
+      {/* My Books Modal */}
+      {showMyBooks && (
+        <MyBooksModal
+          show={showMyBooks}
+          onClose={() => setShowMyBooks(false)}
+          user={user} // pass the logged-in user object
+        />
       )}
     </>
   );
