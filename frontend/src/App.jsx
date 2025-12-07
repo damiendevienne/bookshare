@@ -117,7 +117,7 @@ function App() {
       <FilterPanel filters={filters} setFilters={setFilters} />
 
       <div className="container py-4">
-        <div className="row g-3">
+        <div className="row g-3" style={{ paddingBottom: "80px" }}>
           {filteredBooks.map((b) => (
             <BookCard
             key={b.id}

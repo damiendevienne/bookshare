@@ -8,7 +8,7 @@ export default function Header({ searchTerm, setSearchTerm, activeFilterCount })
         <div className="text-center my-4">
           <img
             className="logo-img img-fluid"
-            src="/images/logo.png"
+            src="/images/logomadi.png"
             alt="App logo"
           />
           <div style={{ paddingTop: "10px" }}> Exchange books in your language with people around </div>

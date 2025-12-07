@@ -1,19 +1,14 @@
 import React from "react";
 
-export default function BookRow({ book, onClick }) {
+export default function BookRow({ book }) {
   return (
     <div
-      className="d-flex align-items-center border-bottom py-2 px-1"
+      className="d-flex align-items-center py-2 px-1 w-100"
       style={{ cursor: "pointer" }}
-      onClick={() => onClick(book)}
     >
       {/* Book image */}
       <img
-        src={
-          book.image
-            ? "http://localhost:1337" + book.image
-            : "/book-icon.png"
-        }
+        src={book.image ? "http://localhost:1337" + book.image : "/book-icon.png"}
         alt={book.title}
         style={{ width: 40, height: 60, objectFit: "cover", marginRight: 10 }}
       />
@@ -26,11 +21,12 @@ export default function BookRow({ book, onClick }) {
 
       {/* Availability and borrower info */}
       <div
-        className="text-end me-2"
+        className="text-end ms-2"
         style={{
           display: "flex",
           flexDirection: "column",
           alignItems: "flex-end",
+          paddingRight: "10px",
         }}
       >
         <span
