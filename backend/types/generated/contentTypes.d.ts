@@ -444,6 +444,9 @@ export interface ApiBookBook extends Struct.CollectionTypeSchema {
     age: Schema.Attribute.Enumeration<['kids', 'adults']>;
     author: Schema.Attribute.String;
     available: Schema.Attribute.Boolean;
+    catalogId: Schema.Attribute.String;
+    catalogSource: Schema.Attribute.String;
+    coverUrl: Schema.Attribute.String;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -452,6 +455,7 @@ export interface ApiBookBook extends Struct.CollectionTypeSchema {
       'images' | 'files' | 'videos' | 'audios',
       true
     >;
+    isbn: Schema.Attribute.String;
     language: Schema.Attribute.Enumeration<['FR', 'EN', 'GR']>;
     loans: Schema.Attribute.Relation<'oneToMany', 'api::loan.loan'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;

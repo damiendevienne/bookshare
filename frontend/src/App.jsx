@@ -91,7 +91,6 @@ function App() {
       if (!ownerId) return;
       counts[ownerId] = (counts[ownerId] || 0) + 1;
     });
-    console.log("Owner counts is computed now");
     return counts;
   }, [books]);
 

@@ -93,7 +93,7 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
             </div>
 
             <div className="modal-body">
-              {images.length > 0 && (
+              {images.length > 0 ? (
                 <div id="carouselBookImages" className="carousel slide mb-3" data-bs-ride="carousel">
                   <div className="carousel-inner">
                     {images.map((img, idx) => (
@@ -129,7 +129,7 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
                     <span className="visually-hidden">Next</span>
                   </button>
                 </div>
-              )}
+              ) : book.coverUrl ? <img src={book.coverUrl} className="d-block mx-auto mb-3" alt={book.title} style={{ maxHeight: "400px", maxWidth: "100%", objectFit: "contain" }} /> : null}
 
               <div className="mb-2">
                 {book.age && <span className="badge bg-primary me-2">{book.age}</span>}

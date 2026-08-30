@@ -14,7 +14,7 @@ function conversationBook(conversation) {
 
 function bookImage(book) {
   const image = book?.image?.[0];
-  return image ? mediaUrl(image.url || image.attributes?.url) : "/images/open-book.png";
+  return image ? mediaUrl(image.url || image.attributes?.url) : book?.coverUrl || "/images/open-book.png";
 }
 
 function loanStateSignature(conversation) {

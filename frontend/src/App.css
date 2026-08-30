@@ -46,6 +46,18 @@
   letter-spacing: 0.06em;
 }
 
+.add-book-trigger {
+  border-radius: 999px;
+  padding-inline: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(49, 90, 115, 0.2);
+}
+
+.catalog-results {
+  max-height: min(55vh, 26rem);
+  overflow-y: auto;
+}
+
 .conversation-section-current {
   color: var(--bookmybook-sage);
   background: rgba(127, 147, 111, 0.12);

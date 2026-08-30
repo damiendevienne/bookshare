@@ -17,6 +17,18 @@
     "author": {
       "type": "string"
     },
+    "coverUrl": {
+      "type": "string"
+    },
+    "isbn": {
+      "type": "string"
+    },
+    "catalogSource": {
+      "type": "string"
+    },
+    "catalogId": {
+      "type": "string"
+    },
     "description": {
       "type": "blocks"
     },

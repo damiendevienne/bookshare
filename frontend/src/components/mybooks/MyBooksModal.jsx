@@ -36,6 +36,7 @@ export default function MyBooksModal({ show, onClose, user, onBookCreated, onBoo
               language: item.language,
               age: item.age,
               image: firstImage,
+              coverUrl: item.coverUrl || null,
             };
           });
           setBooks(booksData);
@@ -64,7 +65,6 @@ export default function MyBooksModal({ show, onClose, user, onBookCreated, onBoo
         <div className="modal-content">
           <div className="modal-header">
             <h5 className="modal-title">My Books</h5>
-            <button type="button" className="btn btn-primary btn-sm ms-auto me-2" onClick={() => setShowAddBook(true)}>Add a book</button>
             <button
               type="button"
               className="btn-close"
@@ -73,6 +73,7 @@ export default function MyBooksModal({ show, onClose, user, onBookCreated, onBoo
           </div>
 
           <div className="modal-body">
+            <div className="text-center mb-3"><button type="button" className="btn btn-primary add-book-trigger" onClick={() => setShowAddBook(true)}>＋ Share a book</button></div>
             {books.length === 0 && <p>No books yet.</p>}
 
             <div className="accordion" id="booksAccordion">

@@ -9,7 +9,7 @@ export default function BookRow({ book }) {
     >
       {/* Book image */}
       <img
-        src={book.image ? mediaUrl(book.image) : "/images/open-book.png"}
+        src={book.image ? mediaUrl(book.image) : book.coverUrl || "/images/open-book.png"}
         alt={book.title}
         style={{ width: 40, height: 60, objectFit: "cover", marginRight: 10 }}
       />

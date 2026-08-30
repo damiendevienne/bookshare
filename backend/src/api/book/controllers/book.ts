@@ -3,7 +3,50 @@ import { factories } from '@strapi/strapi';
 
 const idFilter = (value) => (/^\d+$/.test(String(value)) ? { id: Number(value) } : { documentId: value });
 
+const publicBook = (book) => {
+  if (!book) return book;
+  return {
+    ...book,
+    owner: book.owner ? {
+      id: book.owner.id,
+      documentId: book.owner.documentId,
+      username: book.owner.username,
+    } : null,
+  };
+};
+
 export default factories.createCoreController('api::book.book', ({ strapi }) => ({
+  async find(ctx) {
+    const response = await super.find(ctx);
+    if (Array.isArray(response.data)) response.data = response.data.map(publicBook);
+    return response;
+  },
+
+  async findOne(ctx) {
+    const response = await super.findOne(ctx);
+    response.data = publicBook(response.data);
+    return response;
+  },
+
+  async catalogSearch(ctx) {
+    const query = String(ctx.query.q || '').trim();
+    if (query.length < 2) return ctx.badRequest('Enter at least two characters to search.');
+    const params = new URLSearchParams({ q: query, limit: '8', fields: 'key,title,author_name,first_publish_year,isbn,cover_i,language' });
+    try {
+      const response = await fetch(`https://openlibrary.org/search.json?${params.toString()}`, { signal: AbortSignal.timeout(6000), headers: { Accept: 'application/json' } });
+      if (!response.ok) return ctx.badGateway('The external book catalogue is temporarily unavailable.');
+      const payload = await response.json();
+      const languageMap = { fre: 'FR', fra: 'FR', eng: 'EN', gre: 'GR', ell: 'GR' };
+      ctx.body = { data: (payload.docs || []).filter((book) => book.title).map((book) => ({
+        id: book.key, title: book.title, author: book.author_name?.[0] || '', year: book.first_publish_year || null,
+        isbn: book.isbn?.[0] || null, language: languageMap[book.language?.[0]] || null,
+        coverUrl: book.cover_i ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg` : null,
+      })) };
+    } catch (error) {
+      return ctx.badGateway('The external book catalogue is temporarily unavailable.');
+    }
+  },
+
   async create(ctx) {
     if (!ctx.state.user) return ctx.unauthorized();
     const data = { ...(ctx.request.body?.data || {}) };

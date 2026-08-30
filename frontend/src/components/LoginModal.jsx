@@ -68,8 +68,6 @@ export default function LoginModal({ show, onClose, onLoginSuccess }) {
       onLoginSuccess(user, jwt);
       onClose();
     } catch (err) {
-      const message = err.response?.data?.error?.message || "";
-      console.log("Register error message BLAVLAVLA:", message);
       if (err.response?.status === 400) {
         setError("Invalid or already used credentials.");
       } else {

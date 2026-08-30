@@ -23,7 +23,7 @@ export default function BookCard({ bookData, onClick }) {
             src={
               images.length > 0
                 ? mediaUrl(images[0].url || images[0].attributes?.url)
-                : "/images/open-book.png"
+                : book.coverUrl || "/images/open-book.png"
             }
             className="d-block w-100"
             alt={book.title}
