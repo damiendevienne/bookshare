@@ -2,16 +2,12 @@ import React from "react";
 
 export default function Header({ searchTerm, setSearchTerm, activeFilterCount }) {
   return (
-    <header className="sticky-top bg-white shadow-sm py-3">
+    <header className="bg-white shadow-sm py-3 site-header">
       <div className="container text-center">
         {/*<h1 className="fs-3 mb-2">📚 BookShare Heraklion</h1>*/}
-        <div className="text-center my-4">
-          <img
-            className="logo-img img-fluid"
-            src="/images/logomadi.png"
-            alt="App logo"
-          />
-          <div style={{ paddingTop: "10px" }}> Exchange books in your language with people around </div>
+        <div className="text-center my-4 logo-stage">
+          <img className="logo-img logo-dance img-fluid" src="/images/logomadi.png" alt="bookmybook logo" />
+          <div className="logo-tagline" style={{ paddingTop: "10px" }}> Exchange books in your language with people around </div>
         </div>
         <div className="d-flex justify-content-center align-items-center">
           <input

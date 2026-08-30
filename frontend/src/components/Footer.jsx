@@ -1,11 +1,28 @@
-import React, { useState } from "react";
-import { Heart, BookOpen, LogIn, UserRoundX } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Heart, BookOpen, LogIn, UserRoundX, MessageCircle } from "lucide-react";
 import MyBooksModal from "./mybooks/MyBooksModal";
+import MessagesModal from "./messages/MessagesModal";
+import api from "../api";
 
 
-export default function Footer({ isLoggedIn, user = {}, onLoginToggle }) {
+export default function Footer({ isLoggedIn, user = {}, onLoginToggle, onBookCreated, onBookUpdated }) {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showMyBooks, setShowMyBooks] = useState(false);
+  const [showMessages, setShowMessages] = useState(false);
+  const [unreadMessages, setUnreadMessages] = useState(0);
+
+  useEffect(() => {
+    if (!isLoggedIn || !user?.id) {
+      setUnreadMessages(0);
+      return undefined;
+    }
+    const refreshUnread = () => api.get("/api/conversations/mine")
+      .then((res) => setUnreadMessages((res.data.data || []).reduce((sum, item) => sum + (item.unreadCount || 0), 0)))
+      .catch(() => {});
+    refreshUnread();
+    const timer = window.setInterval(refreshUnread, 5000);
+    return () => window.clearInterval(timer);
+  }, [isLoggedIn, user?.id]);
   const handleUserClick = () => {
     // If logged in, ask for confirmation before logout
     if (isLoggedIn) {
@@ -30,12 +47,24 @@ export default function Footer({ isLoggedIn, user = {}, onLoginToggle }) {
           {/* Favorites (visible only when logged in) */}
           {isLoggedIn && (
             <button
-              className="btn btn-link text-secondary d-flex flex-column align-items-center"
+              className="btn btn-link text-secondary d-flex flex-column align-items-center position-relative"
               style={{ textDecoration: "none" }}
               disabled
             >
               <Heart size={22} />
               <small>Favorites</small>
+            </button>
+          )}
+
+          {isLoggedIn && (
+            <button
+              className="btn btn-link text-secondary d-flex flex-column align-items-center position-relative"
+              style={{ textDecoration: "none" }}
+              onClick={() => setShowMessages(true)}
+            >
+              <MessageCircle size={22} color="var(--bookmybook-navy)" />
+              {unreadMessages > 0 && <span className="position-absolute translate-middle badge rounded-pill bg-danger" style={{ top: "5px", marginLeft: "25px" }}>{unreadMessages > 99 ? "99+" : unreadMessages}</span>}
+              <small style={{ color: "var(--bookmybook-navy)" }}>Messages</small>
             </button>
           )}
 
@@ -46,8 +75,8 @@ export default function Footer({ isLoggedIn, user = {}, onLoginToggle }) {
               style={{ textDecoration: "none" }}
               onClick={() => setShowMyBooks(true)}
             >
-              <BookOpen size={22} color="purple" />
-              <small style={{color:"purple"}}>My Books</small>
+              <BookOpen size={22} color="var(--bookmybook-navy)" />
+              <small style={{color:"var(--bookmybook-navy)"}}>My Books</small>
             </button>
           )}
 
@@ -59,8 +88,8 @@ export default function Footer({ isLoggedIn, user = {}, onLoginToggle }) {
           >
             {isLoggedIn ? (
               <>
-                <UserRoundX size={22} color="purple" />
-                <small style={{color:"purple"}}>{user?.username || "User"}</small>
+                <UserRoundX size={22} color="var(--bookmybook-navy)" />
+                <small style={{color:"var(--bookmybook-navy)"}}>{user?.username || "User"}</small>
               </>
             ) : (
               <>
@@ -115,8 +144,11 @@ export default function Footer({ isLoggedIn, user = {}, onLoginToggle }) {
           show={showMyBooks}
           onClose={() => setShowMyBooks(false)}
           user={user} // pass the logged-in user object
+          onBookCreated={onBookCreated}
+          onBookUpdated={onBookUpdated}
         />
       )}
+      <MessagesModal show={showMessages} onClose={() => setShowMessages(false)} user={user} onUnreadCountChange={setUnreadMessages} onBookUpdated={onBookUpdated} />
     </>
   );
 }

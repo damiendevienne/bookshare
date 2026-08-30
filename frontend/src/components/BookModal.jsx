@@ -1,16 +1,45 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import api, { mediaUrl } from "../api";
 
-export default function BookModal({ selectedBook, showModal, onClose, onFilterByOwner, ownerCounts }) {
-  if (!showModal || !selectedBook) return null;
-
+export default function BookModal({ selectedBook, showModal, onClose, onFilterByOwner, ownerCounts, isLoggedIn, user, onBorrowRequested }) {
   const [showOwnerModal, setShowOwnerModal] = useState(false);
+  const [borrowing, setBorrowing] = useState(false);
+  const [borrowError, setBorrowError] = useState("");
+  const [loanStatus, setLoanStatus] = useState(null);
 
-  const book = selectedBook.attributes || selectedBook;
+  const book = selectedBook?.attributes || selectedBook || {};
   const description = book.description;
   const owner = book.owner?.username || "Unknown";
   const images = book.image || [];
 
-  const booksCount = ownerCounts[book.owner?.id] || 0;
+  const booksCount = ownerCounts?.[book.owner?.id] || 0;
+  const bookIdentifier = selectedBook?.documentId || selectedBook?.id;
+  const isOwner = user?.id && book.owner?.id === user.id;
+
+  useEffect(() => {
+    setLoanStatus(null);
+    if (!showModal || !selectedBook || !isLoggedIn || !user?.id || isOwner || !bookIdentifier) return undefined;
+    api.get(`/api/loans/status?bookId=${encodeURIComponent(bookIdentifier)}`)
+      .then((res) => setLoanStatus(res.data.data?.status || null))
+      .catch(() => {});
+    return undefined;
+  }, [showModal, selectedBook, isLoggedIn, user?.id, bookIdentifier, isOwner]);
+
+  if (!showModal || !selectedBook) return null;
+
+  const requestBorrow = async () => {
+    setBorrowing(true);
+    setBorrowError("");
+    try {
+      await api.post("/api/loans/request", { bookId: bookIdentifier });
+      setLoanStatus("requested");
+      onBorrowRequested?.();
+    } catch (err) {
+      setBorrowError(err.response?.data?.error?.message || "Unable to send the borrowing request.");
+    } finally {
+      setBorrowing(false);
+    }
+  };
 
 
   // Normalize description: handle string or rich blocks
@@ -53,7 +82,7 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
                 <small className="owner">
                   Proposed by{" "}
                   <span
-                    style={{ cursor: "pointer", color: "#0d6efd" }}
+                    style={{ cursor: "pointer", color: "var(--bookmybook-navy)" }}
                     onClick={() => setShowOwnerModal(true)}
                   >
                     {owner}
@@ -73,7 +102,7 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
                         key={idx}
                       >
                         <img
-                          src={"http://localhost:1337" + (img.url || img.attributes?.url)}
+                          src={mediaUrl(img.url || img.attributes?.url)}
                           className="d-block w-100"
                           alt={book.title}
                           style={{ maxHeight: "400px", objectFit: "contain" }}
@@ -111,8 +140,14 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
             </div>
 
             <div className="modal-footer">
-              <button className="btn btn-primary" disabled>
-                Borrow this book
+              {!isLoggedIn && (
+                <small className="text-muted me-auto">
+                  Please log in to borrow books.
+                </small>
+              )}
+              {borrowError && <small className="text-danger me-auto">{borrowError}</small>}
+              <button className="btn btn-primary" disabled={!isLoggedIn || !book.available || isOwner || borrowing || loanStatus === "requested" || loanStatus === "active"} onClick={requestBorrow}>
+                {borrowing ? "Sending…" : loanStatus === "requested" ? "A request was sent to the owner" : loanStatus === "active" ? "Borrowing in progress" : book.available ? "Borrow this book" : "Currently unavailable"}
               </button>
             </div>
           </div>

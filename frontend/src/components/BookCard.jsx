@@ -1,5 +1,6 @@
 import React from "react";
 import "../App.css";
+import { mediaUrl } from "../api";
 
 export default function BookCard({ bookData, onClick }) {
   const book = bookData.attributes || bookData;
@@ -21,7 +22,7 @@ export default function BookCard({ bookData, onClick }) {
           <img
             src={
               images.length > 0
-                ? "http://localhost:1337" + (images[0].url || images[0].attributes?.url)
+                ? mediaUrl(images[0].url || images[0].attributes?.url)
                 : "/images/open-book.png"
             }
             className="d-block w-100"

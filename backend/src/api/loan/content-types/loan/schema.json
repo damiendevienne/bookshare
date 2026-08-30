@@ -1,0 +1,50 @@
+{
+  "kind": "collectionType",
+  "collectionName": "loans",
+  "info": {
+    "singularName": "loan",
+    "pluralName": "loans",
+    "displayName": "Loan"
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "status": {
+      "type": "enumeration",
+      "enum": ["requested", "refused", "active", "returned"],
+      "default": "requested",
+      "required": true
+    },
+    "book": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::book.book",
+      "inversedBy": "loans",
+      "required": true
+    },
+    "lender": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "loansAsLender",
+      "required": true
+    },
+    "borrower": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "loansAsBorrower",
+      "required": true
+    },
+    "conversation": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::conversation.conversation",
+      "inversedBy": "loans",
+      "required": true
+    },
+    "borrowerReceivedAt": { "type": "datetime" },
+    "lenderLentAt": { "type": "datetime" },
+    "borrowerReturnedAt": { "type": "datetime" },
+    "lenderReceivedBackAt": { "type": "datetime" }
+  }
+}

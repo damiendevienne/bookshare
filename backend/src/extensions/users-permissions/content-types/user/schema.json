@@ -71,6 +71,52 @@
       "relation": "oneToMany",
       "target": "api::book.book",
       "mappedBy": "owner"
+    },
+    "zones": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::zone.zone",
+      "mappedBy": "users"
+    },
+    "preferredLocale": {
+      "type": "enumeration",
+      "enum": ["en", "fr", "el"],
+      "default": "en"
+    },
+    "theme": {
+      "type": "enumeration",
+      "enum": ["system", "light", "dark"],
+      "default": "system"
+    },
+    "conversationsAsFirstParticipant": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::conversation.conversation",
+      "mappedBy": "participantOne"
+    },
+    "conversationsAsSecondParticipant": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::conversation.conversation",
+      "mappedBy": "participantTwo"
+    },
+    "messages": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::message.message",
+      "mappedBy": "sender"
+    },
+    "loansAsLender": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::loan.loan",
+      "mappedBy": "lender"
+    },
+    "loansAsBorrower": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::loan.loan",
+      "mappedBy": "borrower"
     }
   }
 }

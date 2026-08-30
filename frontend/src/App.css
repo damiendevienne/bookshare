@@ -42,6 +42,183 @@
   padding-bottom: 0 !important;
 }
 
+.conversation-section-heading {
+  letter-spacing: 0.06em;
+}
+
+.conversation-section-current {
+  color: var(--bookmybook-sage);
+  background: rgba(127, 147, 111, 0.12);
+}
+
+.conversation-section-past {
+  color: #6c757d;
+  background: #f1f3f5;
+}
+
+.conversation-item-current {
+  border-left: 4px solid var(--bookmybook-sage) !important;
+}
+
+.conversation-item-past {
+  border-left: 4px solid #ced4da !important;
+  background-color: #f8f9fa;
+  opacity: 0.78;
+}
+
+.loan-context-badge {
+  display: inline-block;
+  width: fit-content;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  border-radius: 999px;
+  padding: 0.35rem 0.6rem;
+}
+
+.conversation-timing {
+  font-size: 0.7rem;
+  opacity: 0.85;
+}
+
+.conversation-item-content,
+.conversation-header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.conversation-item-details,
+.conversation-header-content > div {
+  min-width: 0;
+  flex: 1;
+}
+
+.conversation-book-thumbnail {
+  width: 48px;
+  height: 64px;
+  flex: 0 0 auto;
+  border-radius: 0.35rem;
+  object-fit: cover;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+
+.conversation-header-thumbnail {
+  width: 56px;
+  height: 74px;
+}
+
+.loan-context-requested {
+  color: #4b3500 !important;
+  background: #f3d06b;
+}
+
+.loan-request-actions {
+  padding: 0.25rem 0;
+}
+
+.receipt-action-card {
+  max-width: 34rem;
+  margin: 1.25rem auto 0;
+  padding: 1rem;
+  border: 1px solid rgba(127, 147, 111, 0.45);
+  border-radius: 0.75rem;
+  background: rgba(127, 147, 111, 0.1);
+  text-align: center;
+}
+
+.receipt-action-title {
+  color: #315a73;
+  font-weight: 700;
+}
+
+.receipt-action-help {
+  margin: 0.25rem 0 0.75rem;
+  color: #68737d;
+  font-size: 0.78rem;
+}
+
+.receipt-action-button {
+  width: min(100%, 20rem);
+  font-weight: 600;
+}
+
+.handover-waiting-notice {
+  max-width: 34rem;
+  margin: 1.25rem auto 0;
+  color: #68737d;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.return-reminder-notice {
+  max-width: 34rem;
+  margin: 1.25rem auto 0;
+  color: #68737d;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.recovery-action-card {
+  border-color: rgba(49, 90, 115, 0.4);
+  background: rgba(49, 90, 115, 0.08);
+}
+
+.handover-notice {
+  max-width: 90%;
+  margin: 0.75rem auto 1rem;
+  color: #6c757d;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.acceptance-notice {
+  color: #27804e;
+  font-size: 0.86rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.refusal-notice {
+  max-width: 90%;
+  margin: 0.75rem auto 1rem;
+  color: #b02a37;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.completion-notice {
+  max-width: 34rem;
+  margin: 0.75rem auto 1rem;
+  color: #4f6878;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  text-align: center;
+  white-space: pre-line;
+}
+
+.loan-context-active {
+  color: #1f4f3b !important;
+  background: #b9dfc5;
+}
+
+.loan-context-accepted {
+  color: #315a73 !important;
+  background: #d9eaf2;
+}
+
+.loan-context-past,
+.loan-context-neutral {
+  color: #37414a !important;
+  background: #d2d7dc;
+}
+
 .owner {
   font-size: 0.75rem; /* Slightly smaller font size */
   font-weight: 800;
@@ -54,6 +231,35 @@
   height: auto;
 }
 
+.logo-stage {
+  position: relative;
+  min-height: 300px;
+}
+
+.logo-stage .logo-img {
+  width: auto !important;
+  max-width: 100%;
+  max-height: 360px;
+}
+
+/* One-shot welcome animation: it runs only when the page/header is mounted. */
+.logo-dance {
+  transform-origin: 50% 85%;
+  animation: macarena-welcome 5s ease-in-out 1;
+  animation-fill-mode: both;
+}
+
+@keyframes macarena-welcome {
+  0%, 100% { transform: rotate(0deg) translateX(0); }
+  12% { transform: rotate(-4deg) translateX(-5px); }
+  25% { transform: rotate(4deg) translateX(5px); }
+  38% { transform: rotate(-4deg) translateX(-5px); }
+  51% { transform: rotate(4deg) translateX(5px); }
+  64% { transform: rotate(-3deg) translateX(-3px); }
+  77% { transform: rotate(3deg) translateX(3px); }
+  90% { transform: rotate(-1deg) translateX(0); }
+}
+
 @media (min-width: 768px) {
   .logo-img {
     width: 60%;
@@ -64,4 +270,91 @@
   .logo-img {
     width: 40%;
   }
+}
+:root {
+  --bookmybook-navy: #315a73;
+  --bookmybook-blue: #6f9caf;
+  --bookmybook-sage: #7f936f;
+  --bookmybook-terracotta: #d9785e;
+  --bookmybook-ivory: #fbf6ed;
+  --bookmybook-gray: #7d8790;
+
+  --bs-primary: var(--bookmybook-navy);
+  --bs-primary-rgb: 49, 90, 115;
+  --bs-success: #5f8967;
+  --bs-success-rgb: 95, 137, 103;
+  --bs-secondary: var(--bookmybook-gray);
+  --bs-secondary-rgb: 125, 135, 144;
+  --bs-danger: #c85d55;
+  --bs-danger-rgb: 200, 93, 85;
+  --bs-warning: #e4c58c;
+  --bs-warning-rgb: 228, 197, 140;
+  --bs-body-bg: var(--bookmybook-ivory);
+  --bs-body-color: #2d3d49;
+  --bs-link-color: var(--bookmybook-navy);
+  --bs-link-hover-color: var(--bookmybook-terracotta);
+}
+
+body {
+  background: var(--bookmybook-ivory);
+  color: #2d3d49;
+}
+
+.btn-primary {
+  --bs-btn-bg: var(--bookmybook-navy);
+  --bs-btn-border-color: var(--bookmybook-navy);
+  --bs-btn-hover-bg: #27485d;
+  --bs-btn-hover-border-color: #27485d;
+}
+
+.btn-success {
+  --bs-btn-bg: #5f8967;
+  --bs-btn-border-color: #5f8967;
+  --bs-btn-hover-bg: #4e7456;
+  --bs-btn-hover-border-color: #4e7456;
+}
+
+.btn-danger {
+  --bs-btn-bg: #c85d55;
+  --bs-btn-border-color: #c85d55;
+  --bs-btn-hover-bg: #a94d47;
+  --bs-btn-hover-border-color: #a94d47;
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--bookmybook-navy);
+  --bs-btn-border-color: var(--bookmybook-navy);
+  --bs-btn-hover-bg: var(--bookmybook-navy);
+  --bs-btn-hover-border-color: var(--bookmybook-navy);
+}
+
+.text-primary { color: var(--bookmybook-navy) !important; }
+.text-secondary { color: var(--bookmybook-gray) !important; }
+.bg-primary { background-color: var(--bookmybook-navy) !important; }
+.bg-success { background-color: #5f8967 !important; }
+.bg-secondary { background-color: var(--bookmybook-gray) !important; }
+.bg-warning { background-color: #e4c58c !important; color: #39434a !important; }
+.bg-danger { background-color: #c85d55 !important; }
+.bg-light { background-color: #f3ecdf !important; }
+
+/* Restore the original Bootstrap badge colors. */
+.badge.bg-primary {
+  background-color: #0d6efd !important;
+  color: #fff !important;
+}
+.badge.bg-success {
+  background-color: #198754 !important;
+  color: #fff !important;
+}
+.badge.bg-secondary {
+  background-color: #6c757d !important;
+  color: #fff !important;
+}
+.badge.bg-warning {
+  background-color: #ffc107 !important;
+  color: #000 !important;
+}
+.badge.bg-danger {
+  background-color: #dc3545 !important;
+  color: #fff !important;
 }

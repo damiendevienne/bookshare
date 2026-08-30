@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import axios from "axios";
+import api from "./api";
 import Header from "./components/Header";
 import BookCard from "./components/BookCard";
 import FilterPanel from "./components/FilterPanel";
@@ -24,7 +24,7 @@ function App() {
     JSON.parse(localStorage.getItem("user")) || null
   );
 
-  const handleLoginSuccess = (user, jwt) => {
+  const handleLoginSuccess = (user) => {
     setIsLoggedIn(true);
     setUser(user);
   };
@@ -46,12 +46,40 @@ function App() {
     setShowModal(false); // close modal when user clicks on owner
   };
 
+  const handleBookCreated = () => {
+    api
+      .get("/api/books?populate=*")
+      .then((res) => setBooks(res.data.data))
+      .catch((err) => console.error("Unable to refresh the book catalogue:", err));
+  };
+
+  const handleBookUpdated = () => {
+    api
+      .get("/api/books?populate=*")
+      .then((res) => setBooks(res.data.data))
+      .catch((err) => console.error("Unable to refresh the book catalogue:", err));
+  };
+
 
   useEffect(() => {
-    axios
-      .get("http://localhost:1337/api/books?populate=*")
-      .then((res) => setBooks(res.data.data))
-      .catch((err) => console.error(err));
+    let cancelled = false;
+    const refreshCatalogue = () => {
+      api
+        .get("/api/books?populate=*")
+        .then((res) => {
+          if (!cancelled) setBooks(res.data.data);
+        })
+        .catch((err) => {
+          if (!cancelled) console.error("Unable to refresh the book catalogue:", err);
+        });
+    };
+
+    refreshCatalogue();
+    const timer = window.setInterval(refreshCatalogue, 5000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
   }, []);
 
 
@@ -138,11 +166,16 @@ function App() {
         onClose={() => setShowModal(false)}
         onFilterByOwner={handleFilterByOwner}
         ownerCounts={ownerCounts}
+        isLoggedIn={isLoggedIn}
+        user={user}
+        onBorrowRequested={handleBookUpdated}
       />
       <Footer
         isLoggedIn={isLoggedIn}
         onLoginToggle={handleLoginToggle}
         user={user}
+        onBookCreated={handleBookCreated}
+        onBookUpdated={handleBookUpdated}
       />
       <LoginModal
         show={showLogin}

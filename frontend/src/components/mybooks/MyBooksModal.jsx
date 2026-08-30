@@ -1,16 +1,21 @@
 import React, { useState, useEffect } from "react";
 import BookRow from "./BookRow";
-import axios from "axios";
+import BookActionsModal from "./BookActionsModal";
+import AddBookModal from "./AddBookModal";
+import api from "../../api";
 
-export default function MyBooksModal({ show, onClose, user }) {
+export default function MyBooksModal({ show, onClose, user, onBookCreated, onBookUpdated }) {
   const [books, setBooks] = useState([]);
   const [expandedBookId, setExpandedBookId] = useState(null);
+  const [activeBook, setActiveBook] = useState(null);
+  const [showAddBook, setShowAddBook] = useState(false);
+  const [refreshToken, setRefreshToken] = useState(0);
 
   useEffect(() => {
     if (show) {
-      axios
+      api
         .get(
-          `http://localhost:1337/api/books?filters[owner][id][$eq]=${user.id}&populate=image`
+          `/api/books?filters[owner][id][$eq]=${user.id}&populate[0]=image&populate[1]=loans&populate[2]=loans.borrower`
         )
         .then((res) => {
           const booksData = res.data.data.map((item) => {
@@ -21,10 +26,13 @@ export default function MyBooksModal({ show, onClose, user }) {
 
             return {
               id: item.id,
+              documentId: item.documentId,
               title: item.title,
               author: item.author,
               description: item.description,
               available: item.available,
+              lended: item.loans?.some((loan) => loan.status === "active") || false,
+              lendedTo: item.loans?.find((loan) => loan.status === "active")?.borrower?.username || null,
               language: item.language,
               age: item.age,
               image: firstImage,
@@ -34,7 +42,7 @@ export default function MyBooksModal({ show, onClose, user }) {
         })
         .catch((err) => console.error(err));
     }
-  }, [show, user.id]);
+  }, [show, user?.id, refreshToken]);
 
   if (!show) return null;
 
@@ -56,6 +64,7 @@ export default function MyBooksModal({ show, onClose, user }) {
         <div className="modal-content">
           <div className="modal-header">
             <h5 className="modal-title">My Books</h5>
+            <button type="button" className="btn btn-primary btn-sm ms-auto me-2" onClick={() => setShowAddBook(true)}>Add a book</button>
             <button
               type="button"
               className="btn-close"
@@ -94,15 +103,9 @@ export default function MyBooksModal({ show, onClose, user }) {
                       <p><strong>Language:</strong> {book.language}</p>
                       <p><strong>Age:</strong> {book.age}</p>
                       <p><strong>Available:</strong> {book.available ? "Yes" : "No"}</p>
-
-                      <div className="d-flex gap-2 mt-3">
-                        <button className="btn btn-sm btn-primary">
-                          Edit book details
-                        </button>
-                        <button className="btn btn-sm btn-danger">
-                          Remove book
-                        </button>
-                      </div>
+                      <button className="btn btn-sm btn-outline-primary" onClick={() => setActiveBook(book)}>
+                        Manage this book
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -111,6 +114,44 @@ export default function MyBooksModal({ show, onClose, user }) {
           </div>
         </div>
       </div>
+      {activeBook && (
+        <BookActionsModal
+          book={activeBook}
+          onClose={() => setActiveBook(null)}
+          onUpdate={(updated) => {
+            if (!updated) {
+              setBooks((current) => current.filter((item) => (
+                item.id !== activeBook.id && item.documentId !== activeBook.documentId
+              )));
+            } else {
+              // Strapi can return either the numeric id or the documentId depending
+              // on the endpoint/version. Match on both and merge the response into
+              // the existing row so the badge updates without closing My Books.
+              setBooks((current) => current.map((item) => {
+                const sameBook =
+                  (updated.id != null && item.id === updated.id) ||
+                  (updated.documentId && item.documentId === updated.documentId) ||
+                  item.id === activeBook.id ||
+                  item.documentId === activeBook.documentId;
+                return sameBook ? { ...item, ...updated, available: updated.available } : item;
+              }));
+              // Re-read the source of truth as well, keeping the local update
+              // instantaneous while guarding against stale response shapes.
+              setRefreshToken((value) => value + 1);
+            }
+            onBookUpdated?.();
+            setActiveBook(null);
+          }}
+        />
+      )}
+      <AddBookModal
+        show={showAddBook}
+        onClose={() => setShowAddBook(false)}
+        onCreated={(book) => {
+          setRefreshToken((value) => value + 1);
+          onBookCreated?.(book);
+        }}
+      />
     </div>
   );
 }

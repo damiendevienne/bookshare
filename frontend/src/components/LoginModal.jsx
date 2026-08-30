@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import api from "../api";
 
 export default function LoginModal({ show, onClose, onLoginSuccess }) {
   const [username, setUsername] = useState("");
@@ -14,7 +14,7 @@ export default function LoginModal({ show, onClose, onLoginSuccess }) {
   const handleLogin = async () => {
     setError("");
     try {
-      const res = await axios.post("http://localhost:1337/api/auth/local", {
+      const res = await api.post("/api/auth/local", {
         identifier: username,
         password,
       });
@@ -41,7 +41,7 @@ export default function LoginModal({ show, onClose, onLoginSuccess }) {
     setError("");
     setInfoMessage("");
     try {
-      await axios.post("http://localhost:1337/api/auth/forgot-password", { email });
+      await api.post("/api/auth/forgot-password", { email });
       setInfoMessage("If this email exists, a reset link has been sent.");
     } catch (err) {
       setError("Error sending reset email.");
@@ -53,7 +53,7 @@ export default function LoginModal({ show, onClose, onLoginSuccess }) {
     setError("");
     setInfoMessage("");
     try {
-      const res = await axios.post("http://localhost:1337/api/auth/local/register", {
+      const res = await api.post("/api/auth/local/register", {
         username,
         email,
         password,

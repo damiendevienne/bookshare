@@ -1,4 +1,5 @@
 import React from "react";
+import { mediaUrl } from "../../api";
 
 export default function BookRow({ book }) {
   return (
@@ -8,7 +9,7 @@ export default function BookRow({ book }) {
     >
       {/* Book image */}
       <img
-        src={book.image ? "http://localhost:1337" + book.image : "/book-icon.png"}
+        src={book.image ? mediaUrl(book.image) : "/images/open-book.png"}
         alt={book.title}
         style={{ width: 40, height: 60, objectFit: "cover", marginRight: 10 }}
       />
@@ -40,12 +41,12 @@ export default function BookRow({ book }) {
           {book.available ? "Available" : "Not available"}
         </span>
 
-        {!book.available && (
+        {!book.available && book.lended && (
           <small
             className="text-muted mt-1"
             style={{ fontSize: "0.7rem" }}
           >
-            Lended to xxx
+            Lended to {book.lendedTo || "another user"}
           </small>
         )}
       </div>

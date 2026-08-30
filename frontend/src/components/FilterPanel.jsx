@@ -66,13 +66,25 @@ export default function FilterPanel({ filters, setFilters }) {
         {/* 🆕 Owner */}
         <div className="mb-3">
           <label className="form-label">Owner</label>
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Enter owner's username"
-            value={filters.owner || ""}
-            onChange={(e) => setFilters({ ...filters, owner: e.target.value })}
-          />
+          <div className="input-group">
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Enter owner's username"
+              value={filters.owner || ""}
+              onChange={(e) => setFilters({ ...filters, owner: e.target.value })}
+            />
+            {filters.owner && (
+              <button
+                type="button"
+                className="btn btn-outline-secondary"
+                aria-label="Clear owner filter"
+                onClick={() => setFilters({ ...filters, owner: "" })}
+              >
+                ×
+              </button>
+            )}
+          </div>
         </div>
 
         {/* 🆕 Reset button */}
