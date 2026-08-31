@@ -2,10 +2,12 @@ import React, { useEffect, useState } from "react";
 import api from "../../api";
 
 const initialForm = { title: "", author: "", description: "", language: "FR", age: "adults", available: true, coverUrl: "", isbn: "", catalogSource: "", catalogId: "" };
+const MAX_IMAGES = 2;
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
 export default function AddBookModal({ show, onClose, onCreated }) {
   const [form, setForm] = useState(initialForm);
-  const [image, setImage] = useState(null);
+  const [images, setImages] = useState([]);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [catalogQuery, setCatalogQuery] = useState("");
@@ -30,16 +32,23 @@ export default function AddBookModal({ show, onClose, onCreated }) {
 
   if (!show) return null;
   const update = (field, value) => setForm((previous) => ({ ...previous, [field]: value }));
-  const closeAndReset = () => { setForm(initialForm); setImage(null); setCatalogQuery(""); setCatalogResults([]); setCatalogBook(null); setManualMode(false); setError(""); onClose(); };
+  const closeAndReset = () => { setForm(initialForm); setImages([]); setCatalogQuery(""); setCatalogResults([]); setCatalogBook(null); setManualMode(false); setError(""); onClose(); };
   const selectCatalogBook = (book) => { setForm((previous) => ({ ...previous, title: book.title, author: book.author || "", language: book.language || previous.language, coverUrl: book.coverUrl || "", isbn: book.isbn || "", catalogSource: "openlibrary", catalogId: book.id || "" })); setCatalogBook(book); setCatalogQuery(""); setCatalogResults([]); };
   const submit = async (event) => {
     event.preventDefault(); setError(""); setSaving(true);
     try {
       let imageIds;
-      if (image) { const files = new FormData(); files.append("files", image); const upload = await api.post("/api/upload", files); imageIds = upload.data.map((item) => item.id); }
-      const data = { title: form.title.trim(), author: form.author.trim(), language: form.language, age: form.age, available: form.available, ...(form.coverUrl && !image && { coverUrl: form.coverUrl }), ...(form.isbn && { isbn: form.isbn.trim() }), ...(form.catalogSource && { catalogSource: form.catalogSource }), ...(form.catalogId && { catalogId: form.catalogId }), ...(form.description.trim() && { description: [{ type: "paragraph", children: [{ type: "text", text: form.description.trim() }] }] }), ...(imageIds?.length && { image: imageIds }) };
+      if (images.length) { const files = new FormData(); images.forEach((file) => files.append("files", file)); const upload = await api.post("/api/upload", files); imageIds = upload.data.map((item) => item.id); }
+      const data = { title: form.title.trim(), author: form.author.trim(), language: form.language, age: form.age, available: form.available, ...(form.coverUrl && !images.length && { coverUrl: form.coverUrl }), ...(form.isbn && { isbn: form.isbn.trim() }), ...(form.catalogSource && { catalogSource: form.catalogSource }), ...(form.catalogId && { catalogId: form.catalogId }), ...(form.description.trim() && { description: [{ type: "paragraph", children: [{ type: "text", text: form.description.trim() }] }] }), ...(imageIds?.length && { image: imageIds }) };
       const response = await api.post("/api/books", { data }); onCreated(response.data.data); closeAndReset();
     } catch (err) { setError(err.response?.data?.error?.message || "Unable to add this book."); } finally { setSaving(false); }
+  };
+  const handleImagesChange = (event) => {
+    const selected = Array.from(event.target.files || []);
+    if (selected.length > MAX_IMAGES) { setImages([]); setError(`You can add up to ${MAX_IMAGES} images per book.`); event.target.value = ""; return; }
+    const invalid = selected.find((file) => !file.type.startsWith("image/") || file.size > MAX_IMAGE_SIZE);
+    if (invalid) { setImages([]); setError(`Each image must be an image file smaller than 5 MB.`); event.target.value = ""; return; }
+    setError(""); setImages(selected);
   };
   const catalogSelected = !manualMode && !!catalogBook;
   return <div className="modal fade show" style={{ display: "block", backgroundColor: "rgba(0,0,0,0.5)" }} onClick={closeAndReset}><div className="modal-dialog" onClick={(event) => event.stopPropagation()}><form className="modal-content" onSubmit={submit}>
@@ -52,7 +61,7 @@ export default function AddBookModal({ show, onClose, onCreated }) {
       <div className="row g-2"><div className="col-6"><label className="form-label">Language</label><select className="form-select" value={form.language} onChange={(event) => update("language", event.target.value)} disabled={catalogSelected}><option value="FR">FR</option><option value="EN">EN</option><option value="GR">GR</option></select></div><div className="col-6"><label className="form-label">Audience</label><select className="form-select" value={form.age} onChange={(event) => update("age", event.target.value)}><option value="kids">Kids</option><option value="adults">Adults</option></select></div></div>
       <div className="mb-3 mt-3"><label className="form-label">Comment</label><textarea className="form-control" rows="3" value={form.description} onChange={(event) => update("description", event.target.value)} /></div>
       {manualMode && <div className="mb-3"><label className="form-label">ISBN <span className="text-muted">(optional)</span></label><input className="form-control" value={form.isbn} onChange={(event) => update("isbn", event.target.value)} placeholder="ISBN-10 or ISBN-13" /></div>}
-      {manualMode && <div className="mb-3"><label className="form-label">Cover image <span className="text-muted">(strongly recommended)</span></label><input className="form-control" type="file" accept="image/*" onChange={(event) => setImage(event.target.files?.[0] || null)} /></div>}
+      {manualMode && <div className="mb-3"><label className="form-label">Cover images <span className="text-muted">(strongly recommended, up to 2 images, 5 MB each)</span></label><input className="form-control" type="file" accept="image/*" multiple onChange={handleImagesChange} />{images.length > 0 && <div className="d-flex gap-2 mt-2">{images.map((image) => <img key={`${image.name}-${image.lastModified}`} src={URL.createObjectURL(image)} alt="Selected cover" style={{ width: 52, height: 72, objectFit: "cover", borderRadius: "0.35rem" }} />)}</div>}</div>}
       {!manualMode && catalogBook?.coverUrl && <div className="mb-3"><small className="text-muted d-block">Catalogue cover</small><img src={catalogBook.coverUrl} alt={catalogBook.title} style={{ width: 70, height: 96, objectFit: "cover", borderRadius: "0.35rem" }} /></div>}
       <div className="form-check"><input className="form-check-input" type="checkbox" checked={form.available} onChange={(event) => update("available", event.target.checked)} id="new-book-available" /><label className="form-check-label" htmlFor="new-book-available">Available for borrowing</label></div>
       </>}

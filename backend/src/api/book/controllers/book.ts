@@ -1,7 +1,37 @@
 // @ts-nocheck
 import { factories } from '@strapi/strapi';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 
 const idFilter = (value) => (/^\d+$/.test(String(value)) ? { id: Number(value) } : { documentId: value });
+const MAX_COVER_SIZE = 5 * 1024 * 1024;
+const imageCount = (image) => {
+  if (Array.isArray(image)) return image.length;
+  if (image && Array.isArray(image.set)) return image.set.length;
+  if (image && Array.isArray(image.connect)) return image.connect.length;
+  return image ? 1 : 0;
+};
+
+const attachCatalogCover = async (strapi, bookId, coverUrl, user) => {
+  const response = await fetch(coverUrl, { signal: AbortSignal.timeout(8000), headers: { Accept: 'image/*' } });
+  if (!response.ok) throw new Error(`Cover download failed with status ${response.status}`);
+  const contentType = response.headers.get('content-type')?.split(';')[0] || 'image/jpeg';
+  if (!contentType.startsWith('image/')) throw new Error('Catalogue cover is not an image');
+  const buffer = Buffer.from(await response.arrayBuffer());
+  if (buffer.length > MAX_COVER_SIZE) throw new Error('Catalogue cover is larger than 5 MB');
+  const extension = contentType.split('/')[1]?.replace('jpeg', 'jpg') || 'jpg';
+  const filepath = path.join(os.tmpdir(), `book-cover-${bookId}-${Date.now()}.${extension}`);
+  await fs.writeFile(filepath, buffer);
+  try {
+    return strapi.plugin('upload').service('upload').upload({
+      data: { refId: bookId, ref: 'api::book.book', field: 'image' },
+      files: { filepath, originalFilename: `book-cover-${bookId}.${extension}`, mimetype: contentType, size: buffer.length },
+    }, { user });
+  } finally {
+    await fs.rm(filepath, { force: true });
+  }
+};
 
 const publicBook = (book) => {
   if (!book) return book;
@@ -15,16 +45,31 @@ const publicBook = (book) => {
   };
 };
 
+const markBooksWithActiveLoans = async (strapi, books) => {
+  const activeLoans = await strapi.db.query('api::loan.loan').findMany({
+    where: { status: 'active' },
+    populate: { book: true },
+  });
+  const activeBookIds = new Set(activeLoans.map((loan) => loan.book?.id).filter(Boolean));
+  return books.map((book) => activeBookIds.has(book.id) ? { ...book, available: false } : book);
+};
+
 export default factories.createCoreController('api::book.book', ({ strapi }) => ({
   async find(ctx) {
     const response = await super.find(ctx);
-    if (Array.isArray(response.data)) response.data = response.data.map(publicBook);
+    if (Array.isArray(response.data)) {
+      response.data = await markBooksWithActiveLoans(strapi, response.data);
+      response.data = response.data.map(publicBook);
+    }
     return response;
   },
 
   async findOne(ctx) {
     const response = await super.findOne(ctx);
-    response.data = publicBook(response.data);
+    if (response.data) {
+      response.data = (await markBooksWithActiveLoans(strapi, [response.data]))[0];
+      response.data = publicBook(response.data);
+    }
     return response;
   },
 
@@ -53,9 +98,23 @@ export default factories.createCoreController('api::book.book', ({ strapi }) => 
     if (!String(data.title || '').trim() || !String(data.author || '').trim()) {
       return ctx.badRequest('Title and author are required.');
     }
+    if (imageCount(data.image) > 2) {
+      return ctx.badRequest('A book can have at most 2 images.');
+    }
     data.owner = ctx.state.user.id;
     ctx.request.body = { ...ctx.request.body, data };
-    return super.create(ctx);
+    const response = await super.create(ctx);
+    // Catalogue covers are initially URLs. Cache a local Strapi copy so future
+    // page loads do not depend on Open Library response time or availability.
+    if (data.catalogSource === 'openlibrary' && data.coverUrl && response.data?.id) {
+      try {
+        const uploaded = await attachCatalogCover(strapi, response.data.id, data.coverUrl, ctx.state.user);
+        response.data.image = uploaded;
+      } catch (error) {
+        strapi.log.warn(`Unable to cache catalogue cover for book ${response.data.id}: ${error.message}`);
+      }
+    }
+    return response;
   },
 
   async update(ctx) {
@@ -63,6 +122,9 @@ export default factories.createCoreController('api::book.book', ({ strapi }) => 
     if (!book) return;
     const data = { ...(ctx.request.body?.data || {}) };
     delete data.owner;
+    if (imageCount(data.image) > 2) {
+      return ctx.badRequest('A book can have at most 2 images.');
+    }
 
     // A book involved in an active loan cannot be made available manually.
     // It becomes available again only after the return is confirmed by both
@@ -109,7 +171,7 @@ export default factories.createCoreController('api::book.book', ({ strapi }) => 
     }
     const identifier = ctx.params.documentId ?? ctx.params.id;
     const book = await strapi.db.query('api::book.book').findOne({
-      where: idFilter(identifier),
+      where: { ...idFilter(identifier), publishedAt: { $notNull: true } },
       populate: { owner: true },
     });
     if (!book) {

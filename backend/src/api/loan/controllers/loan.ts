@@ -14,7 +14,7 @@ export default factories.createCoreController('api::loan.loan', ({ strapi }) => 
     const bookId = ctx.query.bookId;
     if (!userId) return ctx.unauthorized();
     if (!bookId) return ctx.badRequest('A book is required.');
-    const book = await strapi.db.query('api::book.book').findOne({ where: idFilter(String(bookId)) });
+    const book = await strapi.db.query('api::book.book').findOne({ where: { ...idFilter(String(bookId)), publishedAt: { $notNull: true } } });
     if (!book) return ctx.notFound('Book not found.');
     const loan = await strapi.db.query('api::loan.loan').findOne({
       where: { book: book.id, $or: [{ borrower: userId }, { lender: userId }], status: { $in: ['requested', 'active'] } },
@@ -31,7 +31,7 @@ export default factories.createCoreController('api::loan.loan', ({ strapi }) => 
     if (!bookId) return ctx.badRequest('A book is required.');
 
     const book = await strapi.db.query('api::book.book').findOne({
-      where: idFilter(String(bookId)),
+      where: { ...idFilter(String(bookId)), publishedAt: { $notNull: true } },
       populate: { owner: true },
     });
 

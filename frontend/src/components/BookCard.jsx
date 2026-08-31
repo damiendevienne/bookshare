@@ -7,6 +7,10 @@ export default function BookCard({ bookData, onClick }) {
   const images = book.image || [];
   const age = book.age || "Unknown";
   const language = book.language || "Unknown";
+  const image = images[0];
+  const imageUrl = image
+    ? mediaUrl(image.formats?.thumbnail?.url || image.formats?.small?.url || image.url || image.attributes?.url)
+    : book.coverUrl || "/images/open-book.png";
 
   return (
     <div className="col-6 col-md-3"
@@ -20,11 +24,7 @@ export default function BookCard({ bookData, onClick }) {
       <div className="card h-100 shadow-sm" style={{ fontSize: "0.85rem" }}>
         <div className="position-relative">
           <img
-            src={
-              images.length > 0
-                ? mediaUrl(images[0].url || images[0].attributes?.url)
-                : book.coverUrl || "/images/open-book.png"
-            }
+            src={imageUrl}
             className="d-block w-100"
             alt={book.title}
             style={{

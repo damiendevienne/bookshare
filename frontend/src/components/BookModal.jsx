@@ -102,7 +102,7 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
                         key={idx}
                       >
                         <img
-                          src={mediaUrl(img.url || img.attributes?.url)}
+                          src={mediaUrl(img.formats?.medium?.url || img.formats?.small?.url || img.url || img.attributes?.url)}
                           className="d-block w-100"
                           alt={book.title}
                           style={{ maxHeight: "400px", objectFit: "contain" }}
@@ -111,7 +111,7 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
                     ))}
                   </div>
                   <button
-                    className="carousel-control-prev"
+                    className="carousel-control-prev book-carousel-control"
                     type="button"
                     data-bs-target="#carouselBookImages"
                     data-bs-slide="prev"
@@ -120,7 +120,7 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
                     <span className="visually-hidden">Previous</span>
                   </button>
                   <button
-                    className="carousel-control-next"
+                    className="carousel-control-next book-carousel-control"
                     type="button"
                     data-bs-target="#carouselBookImages"
                     data-bs-slide="next"

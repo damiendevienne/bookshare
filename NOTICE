@@ -1,0 +1,20 @@
+BookMyBook
+Copyright (c) 2026 Damien Devienne
+
+This repository contains original BookMyBook code and assets, which are
+proprietary and subject to the accompanying LICENSE file.
+
+Third-party components
+----------------------
+The project uses third-party open-source components, including React, Vite,
+Bootstrap, Lucide React, Axios, Strapi and their dependencies. Those components
+remain available under their respective upstream licenses; this notice does
+not replace or alter those licenses. Their license texts are distributed with
+the relevant packages in node_modules and package-lock files.
+
+External catalogue and cover images
+-----------------------------------
+Book catalogue metadata and remote cover images may be obtained from Open
+Library. Their use remains subject to Open Library's terms and applicable
+third-party rights. BookMyBook does not claim ownership of those external
+materials.

@@ -6,8 +6,17 @@ import FilterPanel from "./components/FilterPanel";
 import BookModal from "./components/BookModal";
 import Footer from "./components/Footer";
 import LoginModal from "./components/LoginModal";
+import SiteFooter from "./components/SiteFooter";
 
 import "./App.css";
+
+function normalizeBookAvailability(bookEntry) {
+  const book = bookEntry.attributes || bookEntry;
+  const hasActiveLoan = (book.loans || []).some((loan) => loan.status === "active");
+  if (!hasActiveLoan || book.available === false) return bookEntry;
+  if (bookEntry.attributes) return { ...bookEntry, attributes: { ...book, available: false } };
+  return { ...bookEntry, available: false };
+}
 
 function App() {
   const [books, setBooks] = useState([]);
@@ -23,6 +32,10 @@ function App() {
   const [user, setUser] = useState(
     JSON.parse(localStorage.getItem("user")) || null
   );
+
+  useEffect(() => {
+    document.body.classList.toggle("theme-dark", localStorage.getItem("preferredTheme") === "dark");
+  }, []);
 
   const handleLoginSuccess = (user) => {
     setIsLoggedIn(true);
@@ -49,14 +62,23 @@ function App() {
   const handleBookCreated = () => {
     api
       .get("/api/books?populate=*")
-      .then((res) => setBooks(res.data.data))
+      .then((res) => setBooks(res.data.data.map(normalizeBookAvailability)))
       .catch((err) => console.error("Unable to refresh the book catalogue:", err));
   };
 
-  const handleBookUpdated = () => {
+  const handleBookUpdated = (bookIdentifier, nextAvailable) => {
+    if (bookIdentifier && nextAvailable !== undefined) {
+      setBooks((current) => current.map((entry) => {
+        const book = entry.attributes || entry;
+        if (book.id !== bookIdentifier && book.documentId !== bookIdentifier) return entry;
+        return entry.attributes
+          ? { ...entry, attributes: { ...book, available: nextAvailable } }
+          : { ...entry, available: nextAvailable };
+      }));
+    }
     api
       .get("/api/books?populate=*")
-      .then((res) => setBooks(res.data.data))
+      .then((res) => setBooks(res.data.data.map(normalizeBookAvailability)))
       .catch((err) => console.error("Unable to refresh the book catalogue:", err));
   };
 
@@ -67,7 +89,7 @@ function App() {
       api
         .get("/api/books?populate=*")
         .then((res) => {
-          if (!cancelled) setBooks(res.data.data);
+          if (!cancelled) setBooks(res.data.data.map(normalizeBookAvailability));
         })
         .catch((err) => {
           if (!cancelled) console.error("Unable to refresh the book catalogue:", err);
@@ -140,6 +162,9 @@ function App() {
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         activeFilterCount={activeFilterCount}
+        isLoggedIn={isLoggedIn}
+        user={user}
+        onLoginToggle={handleLoginToggle}
       />
       <FilterPanel filters={filters} setFilters={setFilters} />
 
@@ -157,6 +182,7 @@ function App() {
           ))}
         </div>
       </div>
+      <SiteFooter />
 
       {/* Modal */}
       <BookModal

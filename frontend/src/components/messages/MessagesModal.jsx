@@ -14,7 +14,7 @@ function conversationBook(conversation) {
 
 function bookImage(book) {
   const image = book?.image?.[0];
-  return image ? mediaUrl(image.url || image.attributes?.url) : book?.coverUrl || "/images/open-book.png";
+  return image ? mediaUrl(image.formats?.thumbnail?.url || image.formats?.small?.url || image.url || image.attributes?.url) : book?.coverUrl || "/images/open-book.png";
 }
 
 function loanStateSignature(conversation) {
@@ -145,7 +145,12 @@ export default function MessagesModal({ show, onClose, user, onUnreadCountChange
   const loanAction = async (loan, action) => {
     try {
       await api.post(`/api/loans/${loan.documentId || loan.id}/${action}`);
-      onBookUpdated?.();
+      if (action === "accept") {
+        const book = conversationBook(active);
+        onBookUpdated?.(book?.documentId || book?.id, false);
+      } else {
+        onBookUpdated?.();
+      }
       const nextConversations = await loadConversations();
       const refreshed = nextConversations.find((item) => (item.documentId || item.id) === (active.documentId || active.id));
       if (refreshed) setActive(refreshed);
