@@ -88,6 +88,10 @@
       "enum": ["system", "light", "dark"],
       "default": "system"
     },
+    "favoriteBookIds": {
+      "type": "json",
+      "default": []
+    },
     "conversationsAsFirstParticipant": {
       "type": "relation",
       "relation": "oneToMany",

@@ -62,6 +62,8 @@ export default {
       'api::loan.confirmLent', 'api::loan.confirmReturned',
       'api::loan.confirmReceivedBack', 'api::conversation.mine',
       'api::book.catalogSearch', 'api::book.book.catalogSearch',
+      'api::book.favorites', 'api::book.toggleFavorite',
+      'api::book.book.favorites', 'api::book.book.toggleFavorite',
       'api::conversation.messages', 'api::conversation.send',
       // Strapi 5 may derive the scope with the API UID repeated for custom
       // controllers; keep these aliases for existing development databases.

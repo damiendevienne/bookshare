@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
+import { Heart } from "lucide-react";
 import api, { mediaUrl } from "../api";
 
-export default function BookModal({ selectedBook, showModal, onClose, onFilterByOwner, ownerCounts, isLoggedIn, user, onBorrowRequested }) {
+export default function BookModal({ selectedBook, showModal, onClose, onFilterByOwner, ownerCounts, isLoggedIn, user, onBorrowRequested, isFavorite, onFavoriteToggle }) {
   const [showOwnerModal, setShowOwnerModal] = useState(false);
   const [borrowing, setBorrowing] = useState(false);
   const [borrowError, setBorrowError] = useState("");
@@ -79,15 +80,20 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
               <div>
                 <h5 className="modal-title">{book.title}</h5>
                 <h6 className="modal-subtitle">{book.author}</h6>
-                <small className="owner">
-                  Proposed by{" "}
-                  <span
-                    style={{ cursor: "pointer", color: "var(--bookmybook-navy)" }}
-                    onClick={() => setShowOwnerModal(true)}
-                  >
-                    {owner}
-                  </span>
-                </small>
+                <div className="book-owner-row">
+                  <small className="owner">
+                    Proposed by{" "}
+                    <span
+                      style={{ cursor: "pointer", color: "var(--bookmybook-navy)" }}
+                      onClick={() => setShowOwnerModal(true)}
+                    >
+                      {owner}
+                    </span>
+                  </small>
+                  <button type="button" className={`book-modal-favorite-button ${isFavorite ? "is-favorite" : ""}`} aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"} aria-pressed={isFavorite} onClick={onFavoriteToggle}>
+                    <Heart size={21} fill={isFavorite ? "currentColor" : "none"} />
+                  </button>
+                </div>
               </div>
               <button type="button" className="btn-close" onClick={onClose}></button>
             </div>

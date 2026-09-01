@@ -1119,6 +1119,7 @@ export interface PluginUsersPermissionsUser
       Schema.Attribute.SetMinMaxLength<{
         minLength: 6;
       }>;
+    favoriteBookIds: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<[]>;
     loansAsBorrower: Schema.Attribute.Relation<'oneToMany', 'api::loan.loan'>;
     loansAsLender: Schema.Attribute.Relation<'oneToMany', 'api::loan.loan'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;

@@ -5,7 +5,7 @@ import MessagesModal from "./messages/MessagesModal";
 import api from "../api";
 
 
-export default function Footer({ isLoggedIn, user = {}, onLoginToggle, onBookCreated, onBookUpdated, activeZone, activeZoneDocumentId }) {
+export default function Footer({ isLoggedIn, user = {}, onLoginToggle, onBookCreated, onBookUpdated, activeZone, activeZoneDocumentId, favoritesCount = 0, favoritesOnly, onToggleFavorites }) {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showMyBooks, setShowMyBooks] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
@@ -47,11 +47,13 @@ export default function Footer({ isLoggedIn, user = {}, onLoginToggle, onBookCre
           {/* Favorites (visible only when logged in) */}
           {isLoggedIn && (
             <button
-              className="btn btn-link text-secondary d-flex flex-column align-items-center position-relative"
+              className={`btn btn-link d-flex flex-column align-items-center position-relative footer-favorites-button ${favoritesOnly ? "is-active" : ""}`}
               style={{ textDecoration: "none" }}
-              disabled
+              onClick={onToggleFavorites}
+              aria-pressed={favoritesOnly}
             >
-              <Heart size={22} />
+              <Heart size={22} fill={favoritesOnly ? "currentColor" : "none"} />
+              {favoritesCount > 0 && <span className="position-absolute translate-middle badge rounded-pill favorite-count-badge" style={{ top: "5px", marginLeft: "25px" }}>{favoritesCount > 99 ? "99+" : favoritesCount}</span>}
               <small>Favorites</small>
             </button>
           )}

@@ -109,6 +109,40 @@ export default factories.createCoreController('api::book.book', ({ strapi }) => 
     }
   },
 
+  async favorites(ctx) {
+    const userId = ctx.state.user?.id;
+    if (!userId) return ctx.unauthorized();
+    const account = await strapi.db.query('plugin::users-permissions.user').findOne({
+      where: { id: userId },
+      select: ['favoriteBookIds'],
+    });
+    const ids = Array.isArray(account?.favoriteBookIds) ? account.favoriteBookIds.filter((id) => typeof id === 'string') : [];
+    ctx.body = { data: ids };
+  },
+
+  async toggleFavorite(ctx) {
+    const userId = ctx.state.user?.id;
+    if (!userId) return ctx.unauthorized();
+    const identifier = String(ctx.params.id || '');
+    const book = await strapi.db.query('api::book.book').findOne({
+      where: { ...idFilter(identifier), publishedAt: { $notNull: true } },
+      select: ['documentId'],
+    });
+    if (!book?.documentId) return ctx.notFound('Book not found.');
+    const account = await strapi.db.query('plugin::users-permissions.user').findOne({
+      where: { id: userId },
+      select: ['favoriteBookIds'],
+    });
+    const current = Array.isArray(account?.favoriteBookIds) ? account.favoriteBookIds.filter((id) => typeof id === 'string') : [];
+    const isFavorite = current.includes(book.documentId);
+    const favoriteBookIds = isFavorite ? current.filter((id) => id !== book.documentId) : [...current, book.documentId];
+    await strapi.db.query('plugin::users-permissions.user').update({
+      where: { id: userId },
+      data: { favoriteBookIds },
+    });
+    ctx.body = { data: { bookId: book.documentId, isFavorite: !isFavorite, favoriteBookIds } };
+  },
+
   async create(ctx) {
     if (!ctx.state.user) return ctx.unauthorized();
     const data = { ...(ctx.request.body?.data || {}) };

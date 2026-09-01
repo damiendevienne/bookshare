@@ -30,6 +30,8 @@ function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState({ age: "", available: "", language: "", owner: "" });
   const [sortOrder, setSortOrder] = useState("newest");
+  const [favoriteBookIds, setFavoriteBookIds] = useState([]);
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
   const [showModal, setShowModal] = useState(false);
   //login new const
@@ -46,6 +48,17 @@ function App() {
   useEffect(() => {
     document.body.classList.toggle("theme-dark", localStorage.getItem("preferredTheme") === "dark");
   }, []);
+
+  useEffect(() => {
+    if (!isLoggedIn || !user?.id) {
+      setFavoriteBookIds([]);
+      setFavoritesOnly(false);
+      return;
+    }
+    api.get("/api/favorites")
+      .then((response) => setFavoriteBookIds(response.data.data || []))
+      .catch(() => setFavoriteBookIds([]));
+  }, [isLoggedIn, user?.id]);
 
   useEffect(() => {
     if (!welcomeMessage) return undefined;
@@ -74,6 +87,28 @@ function App() {
   const handleFilterByOwner = (ownerUsername) => {
     setFilters((prev) => ({ ...prev, owner: ownerUsername }));
     setShowModal(false); // close modal when user clicks on owner
+  };
+
+  const toggleFavorite = async (bookEntry) => {
+    if (!isLoggedIn) {
+      setShowLogin(true);
+      return;
+    }
+    const book = bookEntry?.attributes || bookEntry;
+    const identifier = book?.documentId || book?.id;
+    if (!identifier) return;
+    const favoriteId = String(book.documentId || identifier);
+    const wasFavorite = favoriteBookIds.includes(favoriteId);
+    setFavoriteBookIds((current) => wasFavorite ? current.filter((id) => id !== favoriteId) : [...current, favoriteId]);
+    try {
+      const response = await api.post(`/api/books/${encodeURIComponent(identifier)}/favorite`);
+      setFavoriteBookIds(response.data.data?.favoriteBookIds || []);
+    } catch (error) {
+      setFavoriteBookIds((current) => wasFavorite
+        ? [...new Set([...current, favoriteId])]
+        : current.filter((id) => id !== favoriteId));
+      setWelcomeMessage(error.response?.data?.error?.message || "Unable to update favorites.");
+    }
   };
 
   const catalogueUrl = `/api/books?populate=*&zone=${encodeURIComponent(activeZone)}`;
@@ -202,6 +237,9 @@ function App() {
   
     // 🆕 Owner filter (accent & case insensitive + partial match)
     if (ownerFilter && !ownerName.includes(ownerFilter)) return false;
+
+    const favoriteId = String(book.documentId || book.id || "");
+    if (favoritesOnly && !favoriteBookIds.includes(favoriteId)) return false;
   
     return true;
   });
@@ -223,7 +261,7 @@ function App() {
     }
     return stats;
   }, { total: 0, available: 0, onLoan: 0 }), [books]);
-  const catalogueIsFiltered = Boolean(searchTerm.trim() || activeFilterCount);
+  const catalogueIsFiltered = Boolean(searchTerm.trim() || activeFilterCount || favoritesOnly);
 
   return (
     <>
@@ -250,6 +288,7 @@ function App() {
             <span><strong>{catalogueIsFiltered ? `${sortedBooks.length}/${libraryStats.total}` : libraryStats.total}</strong> {catalogueIsFiltered ? "shown" : libraryStats.total === 1 ? "book" : "books"}</span>
             <span><strong>{libraryStats.available}</strong> available</span>
             <span><strong>{libraryStats.onLoan}</strong> on loan</span>
+            {favoritesOnly && <button type="button" className="favorites-filter-chip" onClick={() => setFavoritesOnly(false)}>Favorites only ×</button>}
           </div>
         </div>
       </div>
@@ -287,6 +326,8 @@ function App() {
             <BookCard
             key={b.id}
             bookData={b}
+            isFavorite={favoriteBookIds.includes(String((b.attributes || b).documentId || (b.attributes || b).id))}
+            onFavoriteToggle={() => toggleFavorite(b)}
             onClick={() => {
               setSelectedBook(b);
               setShowModal(true);
@@ -311,6 +352,8 @@ function App() {
         isLoggedIn={isLoggedIn}
         user={user}
         onBorrowRequested={handleBookUpdated}
+        isFavorite={favoriteBookIds.includes(String((selectedBook?.attributes || selectedBook)?.documentId || (selectedBook?.attributes || selectedBook)?.id || ""))}
+        onFavoriteToggle={() => toggleFavorite(selectedBook)}
       />
       <Footer
         isLoggedIn={isLoggedIn}
@@ -320,6 +363,9 @@ function App() {
         onBookUpdated={handleBookUpdated}
         activeZone={activeZone}
         activeZoneDocumentId={zones.find((zone) => zone.slug === activeZone)?.documentId}
+        favoritesCount={favoriteBookIds.length}
+        favoritesOnly={favoritesOnly}
+        onToggleFavorites={() => setFavoritesOnly((current) => !current)}
       />
       <LoginModal
         show={showLogin}

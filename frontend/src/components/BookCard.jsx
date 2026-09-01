@@ -1,8 +1,9 @@
 import React from "react";
+import { Heart } from "lucide-react";
 import "../App.css";
 import { mediaUrl } from "../api";
 
-export default function BookCard({ bookData, onClick }) {
+export default function BookCard({ bookData, onClick, isFavorite, onFavoriteToggle }) {
   const book = bookData.attributes || bookData;
   const images = book.image || [];
   const age = book.age || "Unknown";
@@ -21,7 +22,7 @@ export default function BookCard({ bookData, onClick }) {
       style={{ cursor: "pointer" }}
       aria-label={`Open details for ${book.title}`}
     >
-      <div className="card h-100 shadow-sm" style={{ fontSize: "0.85rem" }}>
+      <div className="card h-100 shadow-sm book-card" style={{ fontSize: "0.85rem" }}>
         <div className="position-relative">
           <img
             src={imageUrl}
@@ -57,6 +58,9 @@ export default function BookCard({ bookData, onClick }) {
           <h6 className="card-title mb-1 truncate-2">{book.title}</h6>
           <p className="card-text text-muted mb-1 truncate-2">{book.author}</p>
         </div>
+        <button type="button" className={`book-favorite-button ${isFavorite ? "is-favorite" : ""}`} aria-label={isFavorite ? `Remove ${book.title} from favorites` : `Add ${book.title} to favorites`} aria-pressed={isFavorite} onClick={(event) => { event.stopPropagation(); onFavoriteToggle?.(); }} onKeyDown={(event) => event.stopPropagation()}>
+          <Heart size={20} fill={isFavorite ? "currentColor" : "none"} />
+        </button>
       </div>
     </div>
   );

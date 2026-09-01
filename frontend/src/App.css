@@ -125,6 +125,79 @@
   color: var(--bookmybook-navy);
 }
 
+.favorites-filter-chip {
+  border: 1px solid rgba(200, 93, 85, 0.35);
+  border-radius: 999px;
+  padding: 0.12rem 0.45rem;
+  color: #9f403b;
+  background: #fff;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.book-card {
+  position: relative;
+}
+
+.book-card .card-body {
+  padding-right: 2.5rem !important;
+}
+
+.book-favorite-button,
+.book-modal-favorite-button {
+  display: inline-grid;
+  place-items: center;
+  border: 0;
+  padding: 0;
+  color: #66747d;
+  background: transparent;
+}
+
+.book-favorite-button {
+  position: absolute;
+  right: 0.55rem;
+  bottom: 0.55rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 1px 4px rgba(45, 61, 73, 0.18);
+}
+
+.book-favorite-button:hover,
+.book-favorite-button:focus-visible,
+.book-modal-favorite-button:hover,
+.book-modal-favorite-button:focus-visible,
+.book-favorite-button.is-favorite,
+.book-modal-favorite-button.is-favorite {
+  color: #d14343;
+}
+
+.book-owner-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.book-modal-favorite-button {
+  flex: 0 0 auto;
+}
+
+.footer-favorites-button {
+  color: var(--bookmybook-navy);
+}
+
+.footer-favorites-button.is-active {
+  color: #d14343;
+  background: rgba(209, 67, 67, 0.08);
+}
+
+.favorite-count-badge {
+  color: #315a73;
+  background: #d9eaf2;
+}
+
 .library-sort-label {
   display: flex;
   flex: 0 0 auto;
