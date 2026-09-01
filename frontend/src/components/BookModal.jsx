@@ -2,6 +2,10 @@ import React, { useEffect, useState } from "react";
 import { Heart } from "lucide-react";
 import api, { mediaUrl } from "../api";
 
+const textLines = (value) => Array.isArray(value)
+  ? value.map((block) => Array.isArray(block?.children) ? block.children.map((child) => child?.text || "").join("").trim() : "").filter(Boolean)
+  : typeof value === "string" ? value.split("\n").map((line) => line.trim()).filter(Boolean) : [];
+
 export default function BookModal({ selectedBook, showModal, onClose, onFilterByOwner, ownerCounts, isLoggedIn, user, onBorrowRequested, isFavorite, onFavoriteToggle }) {
   const [showOwnerModal, setShowOwnerModal] = useState(false);
   const [borrowing, setBorrowing] = useState(false);
@@ -9,7 +13,6 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
   const [loanStatus, setLoanStatus] = useState(null);
 
   const book = selectedBook?.attributes || selectedBook || {};
-  const description = book.description;
   const owner = book.owner?.username || "Unknown";
   const images = book.image || [];
 
@@ -43,27 +46,13 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
   };
 
 
-  // Normalize description: handle string or rich blocks
-  let renderedDescription = "No description available";
-  if (Array.isArray(description)) {
-    renderedDescription = description
-      .map((block, i) => {
-        if (block.type === "paragraph" && Array.isArray(block.children)) {
-          const text = block.children.map((c) => c.text).join("");
-          return <p key={i} style={{ marginBottom: "0.5rem" }}>{text}</p>;
-        }
-        return null;
-      })
-      .filter(Boolean);
-  } else if (typeof description === "string") {
-    renderedDescription = description
-      .split("\n")
-      .map((line, i) => (
-        <p key={i} style={{ marginBottom: "0.5rem" }}>
-          {line}
-        </p>
-      ));
-  }
+  const legacyDescription = textLines(book.description);
+  const summaryLines = textLines(book.summary).length > 0
+    ? textLines(book.summary)
+    : book.catalogSource === "openlibrary" ? legacyDescription : [];
+  const ownerCommentLines = textLines(book.ownerComment).length > 0
+    ? textLines(book.ownerComment)
+    : book.catalogSource !== "openlibrary" ? legacyDescription : [];
 
   return (
     <>
@@ -141,9 +130,15 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
                   <Heart size={24} fill={isFavorite ? "currentColor" : "none"} />
                 </button>
               </div>
-              <hr />
-              <h6 className="text-muted mt-3">{book.catalogSource === "openlibrary" ? "Summary" : "Comment"}</h6>
-              <div>{renderedDescription}</div>
+              {(summaryLines.length > 0 || ownerCommentLines.length > 0) && <hr />}
+              {summaryLines.length > 0 && <section className="mt-3">
+                <h6 className="text-muted">Summary</h6>
+                <div>{summaryLines.map((line, index) => <p key={index} className="mb-2">{line}</p>)}</div>
+              </section>}
+              {ownerCommentLines.length > 0 && <section className="mt-3">
+                <h6 className="text-muted">Owner’s note</h6>
+                <div>{ownerCommentLines.map((line, index) => <p key={index} className="mb-2">{line}</p>)}</div>
+              </section>}
             </div>
 
             <div className="modal-footer">

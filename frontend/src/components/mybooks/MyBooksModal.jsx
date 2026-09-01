@@ -31,6 +31,8 @@ export default function MyBooksModal({ show, onClose, user, onBookCreated, onBoo
               title: item.title,
               author: item.author,
               description: item.description,
+              summary: item.summary,
+              ownerComment: item.ownerComment,
               available: item.available,
               lended: item.loans?.some((loan) => loan.status === "active") || false,
               lendedTo: item.loans?.find((loan) => loan.status === "active")?.borrower?.username || null,

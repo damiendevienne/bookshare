@@ -288,6 +288,159 @@
   flex-wrap: wrap;
 }
 
+.catalog-search-status {
+  min-height: 1.25rem;
+  line-height: 1.25rem;
+}
+
+.book-editor {
+  max-height: calc(100vh - 2rem);
+  overflow: hidden;
+}
+
+.modal-content > .modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  flex: 0 0 auto;
+  border-bottom-color: rgba(45, 61, 73, 0.14);
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(45, 61, 73, 0.08);
+}
+
+.book-editor .modal-body {
+  overflow-y: auto;
+  background: #f6f8f9;
+}
+
+.book-editor-sections {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.book-editor-section {
+  padding: 1rem;
+  border-radius: 0.8rem;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(45, 61, 73, 0.08);
+}
+
+.book-editor-section-soft {
+  background: #f3f8fb;
+}
+
+.book-editor-section-title {
+  margin-bottom: 0.85rem;
+  color: var(--bookmybook-navy);
+  font-size: 0.78rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.catalog-book-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.catalog-book-summary img {
+  flex: 0 0 auto;
+  width: 62px;
+  height: 84px;
+  border-radius: 0.45rem;
+  object-fit: cover;
+  box-shadow: 0 2px 7px rgba(45, 61, 73, 0.18);
+}
+
+.catalog-book-summary > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.catalog-book-summary strong,
+.catalog-book-summary span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.catalog-book-summary strong {
+  color: var(--bookmybook-navy);
+  font-size: 1.05rem;
+}
+
+.catalog-book-summary span,
+.catalog-book-summary small {
+  color: #66747d;
+}
+
+.book-field-help {
+  display: block;
+  margin-top: 0.25rem;
+  color: #77838b;
+  font-size: 0.76rem;
+  text-align: right;
+}
+
+.book-editor-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.availability-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.availability-toggle-row strong {
+  color: var(--bookmybook-navy);
+}
+
+.book-editor-sharing .form-switch {
+  flex: 0 0 auto;
+  margin: 0;
+  padding-left: 2.75rem;
+}
+
+.book-editor-sharing .form-check-input {
+  cursor: pointer;
+}
+
+.book-editor-sharing > p {
+  margin: 0.65rem 0 0;
+  color: #66747d;
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.book-editor-actions {
+  position: sticky;
+  z-index: 2;
+  bottom: -1rem;
+  margin: 0 -1rem -1rem;
+  padding: 0.85rem 1rem;
+  border-top: 1px solid rgba(45, 61, 73, 0.1);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(8px);
+}
+
+@media (max-width: 576px) {
+  .book-editor {
+    max-height: calc(100vh - 1rem);
+  }
+
+  .book-editor-section {
+    padding: 0.85rem;
+  }
+
+}
+
 .cover-picker-image,
 .cover-picker-placeholder {
   position: relative;
@@ -1052,6 +1205,7 @@
 .theme-dark .card,
 .theme-dark .modal-content,
 .theme-dark .site-footer { background-color: #293743 !important; color: #e8edf1; }
+.theme-dark .modal-content > .modal-header { background-color: #293743; }
 .theme-dark .text-muted { color: #b6c1c9 !important; }
 
 /* One-shot welcome animation: it runs only when the page/header is mounted. */

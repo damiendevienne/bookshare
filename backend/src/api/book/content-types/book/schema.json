@@ -32,6 +32,14 @@
     "description": {
       "type": "blocks"
     },
+    "summary": {
+      "type": "text",
+      "maxLength": 1500
+    },
+    "ownerComment": {
+      "type": "text",
+      "maxLength": 500
+    },
     "available": {
       "type": "boolean"
     },

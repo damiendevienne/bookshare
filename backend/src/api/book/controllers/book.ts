@@ -12,6 +12,24 @@ const imageCount = (image) => {
   if (image && Array.isArray(image.connect)) return image.connect.length;
   return image ? 1 : 0;
 };
+const blocksToText = (value) => Array.isArray(value)
+  ? value.map((block) => Array.isArray(block?.children) ? block.children.map((child) => child?.text || '').join('') : '').filter(Boolean).join('\n')
+  : typeof value === 'string' ? value : '';
+
+const normalizeUserText = (data, field, maxLength, ctx) => {
+  if (!(field in data)) return true;
+  if (data[field] != null && typeof data[field] !== 'string') {
+    ctx.badRequest(`${field} must be plain text.`);
+    return false;
+  }
+  const value = String(data[field] || '').trim();
+  if (value.length > maxLength) {
+    ctx.badRequest(`${field} cannot exceed ${maxLength} characters.`);
+    return false;
+  }
+  data[field] = value || null;
+  return true;
+};
 
 const attachCatalogCover = async (strapi, bookId, coverUrl, user) => {
   const response = await fetch(coverUrl, { signal: AbortSignal.timeout(8000), headers: { Accept: 'image/*' } });
@@ -35,8 +53,11 @@ const attachCatalogCover = async (strapi, bookId, coverUrl, user) => {
 
 const publicBook = (book) => {
   if (!book) return book;
+  const legacyDescription = blocksToText(book.description).trim();
   return {
     ...book,
+    summary: book.summary || (book.catalogSource === 'openlibrary' ? legacyDescription : null),
+    ownerComment: book.ownerComment || (book.catalogSource !== 'openlibrary' ? legacyDescription : null),
     owner: book.owner ? {
       id: book.owner.id,
       documentId: book.owner.documentId,
@@ -101,7 +122,7 @@ export default factories.createCoreController('api::book.book', ({ strapi }) => 
       const languageMap = { fre: 'FR', fra: 'FR', eng: 'EN', gre: 'GR', ell: 'GR' };
       ctx.body = { data: (payload.docs || []).filter((book) => book.title).map((book) => ({
         id: book.key, title: book.title, author: book.author_name?.[0] || '', year: book.first_publish_year || null,
-        isbn: book.isbn?.[0] || null, description: Array.isArray(book.first_sentence) ? book.first_sentence[0] : (typeof book.description === 'string' ? book.description : null), language: languageMap[book.language?.[0]] || null,
+        isbn: book.isbn?.[0] || null, summary: Array.isArray(book.first_sentence) ? book.first_sentence[0] : (typeof book.description === 'string' ? book.description : null), language: languageMap[book.language?.[0]] || null,
         coverUrl: book.cover_i ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg` : null,
       })) };
     } catch (error) {
@@ -146,6 +167,8 @@ export default factories.createCoreController('api::book.book', ({ strapi }) => 
   async create(ctx) {
     if (!ctx.state.user) return ctx.unauthorized();
     const data = { ...(ctx.request.body?.data || {}) };
+    delete data.description;
+    if (!normalizeUserText(data, 'summary', 1500, ctx) || !normalizeUserText(data, 'ownerComment', 500, ctx)) return;
     if (!String(data.title || '').trim() || !String(data.author || '').trim()) {
       return ctx.badRequest('Title and author are required.');
     }
@@ -206,6 +229,11 @@ export default factories.createCoreController('api::book.book', ({ strapi }) => 
     if (!book) return;
     const data = { ...(ctx.request.body?.data || {}) };
     delete data.owner;
+    delete data.description;
+    if (!normalizeUserText(data, 'summary', 1500, ctx) || !normalizeUserText(data, 'ownerComment', 500, ctx)) return;
+    if (book.catalogSource === 'openlibrary') {
+      ['title', 'author', 'coverUrl', 'isbn', 'catalogSource', 'catalogId', 'image', 'language'].forEach((field) => delete data[field]);
+    }
     if (imageCount(data.image) > 2) {
       return ctx.badRequest('A book can have at most 2 images.');
     }

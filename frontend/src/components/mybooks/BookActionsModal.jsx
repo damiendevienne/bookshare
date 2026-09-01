@@ -2,6 +2,10 @@ import React, { useRef, useState } from "react";
 import { Trash } from "lucide-react";
 import api, { mediaUrl } from "../../api";
 
+const legacyText = (value) => Array.isArray(value)
+  ? value.map((block) => Array.isArray(block?.children) ? block.children.map((child) => child?.text || "").join("") : "").filter(Boolean).join("\n")
+  : typeof value === "string" ? value : "";
+
 export default function BookActionsModal({ book, onClose, onUpdate }) {
   const [available, setAvailable] = useState(book.available);
   const isLended = book.lended === true;
@@ -11,14 +15,16 @@ export default function BookActionsModal({ book, onClose, onUpdate }) {
   const [saving, setSaving] = useState(false);
   const [title, setTitle] = useState(book.title || "");
   const [author, setAuthor] = useState(book.author || "");
-  const [description, setDescription] = useState(typeof book.description === "string" ? book.description : "");
+  const imported = book.catalogSource === "openlibrary";
+  const oldDescription = legacyText(book.description);
+  const [summary, setSummary] = useState(book.summary || (imported ? oldDescription : ""));
+  const [ownerComment, setOwnerComment] = useState(book.ownerComment || (!imported ? oldDescription : ""));
   const [age, setAge] = useState(book.age || "adults");
   const [images, setImages] = useState(book.imageRecords || []);
   const [showImageChoices, setShowImageChoices] = useState(false);
   const galleryInputRef = useRef(null);
   const cameraInputRef = useRef(null);
   const bookIdentifier = book.documentId || book.id;
-  const imported = book.catalogSource === "openlibrary";
 
   const toggleAvailable = async () => {
     setError("");
@@ -45,8 +51,8 @@ export default function BookActionsModal({ book, onClose, onUpdate }) {
       if (newFiles.some((file) => !file.type.startsWith("image/") || file.size > 5 * 1024 * 1024)) throw new Error("Each image must be an image file smaller than 5 MB.");
       let imageIds = images.filter((image) => image.id).map((image) => image.id);
       if (newFiles.length) { const formData = new FormData(); newFiles.forEach((file) => formData.append("files", file)); const upload = await api.post("/api/upload", formData); imageIds = [...imageIds, ...upload.data.map((item) => item.id)]; }
-      const response = await api.put(`/api/books/${bookIdentifier}`, { data: { title: imported ? book.title : title.trim(), author: imported ? book.author : author.trim(), description: description.trim() ? [{ type: "paragraph", children: [{ type: "text", text: description.trim() }] }] : null, age, ...(imported ? {} : { image: imageIds }) } });
-      onUpdate({ ...book, ...(response.data.data || {}), title, author, description, age, imageRecords: images });
+      const response = await api.put(`/api/books/${bookIdentifier}`, { data: { title: imported ? book.title : title.trim(), author: imported ? book.author : author.trim(), summary: summary.trim() || null, ownerComment: ownerComment.trim() || null, age, ...(imported ? {} : { image: imageIds }) } });
+      onUpdate({ ...book, ...(response.data.data || {}), title, author, summary, ownerComment, age, imageRecords: images });
     } catch (err) { setError(err.response?.data?.error?.message || err.message || "Unable to save book details."); }
     finally { setSaving(false); }
   };
@@ -87,44 +93,48 @@ export default function BookActionsModal({ book, onClose, onUpdate }) {
       onClick={onClose}
     >
       <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-content">
+        <div className="modal-content book-editor">
           <div className="modal-header">
-            <h5 className="modal-title">{book.title}</h5>
+            <div><h5 className="modal-title">Manage this book</h5><small className="text-muted">{book.title}</small></div>
             <button type="button" className="btn-close" onClick={onClose}></button>
           </div>
-          <form className="modal-body d-flex flex-column gap-3" onSubmit={saveDetails}>
+          <form className="modal-body" onSubmit={saveDetails}>
             {error && <div className="alert alert-danger mb-0">{error}</div>}
             {conversationId && (
               <a className="btn btn-outline-primary" href={`#conversation/${conversationId}`} onClick={onClose}>
                 Open the discussion with the borrower
               </a>
             )}
-            <div>
-              <h6>Book details</h6>
-              {imported && <div className="alert alert-info py-2 small">Bibliographic information and the cover are locked because this book was imported from Open Library.</div>}
-              <label className="form-label">Title</label><input className="form-control mb-2" value={title} onChange={(event) => setTitle(event.target.value)} disabled={imported} required />
-              <label className="form-label">Author</label><input className="form-control mb-2" value={author} onChange={(event) => setAuthor(event.target.value)} disabled={imported} required />
-              <label className="form-label">Audience</label><select className="form-select mb-2" value={age} onChange={(event) => setAge(event.target.value)}><option value="kids">Kids (0–10)</option><option value="teenagers">Teenagers (11–15)</option><option value="adults">Adults (16+)</option></select>
-              <label className="form-label">Comment</label><textarea className="form-control mb-2" rows="3" value={description} onChange={(event) => setDescription(event.target.value)} />
-              {!imported && <><label className="form-label">Cover images</label><input ref={galleryInputRef} className="visually-hidden" type="file" accept="image/*" onChange={handleImageSelection} /><input ref={cameraInputRef} className="visually-hidden" type="file" accept="image/*" capture="environment" onChange={handleImageSelection} /><div className="cover-picker-row">{images.map((image, index) => <div className="cover-picker-image" key={image.id || `${image.name}-${image.lastModified}`}><img src={image instanceof File ? URL.createObjectURL(image) : mediaUrl(image.formats?.small?.url || image.formats?.thumbnail?.url || image.url)} alt={`Book cover ${index + 1}`} /><button type="button" className="cover-picker-remove" onClick={() => removeImage(index)} aria-label="Remove image">×</button></div>)}{images.length < 2 && <button type="button" className="cover-picker-placeholder" onClick={addImage} aria-label="Add a cover image"><span>＋</span></button>}{images.length === 2 && <button type="button" className="btn btn-outline-secondary btn-sm align-self-center" onClick={() => setImages((current) => [current[1], current[0]])}>Change order</button>}</div>{showImageChoices && <div className="image-choice-backdrop" role="dialog" aria-modal="true" onClick={() => setShowImageChoices(false)}><div className="image-choice-modal" onClick={(event) => event.stopPropagation()}><h6>Add a cover image</h6><p className="text-muted small">Choose where to get the image.</p><button type="button" className="btn btn-primary w-100 mb-2" onClick={() => cameraInputRef.current?.click()}>Take a photo</button><button type="button" className="btn btn-outline-primary w-100 mb-2" onClick={() => galleryInputRef.current?.click()}>Choose from gallery</button><button type="button" className="btn btn-link btn-sm" onClick={() => setShowImageChoices(false)}>Cancel</button></div></div>}</>}
-              <button type="submit" className="btn btn-primary btn-sm mt-3" disabled={saving}>{saving ? "Saving…" : "Save details"}</button>
-            </div>
-            <div>
-              <div className="d-flex align-items-center justify-content-between gap-3">
-                <span>Availability: <strong>{available ? "Available" : "Not available"}</strong></span>
-                <button type="button" className={`btn btn-sm ${available ? "btn-outline-secondary" : "btn-success"}`} onClick={toggleAvailable} disabled={saving || (!available && isLended)} title={!available && isLended ? "Confirm the return before making this book available" : undefined}>
-                  {available ? "Mark unavailable" : "Mark available"}
-                </button>
-              </div>
+            <div className="book-editor-sections">
+              <section className="book-editor-section">
+                <h6 className="book-editor-section-title">The book</h6>
+                {imported ? <div className="catalog-book-summary">
+                  <img src={book.image ? mediaUrl(book.image) : book.coverUrl || "/images/open-book.png"} alt="" />
+                  <div className="min-width-0"><strong>{book.title}</strong><span>{book.author}</span><small>{book.language} · Found in Open Library</small></div>
+                </div> : <>
+                  <label className="form-label">Title</label><input className="form-control mb-3" value={title} onChange={(event) => setTitle(event.target.value)} required />
+                  <label className="form-label">Author</label><input className="form-control" value={author} onChange={(event) => setAuthor(event.target.value)} required />
+                </>}
+                <label className="form-label mt-3">Audience</label><select className="form-select mb-3" value={age} onChange={(event) => setAge(event.target.value)}><option value="kids">Kids (0–10)</option><option value="teenagers">Teenagers (11–15)</option><option value="adults">Adults (16+)</option></select>
+                {!imported && <><label className="form-label">Cover images</label><input ref={galleryInputRef} className="visually-hidden" type="file" accept="image/*" onChange={handleImageSelection} /><input ref={cameraInputRef} className="visually-hidden" type="file" accept="image/*" capture="environment" onChange={handleImageSelection} /><div className="cover-picker-row">{images.map((image, index) => <div className="cover-picker-image" key={image.id || `${image.name}-${image.lastModified}`}><img src={image instanceof File ? URL.createObjectURL(image) : mediaUrl(image.formats?.small?.url || image.formats?.thumbnail?.url || image.url)} alt={`Book cover ${index + 1}`} /><button type="button" className="cover-picker-remove" onClick={() => removeImage(index)} aria-label="Remove image">×</button></div>)}{images.length < 2 && <button type="button" className="cover-picker-placeholder" onClick={addImage} aria-label="Add a cover image"><span>＋</span></button>}{images.length === 2 && <button type="button" className="btn btn-outline-secondary btn-sm align-self-center" onClick={() => setImages((current) => [current[1], current[0]])}>Change order</button>}</div>{showImageChoices && <div className="image-choice-backdrop" role="dialog" aria-modal="true" onClick={() => setShowImageChoices(false)}><div className="image-choice-modal" onClick={(event) => event.stopPropagation()}><h6>Add a cover image</h6><p className="text-muted small">Choose where to get the image.</p><button type="button" className="btn btn-primary w-100 mb-2" onClick={() => cameraInputRef.current?.click()}>Take a photo</button><button type="button" className="btn btn-outline-primary w-100 mb-2" onClick={() => galleryInputRef.current?.click()}>Choose from gallery</button><button type="button" className="btn btn-link btn-sm" onClick={() => setShowImageChoices(false)}>Cancel</button></div></div>}</>}
+              </section>
+              <section className="book-editor-section">
+                <h6 className="book-editor-section-title">Tell readers about it</h6>
+                <label className="form-label">Summary <span className="text-muted">(optional)</span></label><textarea className="form-control" rows="3" maxLength="1500" value={summary} onChange={(event) => setSummary(event.target.value)} placeholder="What is this book about?" /><small className="book-field-help mb-3">{summary.length}/1500</small>
+                <label className="form-label">Owner’s note <span className="text-muted">(optional)</span></label><textarea className="form-control" rows="2" maxLength="500" value={ownerComment} onChange={(event) => setOwnerComment(event.target.value)} placeholder="What did you think of it? Is there anything borrowers should know?" /><small className="book-field-help">{ownerComment.length}/500 · Please don’t include personal contact details.</small>
+              </section>
+              <section className="book-editor-section book-editor-sharing">
+                <h6 className="book-editor-section-title">Sharing</h6>
+                <div className="availability-toggle-row"><strong>{available ? "Available for borrowing" : "Not available for borrowing"}</strong><div className="form-check form-switch"><input className="form-check-input" id="manage-book-available" type="checkbox" role="switch" checked={available} onChange={toggleAvailable} disabled={saving || (!available && isLended)} aria-label="Change borrowing availability" /></div></div>
+                <p>{available ? "Other members can find this book and send you a borrowing request." : "The book remains in your library, but other members cannot request it."}</p>
+              </section>
               {!available && isLended && (
-                <small className="text-muted d-block mt-2">
+                <small className="text-muted d-block px-2">
                   This book is currently lent. It will become available after the return is confirmed.
                 </small>
               )}
+              <div className="book-editor-actions"><button type="button" className="btn btn-outline-danger btn-sm" onClick={() => setConfirmDelete(true)} disabled={saving}><Trash size={16} className="me-2" />Remove book</button><button type="submit" className="btn btn-primary" disabled={saving}>{saving ? "Saving…" : "Save changes"}</button></div>
             </div>
-            <button className="btn btn-danger d-flex align-items-center" onClick={() => setConfirmDelete(true)} disabled={saving}>
-              <Trash size={18} className="me-2" /> Remove Book
-            </button>
           </form>
         </div>
       </div>
