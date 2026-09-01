@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Send } from "lucide-react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ArrowLeft, ChevronDown, ChevronRight, Send } from "lucide-react";
 import api, { mediaUrl } from "../../api";
 
 function otherParticipant(conversation, userId) {
@@ -14,7 +14,7 @@ function conversationBook(conversation) {
 
 function bookImage(book) {
   const image = book?.image?.[0];
-  return image ? mediaUrl(image.formats?.thumbnail?.url || image.formats?.small?.url || image.url || image.attributes?.url) : book?.coverUrl || "/images/open-book.png";
+  return image ? mediaUrl(image.formats?.small?.url || image.formats?.medium?.url || image.url || image.attributes?.url) : book?.coverUrl || "/images/open-book.png";
 }
 
 function loanStateSignature(conversation) {
@@ -33,7 +33,7 @@ function loanContext(conversation, userId) {
   if (!loan) return { label: "Discussion", tone: "neutral" };
   const other = otherParticipant(conversation, userId)?.username || "User";
   if (loan.status === "requested") {
-    return { label: loan.lender?.id === userId ? `Borrow request from ${other}` : `Borrow request to ${other}`, tone: "requested" };
+    return { label: loan.lender?.id === userId ? `Pending request from ${other}` : `Pending request to ${other}`, tone: "requested" };
   }
   if (loan.status === "active") {
     if (!loan.borrowerReceivedAt) {
@@ -58,7 +58,24 @@ function loanTiming(loan) {
     return `Request duration: ${days} day${days === 1 ? "" : "s"}`;
   }
   const date = new Date(start).toLocaleDateString();
-  return loan.status === "requested" ? `Waiting since ${date}` : loan.borrowerReceivedAt ? `Since ${date}` : `Accepted on ${date}`;
+  return loan.status === "requested" ? `Since ${date}` : loan.borrowerReceivedAt ? `Since ${date}` : `Accepted on ${date}`;
+}
+
+function messageTime(value) {
+  if (!value) return "";
+  const date = new Date(value); const now = new Date();
+  if (date.toDateString() === now.toDateString()) return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+  return date.toDateString() === yesterday.toDateString() ? "Yesterday" : date.toLocaleDateString();
+}
+
+function messageDayLabel(value) {
+  if (!value) return "";
+  const date = new Date(value); const now = new Date();
+  if (date.toDateString() === now.toDateString()) return "Today";
+  const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+  return date.toLocaleDateString([], { day: "numeric", month: "long", year: "numeric" });
 }
 
 export default function MessagesModal({ show, onClose, user, onUnreadCountChange, onBookUpdated }) {
@@ -67,6 +84,11 @@ export default function MessagesModal({ show, onClose, user, onUnreadCountChange
   const [messages, setMessages] = useState([]);
   const [draft, setDraft] = useState("");
   const [error, setError] = useState("");
+  const [returnMessage, setReturnMessage] = useState(null);
+  const [sendingReturnMessage, setSendingReturnMessage] = useState(false);
+  const [collapsedDiscussionGroups, setCollapsedDiscussionGroups] = useState({ "past-owned": true, "past-borrowed": true });
+  const returnMessageRef = useRef(null);
+  const conversationThreadRef = useRef(null);
 
   const loadConversations = useCallback(() => api.get("/api/conversations/mine").then((res) => {
     const next = res.data.data || [];
@@ -99,17 +121,50 @@ export default function MessagesModal({ show, onClose, user, onUnreadCountChange
     const timer = window.setInterval(loadMessages, 2500);
     return () => window.clearInterval(timer);
   }, [active, loadConversations]);
+  useEffect(() => {
+    if (returnMessage === null) return;
+    const input = returnMessageRef.current;
+    input?.focus();
+    input?.setSelectionRange(input.value.length, input.value.length);
+  }, [returnMessage]);
 
   const loans = useMemo(() => active?.loans || [], [active]);
+  const actionPanelSignature = loans.map((loan) => `${loan.documentId || loan.id}:${loan.status}:${loan.borrowerReceivedAt || ""}:${loan.lenderReceivedBackAt || ""}`).join("|");
+  useEffect(() => {
+    const thread = conversationThreadRef.current;
+    if (thread) thread.scrollTop = thread.scrollHeight;
+  }, [active?.documentId, active?.id, messages.length, actionPanelSignature]);
   const chatLocked = loans.some((loan) => loan.status === "requested");
   const currentConversations = conversations.filter((conversation) => conversation.loans?.some((loan) => loan.status === "requested" || loan.status === "active"));
   const pastConversations = conversations.filter((conversation) => !conversation.loans?.some((loan) => loan.status === "requested" || loan.status === "active"));
+  const splitByOwnership = (items) => items.reduce((groups, conversation) => {
+    const loan = conversation.loans?.find((item) => item.status === "requested" || item.status === "active") || conversation.loans?.[0];
+    if (loan?.lender?.id === user.id) groups.owned.push(conversation);
+    else groups.borrowed.push(conversation);
+    return groups;
+  }, { owned: [], borrowed: [] });
+  const activeGroups = splitByOwnership(currentConversations);
+  const pastGroups = splitByOwnership(pastConversations);
+  const discussionSections = [
+    { label: "Active loans", tone: "current", groups: activeGroups },
+    { label: "Past loans", tone: "past", groups: pastGroups },
+  ].filter((section) => section.groups.owned.length || section.groups.borrowed.length);
   const systemMessageText = (message) => {
     if (!message.isSystem) return message.content;
     const loan = loans.find((item) => item.book);
     const book = loan?.book;
+    if (message.content?.startsWith("You can now discuss") && book) {
+      if (loan?.lender?.id === user.id) {
+        return `You can now discuss and arrange a time and place to hand over “${book.title}”.`;
+      }
+      if (loan?.borrower?.id === user.id) {
+        return `You can now discuss and arrange a time and place to pick up “${book.title}” from the owner.`;
+      }
+    }
     if (message.content?.startsWith("The borrower confirmed receiving the book.")) {
-      if (loan?.borrower?.id === user.id) return "You confirmed the reception of the book.";
+      if (loan?.borrower?.id === user.id) {
+        return "You confirmed that you received the book. Enjoy your reading!\n\nWhen you’ve finished it, use the button below to arrange the return with the owner. Once the owner confirms its return, the book will become available for others to borrow again.";
+      }
       return `${loan?.borrower?.username || otherParticipant(active, user.id)?.username || "The borrower"} confirmed the reception of the book.`;
     }
     if (message.content?.startsWith("You recovered your book")) {
@@ -142,6 +197,27 @@ export default function MessagesModal({ show, onClose, user, onUnreadCountChange
     } catch (err) { setError(err.response?.data?.error?.message || "Unable to send message."); }
   };
 
+  const openReturnComposer = () => {
+    const ownerName = otherParticipant(active, user.id)?.username || "there";
+    setReturnMessage(`Hi ${ownerName}, I’ve finished the book and I’m ready to return it. When would be a good time for you?`);
+  };
+
+  const sendReturnMessage = async (event) => {
+    event.preventDefault();
+    if (!returnMessage?.trim() || !active || sendingReturnMessage) return;
+    setSendingReturnMessage(true);
+    try {
+      const res = await api.post(`/api/conversations/${active.documentId || active.id}/messages`, { content: returnMessage.trim(), purpose: "returnArrangement" });
+      setMessages((current) => [...current, res.data.data]);
+      setReturnMessage(null);
+      await loadConversations();
+    } catch (err) {
+      setError(err.response?.data?.error?.message || "Unable to send message.");
+    } finally {
+      setSendingReturnMessage(false);
+    }
+  };
+
   const loanAction = async (loan, action) => {
     try {
       await api.post(`/api/loans/${loan.documentId || loan.id}/${action}`);
@@ -163,85 +239,117 @@ export default function MessagesModal({ show, onClose, user, onUnreadCountChange
   return <div className="modal fade show" style={{ display: "block", backgroundColor: "rgba(0,0,0,.5)" }} onClick={onClose}>
     <div className="modal-dialog modal-lg modal-dialog-scrollable" onClick={(e) => e.stopPropagation()}>
       <div className="modal-content">
-        <div className="modal-header"><h5 className="modal-title">Messages</h5><button className="btn-close" onClick={onClose} aria-label="Close messages" /></div>
-        <div className="modal-body p-0">
+        <div className="modal-header"><h5 className="modal-title">Discussions</h5><button className="btn-close" onClick={onClose} aria-label="Close discussions" /></div>
+        <div className={`modal-body p-0 ${active ? "messages-modal-body-active" : ""}`}>
           {error && <div className="alert alert-danger m-3">{error}</div>}
           {!active ? <div className="list-group list-group-flush">
             {conversations.length === 0 && <p className="p-3 text-muted mb-0">No conversations yet.</p>}
-            {currentConversations.length > 0 && <div className="conversation-section-heading conversation-section-current px-3 py-2 text-uppercase small fw-bold">Current loans</div>}
-            {[...currentConversations, ...pastConversations].map((conversation) => {
-              const book = conversationBook(conversation);
-              const context = loanContext(conversation, user.id);
-              const loan = conversation.loans?.find((item) => item.status === "requested" || item.status === "active") || conversation.loans?.[0];
-              const isPast = pastConversations.includes(conversation);
-              return <React.Fragment key={conversation.documentId || conversation.id}>
-                {isPast && (pastConversations.indexOf(conversation) === 0) && <div className="conversation-section-heading conversation-section-past px-3 py-2 text-uppercase small fw-bold">Past loans</div>}
-                <button className={`list-group-item list-group-item-action text-start ${isPast ? "conversation-item-past" : "conversation-item-current"}`} onClick={() => { setError(""); setActive(conversation); setConversations((current) => current.map((item) => (item.id === conversation.id ? { ...item, unreadCount: 0 } : item))); }}>
-                  <span className="conversation-item-content">
-                    <span className="conversation-item-details">
-                      <span className="d-flex align-items-center gap-2">
-                        <strong className={conversation.unreadCount > 0 ? "fw-bold" : "fw-normal"}>{book?.title || "Conversation"}</strong>
-                        {conversation.unreadCount > 0 && <span className="badge rounded-pill bg-danger">{conversation.unreadCount > 99 ? "99+" : conversation.unreadCount}</span>}
-                      </span>
-                      {book?.author && <small className="d-block text-muted">{book.author}</small>}
-                      <span className={`badge loan-context-badge loan-context-${context.tone} mt-1`}>{context.label}</span>
-                      {loanTiming(loan) && <small className="d-block text-muted conversation-timing mt-1">{loanTiming(loan)}</small>}
-                    </span>
-                    <img className="conversation-book-thumbnail" src={bookImage(book)} alt="" aria-hidden="true" />
-                  </span>
+            {discussionSections.map((section) => <React.Fragment key={section.tone}>
+              <div className={`conversation-section-heading conversation-section-${section.tone} px-3 py-2 text-uppercase small fw-bold`}>{section.label}</div>
+              {[{ label: "My books", ownership: "owned", items: section.groups.owned }, { label: "Borrowed books", ownership: "borrowed", items: section.groups.borrowed }].filter((group) => group.items.length).map((group) => {
+                const groupKey = `${section.tone}-${group.ownership}`;
+                const isCollapsed = Boolean(collapsedDiscussionGroups[groupKey]);
+                return <React.Fragment key={group.ownership}>
+                <button type="button" className={`conversation-subsection-heading ${section.tone === "past" ? "conversation-subsection-past" : ""} px-3 py-2 text-uppercase fw-bold`} aria-expanded={!isCollapsed} onClick={() => setCollapsedDiscussionGroups((current) => ({ ...current, [groupKey]: !current[groupKey] }))}>
+                  <span>{group.label} ({group.items.length})</span>
+                  {isCollapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
                 </button>
+                {!isCollapsed && group.items.map((conversation) => {
+                  const book = conversationBook(conversation);
+                  const context = loanContext(conversation, user.id);
+                  const other = otherParticipant(conversation, user.id);
+                  return <button key={conversation.documentId || conversation.id} className={`list-group-item list-group-item-action text-start ${section.tone === "past" ? "conversation-item-past" : "conversation-item-current"}`} onClick={() => { setError(""); setActive(conversation); setConversations((current) => current.map((item) => (item.id === conversation.id ? { ...item, unreadCount: 0 } : item))); }}>
+                    <span className="conversation-item-content">
+                      <img className="conversation-book-thumbnail" src={bookImage(book)} alt="" aria-hidden="true" />
+                      <span className="conversation-item-details"><strong className={`conversation-item-title ${conversation.unreadCount > 0 ? "fw-bold" : "fw-normal"}`}>{book?.title || "Conversation"}</strong>{book?.author && <small className="conversation-item-author d-block text-muted">{book.author}</small>}<small className="d-block conversation-with">Discussion with {other?.username || "User"}</small></span>
+                      <span className={`badge loan-context-badge loan-context-${context.tone}`}>{context.label}</span>
+                      <span className="conversation-item-meta">{conversation.unreadCount > 0 && <span className="badge rounded-pill bg-danger">{conversation.unreadCount > 99 ? "99+" : conversation.unreadCount}</span>}<small className="text-muted">{messageTime(conversation.lastMessageAt || conversation.updatedAt)}</small></span>
+                    </span>
+                  </button>;
+                })}
               </React.Fragment>;
-            })}
-          </div> : <div className="d-flex flex-column" style={{ minHeight: "420px" }}>
+              })}
+            </React.Fragment>)}
+          </div> : <div className="conversation-view d-flex flex-column">
             <div className="border-bottom p-2">
-              <button className="btn btn-sm btn-link" onClick={() => setActive(null)}><ArrowLeft size={16} /> Back</button>
-              <div className="mt-2">
-                <div className="conversation-header-content">
-                  <div>
-                    <strong className="d-block">{conversationBook(active)?.title || "Conversation"}</strong>
-                    {conversationBook(active)?.author && <small className="d-block text-muted">{conversationBook(active).author}</small>}
-                    <span className={`badge loan-context-badge loan-context-${loanContext(active, user.id).tone} mt-1`}>{loanContext(active, user.id).label}</span>
-                    {loanTiming(active.loans?.find((loan) => loan.status === "requested" || loan.status === "active") || active.loans?.[0]) && <small className="d-block text-muted conversation-timing mt-1">{loanTiming(active.loans?.find((loan) => loan.status === "requested" || loan.status === "active") || active.loans?.[0])}</small>}
+              <div className="conversation-header-content">
+                <button className="conversation-back-button" onClick={() => setActive(null)} aria-label="Back to conversations"><ArrowLeft size={20} /></button>
+                <img className="conversation-book-thumbnail conversation-header-thumbnail" src={bookImage(conversationBook(active))} alt="" aria-hidden="true" />
+                  <div className="conversation-header-info">
+                    <strong className="d-block conversation-header-title">{conversationBook(active)?.title || "Conversation"}</strong>
+                    {conversationBook(active)?.author && <small className="d-block conversation-header-author">{conversationBook(active).author}</small>}
+                    <small className="d-block conversation-with">Discussion with {otherParticipant(active, user.id)?.username || "User"}</small>
                   </div>
-                  <img className="conversation-book-thumbnail conversation-header-thumbnail" src={bookImage(conversationBook(active))} alt="" aria-hidden="true" />
-                </div>
+                  <div className="conversation-header-status">
+                    <span className={`badge loan-context-badge loan-context-${loanContext(active, user.id).tone}`}>{loanContext(active, user.id).label}</span>
+                    {loanTiming(active.loans?.find((loan) => loan.status === "requested" || loan.status === "active") || active.loans?.[0]) && <small className="conversation-timing">{loanTiming(active.loans?.find((loan) => loan.status === "requested" || loan.status === "active") || active.loans?.[0])}</small>}
+                  </div>
               </div>
             </div>
-            <div className="flex-grow-1 p-3 overflow-auto">
-              {messages.map((message) => {
+            <div ref={conversationThreadRef} className="conversation-thread flex-grow-1 p-3 overflow-auto">
+              {(() => { let previousDay = ""; return messages.map((message) => {
                 const handoverNotice = message.isSystem && message.content?.startsWith("You can now discuss");
                 const refusalNotice = message.isSystem && message.content?.startsWith("The loan request was refused");
                 const receiptNotice = message.isSystem && message.content?.startsWith("The borrower confirmed receiving the book.");
                 const completionNotice = message.isSystem && message.content?.startsWith("You recovered your book");
+                const requestNotice = message.isSystem && message.content?.startsWith("Borrow request for");
                 const content = systemMessageText(message);
                 if (content === null) return null;
-                return <div key={message.id} className={`mb-2 ${handoverNotice || refusalNotice || receiptNotice || completionNotice ? "system-notice" : message.sender?.id === user.id ? "text-end" : ""}`}>
-                  {handoverNotice && loans.some((loan) => loan.borrower?.id === user.id) && <div className="acceptance-notice">The owner accepted your request.</div>}
-                  {handoverNotice || refusalNotice || receiptNotice || completionNotice ? <div className={handoverNotice ? "handover-notice" : refusalNotice ? "refusal-notice" : completionNotice ? "completion-notice" : "acceptance-notice"}>{content}</div> : <span className={`d-inline-block rounded px-3 py-2 ${message.isSystem ? "bg-light text-muted" : message.sender?.id === user.id ? "bg-primary text-white" : "bg-secondary-subtle"}`}>{content}</span>}
-                </div>;
-              })}
+                const handoverLoan = handoverNotice ? loans.find((loan) => loan.book) : null;
+                const handoverConfirmation = handoverLoan?.borrower?.id === user.id
+                  ? "The owner accepted your request."
+                  : handoverLoan?.lender?.id === user.id
+                    ? `You accepted ${handoverLoan.borrower?.username || otherParticipant(active, user.id)?.username || "the borrower"}’s request to borrow your book.`
+                    : "";
+                const borrowerReceiptNotice = receiptNotice && loans.some((loan) => loan.borrower?.id === user.id);
+                const returnAlreadyArranged = messages.some((item) => item.purpose === "returnArrangement" && item.sender?.id === user.id);
+                const canArrangeReturn = borrowerReceiptNotice && !returnAlreadyArranged && loans.some((loan) => loan.status === "active" && loan.borrower?.id === user.id && loan.borrowerReceivedAt && !loan.lenderReceivedBackAt);
+                const [receiptConfirmation, returnGuidance] = borrowerReceiptNotice ? content.split("\n\n") : [];
+                const dayKey = message.createdAt ? new Date(message.createdAt).toDateString() : "";
+                const showDay = dayKey && dayKey !== previousDay;
+                previousDay = dayKey || previousDay;
+                return <React.Fragment key={message.id}>
+                  {showDay && <div className="message-date-separator">{messageDayLabel(message.createdAt)}</div>}
+                  <div className={`mb-2 ${handoverNotice || refusalNotice || receiptNotice || completionNotice || requestNotice ? "system-notice" : message.sender?.id === user.id ? "text-end" : ""}`}>
+                  {handoverNotice || refusalNotice || receiptNotice || completionNotice || requestNotice ? <div className={handoverNotice ? (handoverConfirmation ? "handover-notice acceptance-handover-notice" : "handover-notice") : refusalNotice ? "refusal-notice" : completionNotice ? "completion-notice" : requestNotice ? "request-notice" : "acceptance-notice"}>
+                    {handoverConfirmation && <div className="acceptance-notice-inline">{handoverConfirmation}</div>}
+                    {borrowerReceiptNotice ? <>
+                      <div className="receipt-confirmation-message">{receiptConfirmation}</div>
+                      <div className={`return-guidance-message ${returnAlreadyArranged ? "return-arranged-message" : ""}`}>
+                        {returnAlreadyArranged
+                          ? `Return arrangement started with ${otherParticipant(active, user.id)?.username || "the owner"}. Continue the conversation in the chat.`
+                          : returnGuidance}
+                      </div>
+                      {canArrangeReturn && <button type="button" className="btn btn-outline-success btn-sm arrange-return-button" onClick={openReturnComposer}>Arrange the return</button>}
+                    </> : content}
+                  </div> : <span className={`d-inline-block rounded px-3 py-2 ${message.isSystem ? "bg-light text-muted" : message.sender?.id === user.id ? "message-bubble message-outgoing" : "message-bubble message-incoming"}`}>{content}</span>}
+                  {message.createdAt && <small className="message-time">{messageTime(message.createdAt)}</small>}
+                  </div>
+                </React.Fragment>;
+              }); })()}
               {loans.filter((loan) => loan.status === "requested" && loan.lender?.id === user.id).map((loan) => <div className="loan-request-actions text-center mt-3" key={loan.documentId || loan.id}>
                 <button className="btn btn-sm btn-success me-2" onClick={() => loanAction(loan, "accept")}>Accept</button>
                 <button className="btn btn-sm btn-outline-danger" onClick={() => loanAction(loan, "refuse")}>Refuse</button>
               </div>)}
-              {loans.filter((loan) => loan.status === "active" && loan.borrower?.id === user.id && !loan.borrowerReceivedAt).map((loan) => <div className="receipt-action-card" key={loan.documentId || loan.id}>
-                <div className="receipt-action-title">Have you received the book?</div>
-                <div className="receipt-action-help">Confirm this only after the handover has taken place.</div>
-                <button className="btn btn-success receipt-action-button" onClick={() => loanAction(loan, "confirm-received")}>✓ I received the book</button>
-              </div>)}
-              {loans.filter((loan) => loan.status === "active" && loan.borrower?.id === user.id && loan.borrowerReceivedAt).map((loan) => <div className="return-reminder-notice" key={loan.documentId || loan.id}>
-                When you return the book, the owner will confirm its return in the app. The book will become available again after that confirmation.
-              </div>)}
               {loans.filter((loan) => loan.status === "active" && loan.lender?.id === user.id && !loan.borrowerReceivedAt).map((loan) => <div className="handover-waiting-notice" key={loan.documentId || loan.id}>
                 Once you have handed over the book, ask {loan.borrower?.username || "the borrower"} to click “I received the book”.
               </div>)}
-              {loans.filter((loan) => loan.status === "active" && loan.lender?.id === user.id && loan.borrowerReceivedAt && !loan.lenderReceivedBackAt).map((loan) => <div className="receipt-action-card recovery-action-card" key={loan.documentId || loan.id}>
-                <div className="receipt-action-title">You lent this book to {loan.borrower?.username || otherParticipant(active, user.id)?.username || "the borrower"} on {new Date(loan.borrowerReceivedAt).toLocaleDateString()}.</div>
-                <div className="receipt-action-help">When they return it, click below to confirm that you got it back. The book will then become available again.</div>
-                <button className="btn btn-success receipt-action-button" onClick={() => loanAction(loan, "confirm-received-back")}>✓ I recovered my book</button>
-              </div>)}
             </div>
-            <form className="border-top p-2 d-flex gap-2" onSubmit={sendMessage}>
+            {loans.filter((loan) => loan.status === "active" && loan.borrower?.id === user.id && !loan.borrowerReceivedAt).map((loan) => <div className="receipt-action-card" key={loan.documentId || loan.id}>
+              <div className="receipt-action-copy">
+                <div className="receipt-action-title">Have you received the book?</div>
+                <div className="receipt-action-help">Confirm this only after the handover has taken place.</div>
+              </div>
+              <button className="btn btn-success receipt-action-button" onClick={() => loanAction(loan, "confirm-received")}>✓ I received the book</button>
+            </div>)}
+            {loans.filter((loan) => loan.status === "active" && loan.lender?.id === user.id && loan.borrowerReceivedAt && !loan.lenderReceivedBackAt).map((loan) => <div className="receipt-action-card" key={loan.documentId || loan.id}>
+              <div className="receipt-action-copy">
+                <div className="receipt-action-title">You lent this book to {loan.borrower?.username || otherParticipant(active, user.id)?.username || "the borrower"} on {new Date(loan.borrowerReceivedAt).toLocaleDateString()}.</div>
+                <div className="receipt-action-help">When the borrower returns it, click below to confirm that you received it back. The book will then become available for others to borrow again.</div>
+              </div>
+              <button className="btn btn-success receipt-action-button" onClick={() => loanAction(loan, "confirm-received-back")}>✓ I recovered my book</button>
+            </div>)}
+            <form className="conversation-compose-bar border-top p-2 d-flex gap-2" onSubmit={sendMessage}>
               <input className="form-control" value={draft} onChange={(e) => setDraft(e.target.value)} disabled={chatLocked} placeholder={chatLocked ? "Chat will be available after the request is accepted." : "Write a message…"} />
               <button className="btn btn-primary" disabled={chatLocked || !draft.trim()}><Send size={17} /></button>
             </form>
@@ -249,5 +357,25 @@ export default function MessagesModal({ show, onClose, user, onUnreadCountChange
         </div>
       </div>
     </div>
+    {returnMessage !== null && <div className="modal fade show return-composer-modal" style={{ display: "block", backgroundColor: "rgba(0,0,0,.45)" }} onClick={(event) => { event.stopPropagation(); setReturnMessage(null); }}>
+      <div className="modal-dialog modal-dialog-centered" onClick={(event) => event.stopPropagation()}>
+        <form className="modal-content" onSubmit={sendReturnMessage}>
+          <div className="modal-header">
+            <h5 className="modal-title">Arrange the return</h5>
+            <button type="button" className="btn-close" aria-label="Close" onClick={() => setReturnMessage(null)} />
+          </div>
+          <div className="modal-body">
+            <label className="form-label" htmlFor="return-message">Message to {otherParticipant(active, user.id)?.username || "the owner"}</label>
+            <textarea id="return-message" ref={returnMessageRef} className="form-control" rows="4" value={returnMessage} onChange={(event) => setReturnMessage(event.target.value)} />
+          </div>
+          <div className="modal-footer">
+            <button type="button" className="btn btn-secondary" disabled={sendingReturnMessage} onClick={() => setReturnMessage(null)}>Cancel</button>
+            <button type="submit" className="btn btn-primary" disabled={sendingReturnMessage || !returnMessage.trim()} aria-label="Send return message">
+              {sendingReturnMessage ? "Sending…" : <><Send size={17} /> <span>Send</span></>}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>}
   </div>;
 }

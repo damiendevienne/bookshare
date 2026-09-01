@@ -2,12 +2,18 @@ import React from "react";
 import { Settings } from "lucide-react";
 import SettingsModal from "./SettingsModal";
 
-export default function Header({ searchTerm, setSearchTerm, activeFilterCount, isLoggedIn, user, onLoginToggle }) {
+export default function Header({ isLoggedIn, user, onLoginToggle, activeZone, zones, onZoneChange, welcomeMessage, onDismissWelcome }) {
   const [showSettings, setShowSettings] = React.useState(false);
   const [showRealisticLogo, setShowRealisticLogo] = React.useState(false);
 
   return (
     <header className="bg-white shadow-sm py-3 site-header">
+      {welcomeMessage && (
+        <div className="welcome-banner" role="status">
+          <span>{welcomeMessage}</span>
+          <button type="button" className="welcome-banner-close" aria-label="Dismiss" onClick={onDismissWelcome}>×</button>
+        </div>
+      )}
       <div className="container text-center">
         <button
           type="button"
@@ -28,42 +34,14 @@ export default function Header({ searchTerm, setSearchTerm, activeFilterCount, i
             aria-pressed={showRealisticLogo}
           >
             <span className={`logo-flip-inner ${showRealisticLogo ? "is-flipped" : ""}`}>
-              <img className="logo-flip-face logo-flip-front" src="/images/logomadi-elegant.png" alt="bookmybook logo" />
-              <img className="logo-flip-face logo-flip-back" src="/images/logomadi-proposition-realiste.png" alt="bookmybook realistic logo" />
+              <img className="logo-flip-face logo-flip-front" src="/images/logomadi-elegant-white.png" alt="bookmybook logo" />
+              <img className="logo-flip-face logo-flip-back" src="/images/logomadi-back-white.png" alt="bookmybook lemur seen from behind" />
             </span>
           </button>
           <div className="logo-tagline">
             <span>Borrow and share physical books</span>
             <span>with people around you</span>
           </div>
-        </div>
-        <div className="d-flex justify-content-center align-items-center">
-          <input
-            type="text"
-            className="form-control"
-            style={{ maxWidth: "400px" }}
-            placeholder="Search by title or author..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <span
-            className="ms-2 position-relative"
-            style={{ cursor: "pointer" }}
-            data-bs-toggle="offcanvas"
-            data-bs-target="#filterCanvas"
-            aria-controls="filterCanvas"
-          >
-            <img src="/images/filtre.png" alt="Filter" style={{ height: "24px" }} />
-
-            {activeFilterCount > 0 && (
-              <span
-                className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-secondary"
-                style={{ fontSize: "0.6rem", padding: "0.15em 0.3em" }}
-              >
-                {activeFilterCount}
-              </span>
-            )}
-          </span>
         </div>
       </div>
       <SettingsModal
@@ -72,6 +50,9 @@ export default function Header({ searchTerm, setSearchTerm, activeFilterCount, i
         isLoggedIn={isLoggedIn}
         user={user}
         onLoginToggle={onLoginToggle}
+        activeZone={activeZone}
+        zones={zones}
+        onZoneChange={onZoneChange}
       />
     </header>
   );

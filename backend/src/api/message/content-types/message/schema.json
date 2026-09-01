@@ -24,6 +24,12 @@
       "required": true
     },
     "readAt": { "type": "datetime" },
-    "isSystem": { "type": "boolean", "default": false }
+    "isSystem": { "type": "boolean", "default": false },
+    "purpose": {
+      "type": "enumeration",
+      "enum": ["chat", "returnArrangement"],
+      "default": "chat",
+      "required": true
+    }
   }
 }

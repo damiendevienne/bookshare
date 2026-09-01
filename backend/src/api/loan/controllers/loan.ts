@@ -90,7 +90,7 @@ export default factories.createCoreController('api::loan.loan', ({ strapi }) => 
     if (loan.status !== 'requested') return ctx.badRequest('Only pending requests can be accepted.');
     const updated = await strapi.db.query('api::loan.loan').update({ where: { id: loan.id }, data: { status: 'active' } });
     await strapi.db.query('api::book.book').update({ where: { id: loan.book.id }, data: { available: false } });
-    await this.systemMessage(loan, ctx.state.user.id, `You can now discuss and arrange a meeting point to exchange “${loan.book.title}”.`);
+    await this.systemMessage(loan, ctx.state.user.id, `You can now discuss and arrange a time and place for the handover of “${loan.book.title}”.`);
     ctx.body = { data: updated };
   },
 

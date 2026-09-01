@@ -56,6 +56,23 @@ const markBooksWithActiveLoans = async (strapi, books) => {
 
 export default factories.createCoreController('api::book.book', ({ strapi }) => ({
   async find(ctx) {
+    // The public REST filter sanitizer does not expose the zone relation on
+    // older local Strapi databases. Handle the simple zone slug explicitly so
+    // LAN clients and future area URLs always receive the right catalogue.
+    const zoneSlug = typeof ctx.query.zone === 'string' ? ctx.query.zone : null;
+    if (zoneSlug) {
+      const zone = await strapi.db.query('api::zone.zone').findOne({ where: { slug: zoneSlug }, select: ['id', 'name', 'slug'] });
+      if (!zone) return ctx.notFound('Sharing area not found.');
+      const ownerId = ctx.query.filters?.owner?.id?.$eq;
+      const where = { zone: zone.id, publishedAt: { $notNull: true }, ...(ownerId ? { owner: Number(ownerId) } : {}) };
+      const books = await strapi.db.query('api::book.book').findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        populate: { owner: true, image: true, zone: true, loans: { populate: { borrower: true } } },
+      });
+      const data = (await markBooksWithActiveLoans(strapi, books)).map(publicBook);
+      return { data, meta: { pagination: { page: 1, pageSize: data.length, pageCount: data.length ? 1 : 0, total: data.length } } };
+    }
     const response = await super.find(ctx);
     if (Array.isArray(response.data)) {
       response.data = await markBooksWithActiveLoans(strapi, response.data);
@@ -76,7 +93,7 @@ export default factories.createCoreController('api::book.book', ({ strapi }) => 
   async catalogSearch(ctx) {
     const query = String(ctx.query.q || '').trim();
     if (query.length < 2) return ctx.badRequest('Enter at least two characters to search.');
-    const params = new URLSearchParams({ q: query, limit: '8', fields: 'key,title,author_name,first_publish_year,isbn,cover_i,language' });
+    const params = new URLSearchParams({ q: query, limit: '8', fields: 'key,title,author_name,first_publish_year,isbn,cover_i,language,first_sentence,description' });
     try {
       const response = await fetch(`https://openlibrary.org/search.json?${params.toString()}`, { signal: AbortSignal.timeout(6000), headers: { Accept: 'application/json' } });
       if (!response.ok) return ctx.badGateway('The external book catalogue is temporarily unavailable.');
@@ -84,7 +101,7 @@ export default factories.createCoreController('api::book.book', ({ strapi }) => 
       const languageMap = { fre: 'FR', fra: 'FR', eng: 'EN', gre: 'GR', ell: 'GR' };
       ctx.body = { data: (payload.docs || []).filter((book) => book.title).map((book) => ({
         id: book.key, title: book.title, author: book.author_name?.[0] || '', year: book.first_publish_year || null,
-        isbn: book.isbn?.[0] || null, language: languageMap[book.language?.[0]] || null,
+        isbn: book.isbn?.[0] || null, description: Array.isArray(book.first_sentence) ? book.first_sentence[0] : (typeof book.description === 'string' ? book.description : null), language: languageMap[book.language?.[0]] || null,
         coverUrl: book.cover_i ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg` : null,
       })) };
     } catch (error) {
@@ -101,20 +118,53 @@ export default factories.createCoreController('api::book.book', ({ strapi }) => 
     if (imageCount(data.image) > 2) {
       return ctx.badRequest('A book can have at most 2 images.');
     }
-    data.owner = ctx.state.user.id;
-    ctx.request.body = { ...ctx.request.body, data };
-    const response = await super.create(ctx);
+    const requestedZone = data.zone;
+    const connectedZone = requestedZone?.connect?.[0];
+    const connectedZoneId = typeof connectedZone === 'string'
+      ? connectedZone
+      : connectedZone?.documentId || connectedZone?.id;
+    const zoneValue = typeof requestedZone === 'string' ? requestedZone : null;
+    const zoneSlug = typeof requestedZone === 'object' ? requestedZone?.slug : null;
+    let zone = await strapi.db.query('api::zone.zone').findOne({
+      where: connectedZoneId || zoneValue
+        ? { documentId: connectedZoneId || zoneValue }
+        : { slug: zoneSlug || 'heraklion' },
+      select: ['id', 'documentId'],
+    });
+    if (!zone && (zoneValue || zoneSlug)) {
+      zone = await strapi.db.query('api::zone.zone').findOne({
+        where: { slug: zoneValue || zoneSlug },
+        select: ['id', 'documentId'],
+      });
+    }
+    if (!zone) return ctx.badRequest('Please choose a valid sharing area.');
+    const documents = strapi.documents('api::book.book');
+    const draft = await documents.create({
+      data: {
+        ...data,
+        owner: ctx.state.user.id,
+        zone: zone.id,
+      },
+      populate: { owner: true, image: true, zone: true, loans: true },
+    });
     // Catalogue covers are initially URLs. Cache a local Strapi copy so future
     // page loads do not depend on Open Library response time or availability.
-    if (data.catalogSource === 'openlibrary' && data.coverUrl && response.data?.id) {
+    // Attach it to the draft before publishing so both document versions keep
+    // the same media relation in Strapi's Draft & Publish workflow.
+    if (data.catalogSource === 'openlibrary' && data.coverUrl && draft?.id && !data.image) {
       try {
-        const uploaded = await attachCatalogCover(strapi, response.data.id, data.coverUrl, ctx.state.user);
-        response.data.image = uploaded;
+        await attachCatalogCover(strapi, draft.id, data.coverUrl, ctx.state.user);
       } catch (error) {
-        strapi.log.warn(`Unable to cache catalogue cover for book ${response.data.id}: ${error.message}`);
+        strapi.log.warn(`Unable to cache catalogue cover for book ${draft.id}: ${error.message}`);
       }
     }
-    return response;
+    await documents.publish({ documentId: draft.documentId });
+    const createdBook = await documents.findOne({
+      documentId: draft.documentId,
+      status: 'published',
+      populate: { owner: true, image: true, zone: true, loans: true },
+    });
+    return { data: publicBook(createdBook) };
   },
 
   async update(ctx) {
@@ -144,8 +194,12 @@ export default factories.createCoreController('api::book.book', ({ strapi }) => 
         );
       }
     }
-    ctx.request.body = { ...ctx.request.body, data };
-    return super.update(ctx);
+    const updatedBook = await strapi.db.query('api::book.book').update({
+      where: { id: book.id },
+      data,
+      populate: { owner: true, image: true, zone: true, loans: { populate: { borrower: true } } },
+    });
+    return { data: updatedBook, meta: {} };
   },
 
   async delete(ctx) {

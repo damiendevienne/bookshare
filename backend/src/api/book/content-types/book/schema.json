@@ -57,6 +57,7 @@
       "type": "enumeration",
       "enum": [
         "kids",
+        "teenagers",
         "adults"
       ]
     },
@@ -65,6 +66,13 @@
       "relation": "manyToOne",
       "target": "plugin::users-permissions.user",
       "inversedBy": "books"
+    },
+    "zone": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::zone.zone",
+      "inversedBy": "books",
+      "required": true
     },
     "loans": {
       "type": "relation",

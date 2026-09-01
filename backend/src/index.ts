@@ -17,6 +17,43 @@ export default {
    * run jobs, or perform some special logic.
    */
   async bootstrap({ strapi }) {
+    const appUrl = process.env.PUBLIC_APP_URL || 'http://localhost:5174';
+    const usersPermissionsStore = strapi.store({ type: 'plugin', name: 'users-permissions' });
+    const advancedSettings = await usersPermissionsStore.get({ key: 'advanced' }) || {};
+    const emailConfirmationEnabled = process.env.ENABLE_EMAIL_CONFIRMATION === 'true';
+    await usersPermissionsStore.set({ key: 'advanced', value: {
+      ...advancedSettings,
+      email_confirmation: emailConfirmationEnabled,
+      email_confirmation_redirection: `${appUrl}/email-confirmed`,
+      email_reset_password: `${appUrl}/reset-password`,
+    } });
+
+    // The first deployment starts with one active area. Existing books are
+    // assigned to it so adding the required book.zone relation is backwards
+    // compatible with the local catalogue.
+    let heraklion = await strapi.db.query('api::zone.zone').findOne({ where: { slug: 'heraklion' } });
+    if (!heraklion) {
+      heraklion = await strapi.db.query('api::zone.zone').create({
+        data: { name: 'Heraklion', slug: 'heraklion' },
+      });
+    }
+    const booksWithoutZone = await strapi.db.query('api::book.book').findMany({
+      where: { zone: { $null: true } },
+      select: ['id'],
+    });
+    for (const book of booksWithoutZone) {
+      await strapi.db.query('api::book.book').update({ where: { id: book.id }, data: { zone: heraklion.id } });
+    }
+    // Age categories changed from the former kids/adults split to the more
+    // precise Kids (0-10), Teenagers (11-15), Adults (16+) split.
+    const formerKidsBooks = await strapi.db.query('api::book.book').findMany({
+      where: { age: 'kids' },
+      select: ['id'],
+    });
+    for (const book of formerKidsBooks) {
+      await strapi.db.query('api::book.book').update({ where: { id: book.id }, data: { age: 'teenagers' } });
+    }
+
     // Keep the authenticated API role in sync for the custom borrowing and
     // messaging routes. This also makes fresh/local databases work without a
     // manual Content Manager permission step.
@@ -48,6 +85,12 @@ export default {
           data: { action, role: role.id },
         });
       }
+    }
+    const publicRole = await strapi.db.query('plugin::users-permissions.role').findOne({ where: { type: 'public' } });
+    if (publicRole) {
+      const action = 'api::zone.zone.find';
+      const existing = await strapi.db.query('plugin::users-permissions.permission').findOne({ where: { action }, populate: { role: true } });
+      if (!existing) await strapi.db.query('plugin::users-permissions.permission').create({ data: { action, role: publicRole.id } });
     }
   },
 };

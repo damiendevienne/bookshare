@@ -9,7 +9,7 @@ export default function BookCard({ bookData, onClick }) {
   const language = book.language || "Unknown";
   const image = images[0];
   const imageUrl = image
-    ? mediaUrl(image.formats?.thumbnail?.url || image.formats?.small?.url || image.url || image.attributes?.url)
+    ? mediaUrl(image.formats?.small?.url || image.formats?.medium?.url || image.url || image.attributes?.url)
     : book.coverUrl || "/images/open-book.png";
 
   return (

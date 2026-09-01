@@ -5,7 +5,7 @@ function applyTheme(theme) {
   document.body.classList.toggle("theme-dark", theme === "dark");
 }
 
-export default function SettingsModal({ show, onClose, isLoggedIn, user, onLoginToggle }) {
+export default function SettingsModal({ show, onClose, isLoggedIn, user, onLoginToggle, activeZone, zones = [], onZoneChange }) {
   const [language, setLanguage] = useState(() => localStorage.getItem("preferredLanguage") || "en");
   const [theme, setTheme] = useState(() => localStorage.getItem("preferredTheme") || "light");
 
@@ -31,6 +31,14 @@ export default function SettingsModal({ show, onClose, isLoggedIn, user, onLogin
             <button type="button" className="btn-close" onClick={onClose} aria-label="Close settings" />
           </div>
           <div className="modal-body">
+            <div className="settings-field">
+              <label htmlFor="settings-zone">📍 Sharing area</label>
+              <select id="settings-zone" className="form-select" value={activeZone || ""} onChange={(event) => onZoneChange?.(event.target.value)}>
+                {zones.map((zone) => <option value={zone.slug} key={zone.slug}>{zone.name}</option>)}
+              </select>
+              <small className="text-muted">Only books listed in this area are shown.</small>
+            </div>
+
             <div className="settings-field">
               <label htmlFor="settings-language"><Globe2 size={17} /> Interface language</label>
               <select id="settings-language" className="form-select" value={language} onChange={updateLanguage}>
@@ -67,7 +75,7 @@ export default function SettingsModal({ show, onClose, isLoggedIn, user, onLogin
             </div>
 
             <div className="settings-extra text-muted small">
-              <strong>More options</strong><br />Location and bug reports will be available here as the app grows.
+              <strong>More options</strong><br />Feedback and bug reports will be available here as the app grows.
             </div>
           </div>
         </div>

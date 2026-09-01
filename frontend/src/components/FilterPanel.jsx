@@ -29,8 +29,9 @@ export default function FilterPanel({ filters, setFilters }) {
             onChange={(e) => setFilters({ ...filters, age: e.target.value })}
           >
             <option value="">All</option>
-            <option value="kids">Kids</option>
-            <option value="adults">Adults</option>
+            <option value="kids">Kids (0–10)</option>
+            <option value="teenagers">Teenagers (11–15)</option>
+            <option value="adults">Adults (16+)</option>
           </select>
         </div>
 

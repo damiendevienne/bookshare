@@ -63,8 +63,9 @@ export default factories.createCoreController('api::conversation.conversation', 
     if (!conversation) return ctx.notFound('Conversation not found.');
     const content = String(ctx.request.body?.content || '').trim();
     if (!content) return ctx.badRequest('Message content is required.');
+    const purpose = ctx.request.body?.purpose === 'returnArrangement' ? 'returnArrangement' : 'chat';
     const message = await strapi.db.query('api::message.message').create({
-      data: { conversation: conversation.id, sender: userId, content, isSystem: false },
+      data: { conversation: conversation.id, sender: userId, content, isSystem: false, purpose },
       populate: { sender: true },
     });
     await strapi.db.query('api::conversation.conversation').update({

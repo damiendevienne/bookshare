@@ -6,6 +6,8 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: "0.0.0.0",
+    // Allow temporary public LocalTunnel URLs used for friend testing.
+    allowedHosts: [".loca.lt"],
     // Keep the shared/local URL stable; Vite may still fall back if occupied.
     port: 5174,
     proxy: {

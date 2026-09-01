@@ -4,7 +4,7 @@ import BookActionsModal from "./BookActionsModal";
 import AddBookModal from "./AddBookModal";
 import api from "../../api";
 
-export default function MyBooksModal({ show, onClose, user, onBookCreated, onBookUpdated }) {
+export default function MyBooksModal({ show, onClose, user, onBookCreated, onBookUpdated, activeZone, activeZoneDocumentId }) {
   const [books, setBooks] = useState([]);
   const [expandedBookId, setExpandedBookId] = useState(null);
   const [activeBook, setActiveBook] = useState(null);
@@ -15,12 +15,13 @@ export default function MyBooksModal({ show, onClose, user, onBookCreated, onBoo
     if (show) {
       api
         .get(
-          `/api/books?filters[owner][id][$eq]=${user.id}&populate[0]=image&populate[1]=loans&populate[2]=loans.borrower`
+          `/api/books?filters[owner][id][$eq]=${user.id}&zone=${encodeURIComponent(activeZone || "heraklion")}&populate[0]=image&populate[1]=loans&populate[2]=loans.borrower`
         )
         .then((res) => {
           const booksData = res.data.data.map((item) => {
             const firstImage =
-              item.image?.[0]?.formats?.thumbnail?.url ||
+              item.image?.[0]?.formats?.small?.url ||
+              item.image?.[0]?.formats?.medium?.url ||
               item.image?.[0]?.url ||
               null;
 
@@ -36,6 +37,9 @@ export default function MyBooksModal({ show, onClose, user, onBookCreated, onBoo
               language: item.language,
               age: item.age,
               image: firstImage,
+              images: item.image || [],
+              imageRecords: item.image || [],
+              catalogSource: item.catalogSource || null,
               coverUrl: item.coverUrl || null,
             };
           });
@@ -43,7 +47,7 @@ export default function MyBooksModal({ show, onClose, user, onBookCreated, onBoo
         })
         .catch((err) => console.error(err));
     }
-  }, [show, user?.id, refreshToken]);
+  }, [show, user?.id, refreshToken, activeZone]);
 
   if (!show) return null;
 
@@ -152,6 +156,8 @@ export default function MyBooksModal({ show, onClose, user, onBookCreated, onBoo
           setRefreshToken((value) => value + 1);
           onBookCreated?.(book);
         }}
+        zoneSlug={activeZone}
+        zoneDocumentId={activeZoneDocumentId}
       />
     </div>
   );

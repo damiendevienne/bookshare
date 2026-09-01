@@ -29,7 +29,8 @@ export default function LoginModal({ show, onClose, onLoginSuccess }) {
       onClose();
     } catch (err) {
       if (err.response?.status === 400) {
-        setError("Incorrect username or password.");
+        const message = err.response?.data?.error?.message || "";
+        setError(message.toLowerCase().includes("confirmed") ? "Please confirm your email address before logging in." : "Incorrect username or password.");
       } else {
         setError("Unexpected error occurred.");
         console.error("Login error:", err);
@@ -59,12 +60,18 @@ export default function LoginModal({ show, onClose, onLoginSuccess }) {
         password,
       });
 
+      // With email confirmation enabled Strapi deliberately returns no JWT.
+      // Do not sign the new account in until its email address is verified.
+      if (!res.data.jwt) {
+        setInfoMessage("Your account was created. Check your email to confirm your address before logging in.");
+        setMode("login");
+        setPassword("");
+        return;
+      }
       const jwt = res.data.jwt;
       const user = res.data.user;
-
       localStorage.setItem("jwt", jwt);
       localStorage.setItem("user", JSON.stringify(user));
-
       onLoginSuccess(user, jwt);
       onClose();
     } catch (err) {

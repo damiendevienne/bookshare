@@ -136,6 +136,7 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
                 {book.language && <span className="badge bg-warning">{book.language}</span>}
               </div>
               <hr />
+              <h6 className="text-muted mt-3">{book.catalogSource === "openlibrary" ? "Summary" : "Comment"}</h6>
               <div>{renderedDescription}</div>
             </div>
 

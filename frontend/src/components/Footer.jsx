@@ -5,7 +5,7 @@ import MessagesModal from "./messages/MessagesModal";
 import api from "../api";
 
 
-export default function Footer({ isLoggedIn, user = {}, onLoginToggle, onBookCreated, onBookUpdated }) {
+export default function Footer({ isLoggedIn, user = {}, onLoginToggle, onBookCreated, onBookUpdated, activeZone, activeZoneDocumentId }) {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showMyBooks, setShowMyBooks] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
@@ -64,7 +64,7 @@ export default function Footer({ isLoggedIn, user = {}, onLoginToggle, onBookCre
             >
               <MessageCircle size={22} color="var(--bookmybook-navy)" />
               {unreadMessages > 0 && <span className="position-absolute translate-middle badge rounded-pill bg-danger" style={{ top: "5px", marginLeft: "25px" }}>{unreadMessages > 99 ? "99+" : unreadMessages}</span>}
-              <small style={{ color: "var(--bookmybook-navy)" }}>Messages</small>
+              <small style={{ color: "var(--bookmybook-navy)" }}>Discussions</small>
             </button>
           )}
 
@@ -144,6 +144,8 @@ export default function Footer({ isLoggedIn, user = {}, onLoginToggle, onBookCre
           show={showMyBooks}
           onClose={() => setShowMyBooks(false)}
           user={user} // pass the logged-in user object
+          activeZone={activeZone}
+          activeZoneDocumentId={activeZoneDocumentId}
           onBookCreated={onBookCreated}
           onBookUpdated={onBookUpdated}
         />

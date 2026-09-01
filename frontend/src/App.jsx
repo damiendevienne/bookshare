@@ -7,6 +7,7 @@ import BookModal from "./components/BookModal";
 import Footer from "./components/Footer";
 import LoginModal from "./components/LoginModal";
 import SiteFooter from "./components/SiteFooter";
+import ZoneChooser from "./components/ZoneChooser";
 
 import "./App.css";
 
@@ -20,8 +21,15 @@ function normalizeBookAvailability(bookEntry) {
 
 function App() {
   const [books, setBooks] = useState([]);
+  const [zones, setZones] = useState([]);
+  const [activeZone, setActiveZone] = useState(() => {
+    const pathZone = window.location.pathname.split("/")[1];
+    return pathZone || localStorage.getItem("activeZone") || "heraklion";
+  });
+  const [showZoneChooser, setShowZoneChooser] = useState(() => !window.location.pathname.split("/")[1] && !localStorage.getItem("activeZone"));
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState({ age: "", available: "", language: "", owner: "" });
+  const [sortOrder, setSortOrder] = useState("newest");
   const [selectedBook, setSelectedBook] = useState(null);
   const [showModal, setShowModal] = useState(false);
   //login new const
@@ -29,6 +37,8 @@ function App() {
     !!localStorage.getItem("jwt")
   );
   const [showLogin, setShowLogin] = useState(false);
+  const [welcomeMessage, setWelcomeMessage] = useState("");
+  const [catalogueState, setCatalogueState] = useState("loading");
   const [user, setUser] = useState(
     JSON.parse(localStorage.getItem("user")) || null
   );
@@ -37,9 +47,16 @@ function App() {
     document.body.classList.toggle("theme-dark", localStorage.getItem("preferredTheme") === "dark");
   }, []);
 
+  useEffect(() => {
+    if (!welcomeMessage) return undefined;
+    const timer = window.setTimeout(() => setWelcomeMessage(""), 5000);
+    return () => window.clearTimeout(timer);
+  }, [welcomeMessage]);
+
   const handleLoginSuccess = (user) => {
     setIsLoggedIn(true);
     setUser(user);
+    setWelcomeMessage(`Welcome, ${user?.username || "reader"}!`);
   };
 
   const handleLoginToggle = () => {
@@ -59,9 +76,31 @@ function App() {
     setShowModal(false); // close modal when user clicks on owner
   };
 
+  const catalogueUrl = `/api/books?populate=*&zone=${encodeURIComponent(activeZone)}`;
+
+  const handleZoneChange = (slug) => {
+    if (!slug) return;
+    setActiveZone(slug);
+    localStorage.setItem("activeZone", slug);
+    window.history.pushState({}, "", `/${slug}`);
+    setShowZoneChooser(false);
+  };
+
+  useEffect(() => {
+    api.get("/api/zones")
+      .then((response) => {
+        const availableZones = response.data.data || [];
+        setZones(availableZones);
+        if (availableZones.length && !availableZones.some((zone) => zone.slug === activeZone)) {
+          handleZoneChange(availableZones[0].slug);
+        }
+      })
+      .catch(() => setZones([{ name: "Heraklion", slug: "heraklion" }]));
+  }, [activeZone]);
+
   const handleBookCreated = () => {
     api
-      .get("/api/books?populate=*")
+      .get(catalogueUrl)
       .then((res) => setBooks(res.data.data.map(normalizeBookAvailability)))
       .catch((err) => console.error("Unable to refresh the book catalogue:", err));
   };
@@ -77,7 +116,7 @@ function App() {
       }));
     }
     api
-      .get("/api/books?populate=*")
+      .get(catalogueUrl)
       .then((res) => setBooks(res.data.data.map(normalizeBookAvailability)))
       .catch((err) => console.error("Unable to refresh the book catalogue:", err));
   };
@@ -87,22 +126,34 @@ function App() {
     let cancelled = false;
     const refreshCatalogue = () => {
       api
-        .get("/api/books?populate=*")
+        .get(catalogueUrl)
         .then((res) => {
-          if (!cancelled) setBooks(res.data.data.map(normalizeBookAvailability));
+          if (!cancelled) {
+            setBooks(res.data.data.map(normalizeBookAvailability));
+            setCatalogueState("ready");
+          }
         })
         .catch((err) => {
-          if (!cancelled) console.error("Unable to refresh the book catalogue:", err);
+          if (!cancelled) {
+            setCatalogueState(navigator.onLine ? "error" : "offline");
+            console.error("Unable to refresh the book catalogue:", err);
+          }
         });
     };
 
+    const handleOffline = () => { if (!cancelled) setCatalogueState("offline"); };
+    const handleOnline = () => { if (!cancelled) refreshCatalogue(); };
+    window.addEventListener("offline", handleOffline);
+    window.addEventListener("online", handleOnline);
     refreshCatalogue();
     const timer = window.setInterval(refreshCatalogue, 5000);
     return () => {
       cancelled = true;
       window.clearInterval(timer);
+      window.removeEventListener("offline", handleOffline);
+      window.removeEventListener("online", handleOnline);
     };
-  }, []);
+  }, [catalogueUrl]);
 
 
   // Compute counts only when books change
@@ -155,22 +206,84 @@ function App() {
     return true;
   });
   const activeFilterCount = Object.values(filters).filter((v) => v).length;
+  const sortedBooks = [...filteredBooks].sort((leftEntry, rightEntry) => {
+    const left = leftEntry.attributes || leftEntry;
+    const right = rightEntry.attributes || rightEntry;
+    if (sortOrder === "title-asc") return String(left.title || "").localeCompare(String(right.title || ""), undefined, { sensitivity: "base" });
+    if (sortOrder === "title-desc") return String(right.title || "").localeCompare(String(left.title || ""), undefined, { sensitivity: "base" });
+    if (sortOrder === "author-asc") return String(left.author || "").localeCompare(String(right.author || ""), undefined, { sensitivity: "base" });
+    return new Date(right.createdAt || 0) - new Date(left.createdAt || 0);
+  });
+  const libraryStats = useMemo(() => books.reduce((stats, entry) => {
+    const book = entry.attributes || entry;
+    stats.total += 1;
+    if (book.available) stats.available += 1;
+    if ((book.loans || []).some((loan) => loan.status === "active" && loan.borrowerReceivedAt && !loan.lenderReceivedBackAt)) {
+      stats.onLoan += 1;
+    }
+    return stats;
+  }, { total: 0, available: 0, onLoan: 0 }), [books]);
+  const catalogueIsFiltered = Boolean(searchTerm.trim() || activeFilterCount);
 
   return (
     <>
       <Header
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        activeFilterCount={activeFilterCount}
         isLoggedIn={isLoggedIn}
         user={user}
         onLoginToggle={handleLoginToggle}
+        activeZone={activeZone}
+        zones={zones}
+        onZoneChange={handleZoneChange}
+        welcomeMessage={welcomeMessage}
+        onDismissWelcome={() => setWelcomeMessage("")}
       />
+      <div className="catalog-sticky-controls">
+        <div className="container">
+          <div className="catalog-search-row">
+            <input type="text" className="form-control" placeholder="Search by title or author..." value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} />
+            <button type="button" className="catalog-filter-trigger position-relative" data-bs-toggle="offcanvas" data-bs-target="#filterCanvas" aria-controls="filterCanvas" aria-label="Open book filters">
+              <img src="/images/filtre.png" alt="" aria-hidden="true" />
+              {activeFilterCount > 0 && <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-secondary">{activeFilterCount}</span>}
+            </button>
+          </div>
+          <div className="library-summary" aria-live="polite">
+            <span><strong>{catalogueIsFiltered ? `${sortedBooks.length}/${libraryStats.total}` : libraryStats.total}</strong> {catalogueIsFiltered ? "shown" : libraryStats.total === 1 ? "book" : "books"}</span>
+            <span><strong>{libraryStats.available}</strong> available</span>
+            <span><strong>{libraryStats.onLoan}</strong> on loan</span>
+          </div>
+        </div>
+      </div>
       <FilterPanel filters={filters} setFilters={setFilters} />
 
-      <div className="container py-4">
+      {catalogueState !== "ready" && (
+        <div className="container pt-3">
+          <div className={`alert ${catalogueState === "offline" ? "alert-warning" : "alert-danger"} d-flex align-items-center justify-content-between gap-3`} role="alert">
+            <span>
+              {catalogueState === "offline"
+                ? "You appear to be offline. The book catalogue cannot be loaded right now."
+                : catalogueState === "loading"
+                ? "Loading the book catalogue…"
+                : "The book catalogue could not be loaded. Please try again."}
+            </span>
+            {catalogueState !== "loading" && <button type="button" className="btn btn-sm btn-outline-dark" onClick={() => window.location.reload()}>Try again</button>}
+          </div>
+        </div>
+      )}
+
+      <div className="container pt-3 pb-4">
+        <div className="library-sort-row">
+          <label className="library-sort-label" htmlFor="library-sort">
+            <span className="visually-hidden">Sort by</span>
+            <select id="library-sort" className="form-select form-select-sm" value={sortOrder} onChange={(event) => setSortOrder(event.target.value)}>
+              <option value="newest">Newest first</option>
+              <option value="title-asc">Title: A–Z</option>
+              <option value="title-desc">Title: Z–A</option>
+              <option value="author-asc">Author: A–Z</option>
+            </select>
+          </label>
+        </div>
         <div className="row g-3" style={{ paddingBottom: "80px" }}>
-          {filteredBooks.map((b) => (
+          {sortedBooks.map((b) => (
             <BookCard
             key={b.id}
             bookData={b}
@@ -183,6 +296,10 @@ function App() {
         </div>
       </div>
       <SiteFooter />
+
+      {showZoneChooser && zones.length > 0 && (
+        <ZoneChooser zones={zones} activeZone={activeZone} onSelect={handleZoneChange} />
+      )}
 
       {/* Modal */}
       <BookModal
@@ -201,6 +318,8 @@ function App() {
         user={user}
         onBookCreated={handleBookCreated}
         onBookUpdated={handleBookUpdated}
+        activeZone={activeZone}
+        activeZoneDocumentId={zones.find((zone) => zone.slug === activeZone)?.documentId}
       />
       <LoginModal
         show={showLogin}

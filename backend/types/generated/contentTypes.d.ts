@@ -441,7 +441,7 @@ export interface ApiBookBook extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
-    age: Schema.Attribute.Enumeration<['kids', 'adults']>;
+    age: Schema.Attribute.Enumeration<['kids', 'teenagers', 'adults']>;
     author: Schema.Attribute.String;
     available: Schema.Attribute.Boolean;
     catalogId: Schema.Attribute.String;
@@ -470,6 +470,8 @@ export interface ApiBookBook extends Struct.CollectionTypeSchema {
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    zone: Schema.Attribute.Relation<'manyToOne', 'api::zone.zone'> &
+      Schema.Attribute.Required;
   };
 }
 
@@ -592,6 +594,9 @@ export interface ApiMessageMessage extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Private;
     publishedAt: Schema.Attribute.DateTime;
+    purpose: Schema.Attribute.Enumeration<['chat', 'returnArrangement']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'chat'>;
     readAt: Schema.Attribute.DateTime;
     sender: Schema.Attribute.Relation<
       'manyToOne',
@@ -615,6 +620,7 @@ export interface ApiZoneZone extends Struct.CollectionTypeSchema {
     draftAndPublish: false;
   };
   attributes: {
+    books: Schema.Attribute.Relation<'oneToMany', 'api::book.book'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
