@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import { HeartCrack } from "lucide-react";
 import api from "./api";
 import Header from "./components/Header";
 import BookCard from "./components/BookCard";
@@ -288,7 +289,6 @@ function App() {
             <span><strong>{catalogueIsFiltered ? `${sortedBooks.length}/${libraryStats.total}` : libraryStats.total}</strong> {catalogueIsFiltered ? "shown" : libraryStats.total === 1 ? "book" : "books"}</span>
             <span><strong>{libraryStats.available}</strong> available</span>
             <span><strong>{libraryStats.onLoan}</strong> on loan</span>
-            {favoritesOnly && <button type="button" className="favorites-filter-chip" onClick={() => setFavoritesOnly(false)}>Favorites only ×</button>}
           </div>
         </div>
       </div>
@@ -311,6 +311,7 @@ function App() {
 
       <div className="container pt-3 pb-4">
         <div className="library-sort-row">
+          {favoritesOnly && <button type="button" className="favorites-filter-chip" onClick={() => setFavoritesOnly(false)}>♥ Favorites only ×</button>}
           <label className="library-sort-label" htmlFor="library-sort">
             <span className="visually-hidden">Sort by</span>
             <select id="library-sort" className="form-select form-select-sm" value={sortOrder} onChange={(event) => setSortOrder(event.target.value)}>
@@ -321,6 +322,11 @@ function App() {
             </select>
           </label>
         </div>
+        {favoritesOnly && sortedBooks.length === 0 && <div className="favorites-empty-state">
+          <span className="favorites-empty-icon" aria-hidden="true"><HeartCrack size={34} strokeWidth={1.6} /></span>
+          <strong>{favoriteBookIds.length === 0 ? "No favorites yet." : "No favorites match your current filters."}</strong>
+          <span>{favoriteBookIds.length === 0 ? "Tap the heart on any book to save it to your favorites." : "Try changing your search or filters to see more of your saved books."}</span>
+        </div>}
         <div className="row g-3" style={{ paddingBottom: "80px" }}>
           {sortedBooks.map((b) => (
             <BookCard

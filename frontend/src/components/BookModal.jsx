@@ -80,20 +80,15 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
               <div>
                 <h5 className="modal-title">{book.title}</h5>
                 <h6 className="modal-subtitle">{book.author}</h6>
-                <div className="book-owner-row">
-                  <small className="owner">
-                    Proposed by{" "}
-                    <span
-                      style={{ cursor: "pointer", color: "var(--bookmybook-navy)" }}
-                      onClick={() => setShowOwnerModal(true)}
-                    >
-                      {owner}
-                    </span>
-                  </small>
-                  <button type="button" className={`book-modal-favorite-button ${isFavorite ? "is-favorite" : ""}`} aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"} aria-pressed={isFavorite} onClick={onFavoriteToggle}>
-                    <Heart size={21} fill={isFavorite ? "currentColor" : "none"} />
-                  </button>
-                </div>
+                <small className="owner">
+                  Proposed by{" "}
+                  <span
+                    style={{ cursor: "pointer", color: "var(--bookmybook-navy)" }}
+                    onClick={() => setShowOwnerModal(true)}
+                  >
+                    {owner}
+                  </span>
+                </small>
               </div>
               <button type="button" className="btn-close" onClick={onClose}></button>
             </div>
@@ -135,11 +130,16 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
                     <span className="visually-hidden">Next</span>
                   </button>
                 </div>
-              ) : book.coverUrl ? <img src={book.coverUrl} className="d-block mx-auto mb-3" alt={book.title} style={{ maxHeight: "400px", maxWidth: "100%", objectFit: "contain" }} /> : null}
+              ) : <img src={book.coverUrl || "/images/open-book.png"} className="d-block mx-auto mb-3" alt={book.title || "Book cover"} style={{ maxHeight: "400px", maxWidth: "100%", objectFit: "contain" }} />}
 
-              <div className="mb-2">
-                {book.age && <span className="badge bg-primary me-2">{book.age}</span>}
-                {book.language && <span className="badge bg-warning">{book.language}</span>}
+              <div className="book-details-badge-row mb-2">
+                <div>
+                  {book.age && <span className="badge bg-primary me-2">{book.age}</span>}
+                  {book.language && <span className="badge bg-warning">{book.language}</span>}
+                </div>
+                <button type="button" className={`book-modal-favorite-button ${isFavorite ? "is-favorite" : ""}`} aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"} aria-pressed={isFavorite} onClick={onFavoriteToggle}>
+                  <Heart size={24} fill={isFavorite ? "currentColor" : "none"} />
+                </button>
               </div>
               <hr />
               <h6 className="text-muted mt-3">{book.catalogSource === "openlibrary" ? "Summary" : "Comment"}</h6>

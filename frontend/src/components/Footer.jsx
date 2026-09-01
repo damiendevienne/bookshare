@@ -53,8 +53,7 @@ export default function Footer({ isLoggedIn, user = {}, onLoginToggle, onBookCre
               aria-pressed={favoritesOnly}
             >
               <Heart size={22} fill={favoritesOnly ? "currentColor" : "none"} />
-              {favoritesCount > 0 && <span className="position-absolute translate-middle badge rounded-pill favorite-count-badge" style={{ top: "5px", marginLeft: "25px" }}>{favoritesCount > 99 ? "99+" : favoritesCount}</span>}
-              <small>Favorites</small>
+              <small>Favorites{favoritesCount > 0 ? ` (${favoritesCount > 99 ? "99+" : favoritesCount})` : ""}</small>
             </button>
           )}
 
