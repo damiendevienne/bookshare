@@ -632,9 +632,16 @@ export interface ApiZoneZone extends Struct.CollectionTypeSchema {
   };
   attributes: {
     books: Schema.Attribute.Relation<'oneToMany', 'api::book.book'>;
+    countryCode: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 2;
+      }> &
+      Schema.Attribute.DefaultTo<'GR'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    enabled: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<'oneToMany', 'api::zone.zone'> &
       Schema.Attribute.Private;
