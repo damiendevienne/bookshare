@@ -35,6 +35,17 @@ export default {
       email_confirmation_redirection: `${appUrl}/email-confirmed`,
       email_reset_password: `${appUrl}/reset-password`,
     } });
+    const configuredSender = process.env.EMAIL_DEFAULT_FROM;
+    if (configuredSender) {
+      const emailSettings = await usersPermissionsStore.get({ key: 'email' }) || {};
+      for (const templateName of ['email_confirmation', 'reset_password']) {
+        const template = emailSettings[templateName];
+        if (!template?.options) continue;
+        template.options.from = { name: 'BookMyBook', email: configuredSender };
+        template.options.response_email = process.env.EMAIL_DEFAULT_REPLY_TO || configuredSender;
+      }
+      await usersPermissionsStore.set({ key: 'email', value: emailSettings });
+    }
 
     // The first deployment starts with one active area. Existing books are
     // assigned to it so adding the required book.zone relation is backwards
