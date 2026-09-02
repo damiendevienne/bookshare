@@ -12,6 +12,7 @@ export default function LoginModal({ show, onClose, onLoginSuccess }) {
   const [charterAccepted, setCharterAccepted] = useState(false);
   const [showCharter, setShowCharter] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [registering, setRegistering] = useState(false);
   const [mode, setMode] = useState("login"); // "login" | "forgot" | "register"
 
   if (!show) return null;
@@ -56,6 +57,7 @@ export default function LoginModal({ show, onClose, onLoginSuccess }) {
   };
 
   const handleRegister = async () => {
+    if (registering) return;
     setError("");
     setInfoMessage("");
     if (!charterAccepted) {
@@ -66,6 +68,7 @@ export default function LoginModal({ show, onClose, onLoginSuccess }) {
       setError("Password must be at least 8 characters and include at least one letter and one number.");
       return;
     }
+    setRegistering(true);
     try {
       const res = await api.post("/api/auth/local/register", {
         username,
@@ -95,6 +98,8 @@ export default function LoginModal({ show, onClose, onLoginSuccess }) {
         setError("Unexpected error occurred.");
         console.error("Register error:", err);
       }
+    } finally {
+      setRegistering(false);
     }
   };
 
@@ -106,10 +111,12 @@ export default function LoginModal({ show, onClose, onLoginSuccess }) {
       className="modal fade show"
       style={{ display: "block", backgroundColor: "rgba(0,0,0,0.5)" }}
       tabIndex="-1"
-      onClick={onClose}
+      onClick={(event) => { if (!registering && event.target === event.currentTarget) onClose(); }}
+      aria-busy={registering}
     >
       <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-content">
+        <div className="modal-content login-modal-content">
+          {registering && <div className="book-saving-overlay" role="status"><span>Creating your account…</span></div>}
           <div className="modal-header">
             <h5 className="modal-title">
               {mode === "login"

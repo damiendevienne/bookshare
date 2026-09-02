@@ -489,6 +489,7 @@
 .book-editor {
   position: relative;
 }
+.login-modal-content { position: relative; }
 
 .password-field { position: relative; }
 .password-field .form-control { padding-right: 2.5rem; }

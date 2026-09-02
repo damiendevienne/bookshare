@@ -39,7 +39,7 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(
     !!sessionStorage.getItem("jwt")
   );
-  const [showLogin, setShowLogin] = useState(false);
+  const [showLogin, setShowLogin] = useState(() => new URLSearchParams(window.location.search).get("login") === "1");
   const [welcomeMessage, setWelcomeMessage] = useState("");
   const [catalogueState, setCatalogueState] = useState("loading");
   const [user, setUser] = useState(
