@@ -1,4 +1,11 @@
 export default () => ({
+  'users-permissions': {
+    config: {
+      register: {
+        allowedFields: ['communityCharterAccepted', 'favoriteBookIds'],
+      },
+    },
+  },
   email: {
     config: {
       // Use sendmail for local development. Set EMAIL_PROVIDER=nodemailer and

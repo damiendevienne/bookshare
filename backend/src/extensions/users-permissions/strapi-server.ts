@@ -1,22 +1,22 @@
 // @ts-nocheck
 
 export default (plugin) => {
-  const originalRegister = plugin.controllers.auth.register;
+  const originalAuthFactory = plugin.controllers.auth;
+  plugin.controllers.auth = ({ strapi }) => {
+    const originalAuth = originalAuthFactory({ strapi });
+    const originalRegister = originalAuth.register;
 
-  plugin.controllers.auth.register = async (ctx) => {
-    const body = ctx.request.body || {};
-    const charterAccepted = body.communityCharterAccepted === true || body.communityCharterAccepted === 'true';
-    delete body.communityCharterAccepted;
+    originalAuth.register = async (ctx) => {
+      const body = ctx.request.body || {};
+      const charterAccepted = body.communityCharterAccepted === true || body.communityCharterAccepted === 'true';
+      if (!charterAccepted) {
+        return ctx.badRequest('You must accept the Community Charter to create an account.');
+      }
+      body.favoriteBookIds = [];
+      await originalRegister(ctx);
+    };
 
-    await originalRegister(ctx);
-
-    const createdUserId = ctx.body?.user?.id;
-    if (charterAccepted && createdUserId) {
-      await strapi.db.query('plugin::users-permissions.user').update({
-        where: { id: createdUserId },
-        data: { communityCharterAccepted: true },
-      });
-    }
+    return originalAuth;
   };
 
   return plugin;
