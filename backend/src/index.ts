@@ -69,7 +69,7 @@ export default {
       'api::book.book.find', 'api::book.book.findOne',
       'api::book.book.create',
       'api::book.book.update', 'api::book.book.delete',
-      'plugin::upload.upload.upload',
+      'plugin::upload.content-api.upload',
       'api::loan.request', 'api::loan.status', 'api::loan.accept', 'api::loan.refuse', 'api::loan.confirmReceived',
       'api::loan.confirmLent', 'api::loan.confirmReturned',
       'api::loan.confirmReceivedBack', 'api::conversation.mine',

@@ -4,6 +4,22 @@ import api from "../../api";
 const initialForm = { title: "", author: "", summary: "", ownerComment: "", language: "FR", age: "adults", available: true, coverUrl: "", isbn: "", catalogSource: "", catalogId: "" };
 const MAX_IMAGES = 2;
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+const MAX_SOURCE_IMAGE_SIZE = 20 * 1024 * 1024;
+const MAX_IMAGE_DIMENSION = 1800;
+
+async function compressImage(file) {
+  if (file.size <= MAX_IMAGE_SIZE) return file;
+  const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+  const scale = Math.min(1, MAX_IMAGE_DIMENSION / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+  canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+  canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.82));
+  if (!blob || blob.size > MAX_IMAGE_SIZE) throw new Error("IMAGE_TOO_LARGE");
+  return new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg", lastModified: Date.now() });
+}
 
 export default function AddBookModal({ show, onClose, onCreated, zoneSlug = "heraklion", zoneDocumentId }) {
   const [form, setForm] = useState(initialForm);
@@ -41,18 +57,25 @@ export default function AddBookModal({ show, onClose, onCreated, zoneSlug = "her
     event.preventDefault(); setError(""); setSaving(true);
     try {
       let imageIds;
-      if (images.length) { const files = new FormData(); images.forEach((file) => files.append("files", file)); const upload = await api.post("/api/upload", files); imageIds = upload.data.map((item) => item.id); }
+      if (images.length) { const optimizedImages = await Promise.all(images.map(compressImage)); const files = new FormData(); optimizedImages.forEach((file) => files.append("files", file)); const upload = await api.post("/api/upload", files); imageIds = upload.data.map((item) => item.id); }
       const zoneIdentifier = zoneDocumentId || zoneSlug;
       const data = { title: form.title.trim(), author: form.author.trim(), language: form.language, age: form.age, available: form.available, summary: form.summary.trim() || null, ownerComment: form.ownerComment.trim() || null, zone: { connect: [zoneIdentifier] }, ...(form.coverUrl && !images.length && { coverUrl: form.coverUrl }), ...(form.isbn && { isbn: form.isbn.trim() }), ...(form.catalogSource && { catalogSource: form.catalogSource }), ...(form.catalogId && { catalogId: form.catalogId }), ...(imageIds?.length && { image: imageIds }) };
       const response = await api.post("/api/books", { data }); onCreated(response.data.data); closeAndReset();
-    } catch (err) { setError(err.response?.data?.error?.message || "Unable to add this book."); } finally { setSaving(false); }
+    } catch (err) {
+      const status = err.response?.status;
+      setError(status === 413 || err.message === "IMAGE_TOO_LARGE"
+        ? "This image could not be compressed enough. Please choose a smaller image."
+        : status === 403 && images.length
+          ? "You don't have permission to upload images. Please try again or contact support."
+          : err.response?.data?.error?.message || "Unable to add this book.");
+    } finally { setSaving(false); }
   };
   const handleImagesChange = (event) => {
     const selected = Array.from(event.target.files || []).slice(0, 1);
     const combined = [...images, ...selected];
     if (combined.length > MAX_IMAGES) { setError(`You can add up to ${MAX_IMAGES} images per book.`); event.target.value = ""; return; }
-    const invalid = selected.find((file) => !file.type.startsWith("image/") || file.size > MAX_IMAGE_SIZE);
-    if (invalid) { setImages([]); setError(`Each image must be an image file smaller than 5 MB.`); event.target.value = ""; return; }
+    const invalid = selected.find((file) => !file.type.startsWith("image/") || file.size > MAX_SOURCE_IMAGE_SIZE);
+    if (invalid) { setImages([]); setError("Please choose an image file smaller than 20 MB."); event.target.value = ""; return; }
     setError(""); setImages(combined); setShowImageChoices(false); event.target.value = "";
   };
   const addImage = () => {
