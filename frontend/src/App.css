@@ -487,6 +487,23 @@
 }
 
 .book-editor {
+  position: relative;
+}
+
+.book-saving-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--bookmybook-navy, #18324a);
+  font-weight: 600;
+  pointer-events: all;
+}
+
+.book-editor {
   max-height: calc(100vh - 2rem);
   overflow: hidden;
 }

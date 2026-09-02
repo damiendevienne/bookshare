@@ -99,13 +99,15 @@ export default function BookActionsModal({ book, onClose, onUpdate, onOpenConver
       className="modal fade show"
       style={{ display: "block", backgroundColor: "rgba(0,0,0,0.5)" }}
       tabIndex="-1"
-      onClick={onClose}
+      onClick={(event) => { if (!saving && event.target === event.currentTarget) onClose(); }}
+      aria-busy={saving}
     >
       <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
         <div className="modal-content book-editor">
+          {saving && <div className="book-saving-overlay" role="status"><span>Saving…</span></div>}
           <div className="modal-header">
             <h5 className="modal-title">Manage this book</h5>
-            <button type="button" className="btn-close" onClick={onClose}></button>
+            <button type="button" className="btn-close" onClick={onClose} disabled={saving}></button>
           </div>
           <form className="modal-body" onSubmit={saveDetails}>
             {error && <div className="alert alert-danger mb-0">{error}</div>}
@@ -114,7 +116,7 @@ export default function BookActionsModal({ book, onClose, onUpdate, onOpenConver
                 Open the discussion with the borrower
               </a>
             )}
-            <div className="book-editor-sections">
+            <fieldset className="book-editor-sections border-0 p-0 m-0" disabled={saving}>
               <section className="book-editor-section">
                 <h6 className="book-editor-section-title">The book</h6>
                 {imported ? <div className="catalog-book-summary">
@@ -150,8 +152,8 @@ export default function BookActionsModal({ book, onClose, onUpdate, onOpenConver
                   <p>{available ? "Other members can find this book and send you a borrowing request." : "The book remains in your library, but other members cannot request it."}</p>
                 </>}
               </section>
-              <div className="book-editor-actions"><button type="button" className="btn btn-outline-danger btn-sm" onClick={() => setConfirmDelete(true)} disabled={saving}><Trash size={16} className="me-2" />Remove book</button><button type="submit" className="btn btn-primary" disabled={saving}>{saving ? "Saving…" : "Save changes"}</button></div>
-            </div>
+            </fieldset>
+            <div className="book-editor-actions"><button type="button" className="btn btn-outline-danger btn-sm" onClick={() => setConfirmDelete(true)} disabled={saving}><Trash size={16} className="me-2" />Remove book</button><button type="submit" className="btn btn-primary" disabled={saving}>{saving ? "Saving…" : "Save changes"}</button></div>
           </form>
         </div>
       </div>
