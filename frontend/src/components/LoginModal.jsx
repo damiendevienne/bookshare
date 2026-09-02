@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import api from "../api";
+import { Eye, EyeOff } from "lucide-react";
 import { communityCharterIntro, communityCharterPoints, communityCharterClosing } from "../constants/communityCharter";
 
 export default function LoginModal({ show, onClose, onLoginSuccess }) {
@@ -10,6 +11,7 @@ export default function LoginModal({ show, onClose, onLoginSuccess }) {
   const [infoMessage, setInfoMessage] = useState("");
   const [charterAccepted, setCharterAccepted] = useState(false);
   const [showCharter, setShowCharter] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [mode, setMode] = useState("login"); // "login" | "forgot" | "register"
 
   if (!show) return null;
@@ -60,6 +62,10 @@ export default function LoginModal({ show, onClose, onLoginSuccess }) {
       setError("Please accept the Community Charter to create an account.");
       return;
     }
+    if (!passwordValid) {
+      setError("Password must be at least 8 characters and include at least one letter and one number.");
+      return;
+    }
     try {
       const res = await api.post("/api/auth/local/register", {
         username,
@@ -92,6 +98,9 @@ export default function LoginModal({ show, onClose, onLoginSuccess }) {
     }
   };
 
+  const passwordValid = password.length >= 8 && password.length <= 72
+    && /[A-Za-z]/.test(password) && /\d/.test(password);
+
   return (
     <div
       className="modal fade show"
@@ -104,10 +113,10 @@ export default function LoginModal({ show, onClose, onLoginSuccess }) {
           <div className="modal-header">
             <h5 className="modal-title">
               {mode === "login"
-                ? "Login"
+                ? "Login to BookMyBook"
                 : mode === "forgot"
                 ? "Forgot Password"
-                : "Create Account"}
+                : "Create your BookMyBook account"}
             </h5>
             <button type="button" className="btn-close" onClick={onClose}></button>
           </div>
@@ -124,18 +133,21 @@ export default function LoginModal({ show, onClose, onLoginSuccess }) {
                   <input
                     type="text"
                     className="form-control"
+                    autoComplete="username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                   />
                 </div>
-                <div className="mb-3">
+                <div className="mb-3 password-field">
                   <label className="form-label">Password</label>
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     className="form-control"
+                    autoComplete="current-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
+                  <button type="button" className="password-visibility-toggle" onClick={() => setShowPassword((current) => !current)} aria-label={showPassword ? "Hide password" : "Show password"}><span className="visually-hidden">{showPassword ? "Hide password" : "Show password"}</span>{showPassword ? <EyeOff size={17} /> : <Eye size={17} />}</button>
                 </div>
 
                 <button className="btn btn-primary w-100" onClick={handleLogin}>
@@ -168,11 +180,12 @@ export default function LoginModal({ show, onClose, onLoginSuccess }) {
             {/* === FORGOT PASSWORD MODE === */}
             {mode === "forgot" && (
               <>
-                <div className="mb-3">
+                <div className="mb-3 password-field">
                   <label className="form-label">Email</label>
                   <input
                     type="email"
                     className="form-control"
+                    autoComplete="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                   />
@@ -196,6 +209,7 @@ export default function LoginModal({ show, onClose, onLoginSuccess }) {
                   <input
                     type="text"
                     className="form-control"
+                    autoComplete="username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                   />
@@ -205,18 +219,22 @@ export default function LoginModal({ show, onClose, onLoginSuccess }) {
                   <input
                     type="email"
                     className="form-control"
+                    autoComplete="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
-                <div className="mb-3">
+                <div className="mb-3 password-field">
                   <label className="form-label">Password</label>
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     className="form-control"
+                    autoComplete="new-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
+                  <button type="button" className="password-visibility-toggle" onClick={() => setShowPassword((current) => !current)} aria-label={showPassword ? "Hide password" : "Show password"}><span className="visually-hidden">{showPassword ? "Hide password" : "Show password"}</span>{showPassword ? <EyeOff size={17} /> : <Eye size={17} />}</button>
+                  <small className={`form-text ${passwordValid ? "text-success" : password ? "text-danger" : ""}`}>At least 8 characters, with letters &amp; numbers.</small>
                 </div>
 
                 <div className="form-check mb-3">
@@ -246,7 +264,7 @@ export default function LoginModal({ show, onClose, onLoginSuccess }) {
                   )}
                 </div>
 
-                <button className="btn btn-primary w-100" onClick={handleRegister} disabled={!charterAccepted}>
+                <button className="btn btn-primary w-100" onClick={handleRegister} disabled={!charterAccepted || !passwordValid}>
                   Register
                 </button>
 
