@@ -1,14 +1,13 @@
 // @ts-nocheck
 
 export default (plugin) => {
-  const contentApiRoutes = plugin.routes['content-api']?.routes || [];
-  contentApiRoutes.push({
+  const contentApiRoutes = plugin.routes['content-api']?.routes;
+  contentApiRoutes?.push({
     method: 'GET',
     path: '/auth/reset-password/validate',
     handler: 'auth.validateResetPasswordToken',
     config: { auth: false },
   });
-  plugin.routes['content-api'].routes = contentApiRoutes;
 
   const originalAuthFactory = plugin.controllers.auth;
   plugin.controllers.auth = ({ strapi }) => {
