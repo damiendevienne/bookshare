@@ -104,7 +104,7 @@ export default function Footer({ isLoggedIn, user = {}, onLoginToggle, onBookCre
             {isLoggedIn ? (
               <>
                 <UserRoundX size={22} color="var(--bookmybook-navy)" />
-                <small style={{color:"var(--bookmybook-navy)"}}>{user?.username || "User"}</small>
+                <small className="footer-username" style={{color:"var(--bookmybook-navy)"}} title={user?.username || "User"}>{user?.username || "User"}</small>
               </>
             ) : (
               <>

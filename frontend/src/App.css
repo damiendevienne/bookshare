@@ -492,6 +492,13 @@
 .login-modal-content { position: relative; }
 
 .password-field { position: relative; }
+.footer-username {
+  display: block;
+  max-width: 7rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .password-field .form-control { padding-right: 2.5rem; }
 .password-visibility-toggle {
   position: absolute;

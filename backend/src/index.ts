@@ -50,6 +50,13 @@ export default {
 <p><a href="<%= URL %>?confirmation=<%= CODE %>" style="display:inline-block;padding:12px 18px;background:#6bb5f3;color:#111;text-decoration:none;border-radius:6px;font-weight:600">Confirm my email address</a></p>
 <p>If you did not create this account, you can ignore this message.</p>
 <p>Happy reading! 📚</p>`;
+        } else if (templateName === 'reset_password') {
+          template.options.object = 'Reset your BookMyBook password';
+          template.options.message = `<p>We received a request to reset your BookMyBook password.</p>
+<p>Click the button below to choose a new password.</p>
+<p><a href="<%= URL %>?code=<%= TOKEN %>" style="display:inline-block;padding:12px 18px;background:#6bb5f3;color:#111;text-decoration:none;border-radius:6px;font-weight:600">Choose a new password</a></p>
+<p>If you did not request this, you can ignore this message.</p>
+<p>BookMyBook 📚</p>`;
         }
       }
       await usersPermissionsStore.set({ key: 'email', value: emailSettings });
