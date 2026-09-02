@@ -58,6 +58,10 @@ export default {
     // messaging routes. This also makes fresh/local databases work without a
     // manual Content Manager permission step.
     const actions = [
+      'api::book.book.find', 'api::book.book.findOne',
+      'api::book.book.create',
+      'api::book.book.update', 'api::book.book.delete',
+      'plugin::upload.upload.upload',
       'api::loan.request', 'api::loan.status', 'api::loan.accept', 'api::loan.refuse', 'api::loan.confirmReceived',
       'api::loan.confirmLent', 'api::loan.confirmReturned',
       'api::loan.confirmReceivedBack', 'api::conversation.mine',
@@ -92,9 +96,13 @@ export default {
     }
     const publicRole = await strapi.db.query('plugin::users-permissions.role').findOne({ where: { type: 'public' } });
     if (publicRole) {
-      const action = 'api::zone.zone.find';
-      const existing = await strapi.db.query('plugin::users-permissions.permission').findOne({ where: { action }, populate: { role: true } });
-      if (!existing) await strapi.db.query('plugin::users-permissions.permission').create({ data: { action, role: publicRole.id } });
+      const publicActions = ['api::zone.zone.find', 'api::book.book.find', 'api::book.book.findOne'];
+      for (const action of publicActions) {
+        const existing = await strapi.db.query('plugin::users-permissions.permission').findOne({ where: { action }, populate: { role: true } });
+        if (!existing || existing.role?.id !== publicRole.id) {
+          await strapi.db.query('plugin::users-permissions.permission').create({ data: { action, role: publicRole.id } });
+        }
+      }
     }
   },
 };
