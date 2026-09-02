@@ -32,7 +32,7 @@ cd /srv/bookmybook
 bash scripts/deploy-vm.sh
 ```
 
-Le script s’arrête immédiatement si une commande échoue.
+Le script s’arrête immédiatement si une commande échoue. Il ne réinstalle les dépendances et ne reconstruit que la partie de l’application qui a changé.
 
 ## 4. Mettre à jour le frontend
 
