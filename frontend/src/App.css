@@ -499,6 +499,10 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+footer .btn,
+footer .btn small {
+  white-space: nowrap;
+}
 .password-field .form-control { padding-right: 2.5rem; }
 .password-visibility-toggle {
   position: absolute;
