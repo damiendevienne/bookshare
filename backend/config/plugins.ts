@@ -4,6 +4,11 @@ export default () => ({
       register: {
         allowedFields: ['communityCharterAccepted', 'favoriteBookIds'],
       },
+      validatePassword: (password) => typeof password === 'string'
+        && password.length >= 8
+        && password.length <= 72
+        && /[A-Za-z]/.test(password)
+        && /\d/.test(password),
     },
   },
   email: {

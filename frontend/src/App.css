@@ -490,6 +490,18 @@
   position: relative;
 }
 
+.password-field { position: relative; }
+.password-field .form-control { padding-right: 2.5rem; }
+.password-visibility-toggle {
+  position: absolute;
+  right: 0.55rem;
+  top: 2rem;
+  border: 0;
+  background: transparent;
+  color: #557080;
+  padding: 0.2rem;
+}
+
 .book-saving-overlay {
   position: absolute;
   inset: 0;
