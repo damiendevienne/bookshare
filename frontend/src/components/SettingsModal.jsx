@@ -34,7 +34,7 @@ export default function SettingsModal({ show, onClose, isLoggedIn, user, onLogin
             <div className="settings-field">
               <label htmlFor="settings-zone">📍 Sharing area</label>
               <select id="settings-zone" className="form-select" value={activeZone || ""} onChange={(event) => onZoneChange?.(event.target.value)}>
-                {zones.map((zone) => <option value={zone.slug} key={zone.slug}>{zone.name}</option>)}
+                {zones.map((zone) => <option value={zone.slug} key={zone.slug} disabled={zone.enabled === false}>{zone.countryCode === "FR" ? "🇫🇷" : zone.countryCode === "GR" ? "🇬🇷" : "🌍"} {zone.name}{zone.enabled === false ? " · Coming soon" : ""}</option>)}
               </select>
               <small className="text-muted">Only books listed in this area are shown.</small>
             </div>

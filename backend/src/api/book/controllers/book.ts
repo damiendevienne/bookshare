@@ -182,15 +182,14 @@ export default factories.createCoreController('api::book.book', ({ strapi }) => 
       : connectedZone?.documentId || connectedZone?.id;
     const zoneValue = typeof requestedZone === 'string' ? requestedZone : null;
     const zoneSlug = typeof requestedZone === 'object' ? requestedZone?.slug : null;
+    const zoneIdentifier = connectedZoneId || zoneValue || zoneSlug || 'heraklion';
     let zone = await strapi.db.query('api::zone.zone').findOne({
-      where: connectedZoneId || zoneValue
-        ? { documentId: connectedZoneId || zoneValue }
-        : { slug: zoneSlug || 'heraklion' },
+      where: { documentId: zoneIdentifier },
       select: ['id', 'documentId'],
     });
-    if (!zone && (zoneValue || zoneSlug)) {
+    if (!zone) {
       zone = await strapi.db.query('api::zone.zone').findOne({
-        where: { slug: zoneValue || zoneSlug },
+        where: { slug: zoneIdentifier },
         select: ['id', 'documentId'],
       });
     }

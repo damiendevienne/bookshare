@@ -85,7 +85,7 @@ function renderLoanReminder(content) {
   return <><div className="loan-reminder-heading">Loan reminder</div><div>{match[1]}<strong className="loan-reminder-duration">{match[2]} {match[3]}</strong>{match[4]}</div></>;
 }
 
-export default function MessagesModal({ show, onClose, onContextBack, user, onUnreadCountChange, onBookUpdated, initialConversationId }) {
+export default function MessagesModal({ show, onClose, onContextBack, user, activeZone, onUnreadCountChange, onBookUpdated, initialConversationId }) {
   const [conversations, setConversations] = useState([]);
   const [active, setActive] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -98,7 +98,7 @@ export default function MessagesModal({ show, onClose, onContextBack, user, onUn
   const conversationThreadRef = useRef(null);
   const closeModal = () => { setActive(null); onClose(); };
 
-  const loadConversations = useCallback(() => api.get("/api/conversations/mine").then((res) => {
+    const loadConversations = useCallback(() => api.get(`/api/conversations/mine?zone=${encodeURIComponent(activeZone || "heraklion")}`).then((res) => {
     const next = res.data.data || [];
     setConversations(next);
     setActive((current) => {

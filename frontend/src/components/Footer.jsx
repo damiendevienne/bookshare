@@ -18,13 +18,13 @@ export default function Footer({ isLoggedIn, user = {}, onLoginToggle, onBookCre
       setUnreadMessages(0);
       return undefined;
     }
-    const refreshUnread = () => api.get("/api/conversations/mine")
+    const refreshUnread = () => api.get(`/api/conversations/mine?zone=${encodeURIComponent(activeZone || "heraklion")}`)
       .then((res) => setUnreadMessages((res.data.data || []).reduce((sum, item) => sum + (item.unreadCount || 0), 0)))
       .catch(() => {});
     refreshUnread();
     const timer = window.setInterval(refreshUnread, 5000);
     return () => window.clearInterval(timer);
-  }, [isLoggedIn, user?.id]);
+  }, [isLoggedIn, user?.id, activeZone]);
   const handleUserClick = () => {
     // If logged in, ask for confirmation before logout
     if (isLoggedIn) {
@@ -167,7 +167,7 @@ export default function Footer({ isLoggedIn, user = {}, onLoginToggle, onBookCre
           externalRefreshToken={myBooksRefreshToken}
         />
       )}
-      <MessagesModal show={showMessages} initialConversationId={initialConversationId} onContextBack={initialConversationId ? closeMessages : undefined} onClose={closeMessages} user={user} onUnreadCountChange={setUnreadMessages} onBookUpdated={handleLoanUpdated} />
+      <MessagesModal show={showMessages} initialConversationId={initialConversationId} onContextBack={initialConversationId ? closeMessages : undefined} onClose={closeMessages} user={user} activeZone={activeZone} onUnreadCountChange={setUnreadMessages} onBookUpdated={handleLoanUpdated} />
     </>
   );
 }

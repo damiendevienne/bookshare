@@ -127,8 +127,9 @@ function App() {
       .then((response) => {
         const availableZones = response.data.data || [];
         setZones(availableZones);
-        if (availableZones.length && !availableZones.some((zone) => zone.slug === activeZone)) {
-          handleZoneChange(availableZones[0].slug);
+        const active = availableZones.find((zone) => zone.slug === activeZone);
+        if (availableZones.length && (!active || active.enabled === false)) {
+          handleZoneChange(availableZones.find((zone) => zone.enabled !== false)?.slug || availableZones[0].slug);
         }
       })
       .catch(() => setZones([{ name: "Heraklion", slug: "heraklion" }]));

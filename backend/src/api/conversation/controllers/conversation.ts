@@ -5,13 +5,17 @@ export default factories.createCoreController('api::conversation.conversation', 
   async mine(ctx) {
     const userId = ctx.state.user?.id;
     if (!userId) return ctx.unauthorized();
+    const activeZone = String(ctx.query.zone || '').trim();
     await this.createDueLoanReminders(userId);
     const rows = await strapi.db.query('api::conversation.conversation').findMany({
       where: { $or: [{ participantOne: userId }, { participantTwo: userId }] },
       orderBy: { lastMessageAt: 'desc' },
-      populate: { participantOne: true, participantTwo: true, loans: { populate: { book: { populate: { image: true } }, lender: true, borrower: true } } },
+      populate: { participantOne: true, participantTwo: true, loans: { populate: { book: { populate: { image: true, zone: true } }, lender: true, borrower: true } } },
     });
-    const withUnread = await Promise.all(rows.map(async (row) => {
+    const scopedRows = activeZone
+      ? rows.filter((row) => (row.loans || []).some((loan) => loan.book?.zone?.slug === activeZone))
+      : rows;
+    const withUnread = await Promise.all(scopedRows.map(async (row) => {
       const incoming = await strapi.db.query('api::message.message').findMany({
         where: { conversation: row.id, readAt: null },
         populate: { sender: true },

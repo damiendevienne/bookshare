@@ -17,6 +17,14 @@ export default {
    * run jobs, or perform some special logic.
    */
   async bootstrap({ strapi }) {
+    const existingHeraklion = await strapi.db.query('api::zone.zone').findOne({ where: { slug: 'heraklion' } });
+    if (existingHeraklion && (existingHeraklion.enabled !== true || !existingHeraklion.countryCode)) {
+      await strapi.db.query('api::zone.zone').update({ where: { id: existingHeraklion.id }, data: { enabled: true, countryCode: existingHeraklion.countryCode || 'GR' } });
+    }
+    const lyon = await strapi.db.query('api::zone.zone').findOne({ where: { slug: 'lyon' } });
+    if (!lyon) {
+      await strapi.db.query('api::zone.zone').create({ data: { name: 'Lyon', slug: 'lyon', countryCode: 'FR', enabled: false } });
+    }
     const appUrl = process.env.PUBLIC_APP_URL || 'http://localhost:5174';
     const usersPermissionsStore = strapi.store({ type: 'plugin', name: 'users-permissions' });
     const advancedSettings = await usersPermissionsStore.get({ key: 'advanced' }) || {};
@@ -34,7 +42,7 @@ export default {
     let heraklion = await strapi.db.query('api::zone.zone').findOne({ where: { slug: 'heraklion' } });
     if (!heraklion) {
       heraklion = await strapi.db.query('api::zone.zone').create({
-        data: { name: 'Heraklion', slug: 'heraklion' },
+        data: { name: 'Heraklion', slug: 'heraklion', countryCode: 'GR', enabled: true },
       });
     }
     const booksWithoutZone = await strapi.db.query('api::book.book').findMany({

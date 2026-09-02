@@ -11,8 +11,8 @@ export default function ZoneChooser({ zones, onSelect }) {
             <p className="text-muted mb-4">See books available around you.</p>
             <div className="d-grid gap-2">
               {zones.map((zone) => (
-                <button type="button" className="btn btn-primary" key={zone.slug} onClick={() => onSelect(zone.slug)}>
-                  {zone.name}
+                <button type="button" className="btn btn-primary" key={zone.slug} disabled={zone.enabled === false} onClick={() => onSelect(zone.slug)}>
+                  {zone.countryCode === "FR" ? "🇫🇷" : zone.countryCode === "GR" ? "🇬🇷" : "🌍"} {zone.name}{zone.enabled === false ? " · Coming soon" : ""}
                 </button>
               ))}
             </div>
