@@ -495,10 +495,12 @@ export interface ApiConversationConversation
     draftAndPublish: false;
   };
   attributes: {
+    borrowerArchivedAt: Schema.Attribute.DateTime;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     lastMessageAt: Schema.Attribute.DateTime;
+    lenderArchivedAt: Schema.Attribute.DateTime;
     loans: Schema.Attribute.Relation<'oneToMany', 'api::loan.loan'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -552,6 +554,7 @@ export interface ApiLoanLoan extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    lastLoanReminderAt: Schema.Attribute.DateTime;
     lender: Schema.Attribute.Relation<
       'manyToOne',
       'plugin::users-permissions.user'
@@ -1109,6 +1112,8 @@ export interface PluginUsersPermissionsUser
   attributes: {
     blocked: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     books: Schema.Attribute.Relation<'oneToMany', 'api::book.book'>;
+    communityCharterAccepted: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
     confirmationToken: Schema.Attribute.String & Schema.Attribute.Private;
     confirmed: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     conversationsAsFirstParticipant: Schema.Attribute.Relation<

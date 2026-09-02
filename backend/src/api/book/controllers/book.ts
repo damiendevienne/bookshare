@@ -89,7 +89,7 @@ export default factories.createCoreController('api::book.book', ({ strapi }) => 
       const books = await strapi.db.query('api::book.book').findMany({
         where,
         orderBy: { createdAt: 'desc' },
-        populate: { owner: true, image: true, zone: true, loans: { populate: { borrower: true } } },
+        populate: { owner: true, image: true, zone: true, loans: { populate: { borrower: true, conversation: true } } },
       });
       const data = (await markBooksWithActiveLoans(strapi, books)).map(publicBook);
       return { data, meta: { pagination: { page: 1, pageSize: data.length, pageCount: data.length ? 1 : 0, total: data.length } } };

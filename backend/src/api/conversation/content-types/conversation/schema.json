@@ -35,5 +35,7 @@
       "mappedBy": "conversation"
     },
     "lastMessageAt": { "type": "datetime" }
+    ,"lenderArchivedAt": { "type": "datetime" }
+    ,"borrowerArchivedAt": { "type": "datetime" }
   }
 }

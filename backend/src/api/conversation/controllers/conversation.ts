@@ -5,6 +5,7 @@ export default factories.createCoreController('api::conversation.conversation', 
   async mine(ctx) {
     const userId = ctx.state.user?.id;
     if (!userId) return ctx.unauthorized();
+    await this.createDueLoanReminders(userId);
     const rows = await strapi.db.query('api::conversation.conversation').findMany({
       where: { $or: [{ participantOne: userId }, { participantTwo: userId }] },
       orderBy: { lastMessageAt: 'desc' },
@@ -15,7 +16,10 @@ export default factories.createCoreController('api::conversation.conversation', 
         where: { conversation: row.id, readAt: null },
         populate: { sender: true },
       });
-      return { ...row, unreadCount: incoming.filter((message) => message.sender?.id !== userId).length };
+      const unreadMessages = incoming.filter((message) => message.sender?.id !== userId).length;
+      const pendingRefusal = (row.loans || []).some((loan) => loan.status === 'refused'
+        && (loan.lender?.id === userId ? !row.lenderArchivedAt : !row.borrowerArchivedAt));
+      return { ...row, unreadCount: unreadMessages + (pendingRefusal ? 1 : 0) };
     }));
     ctx.body = { data: withUnread.map((row) => ({
       ...row,
@@ -43,11 +47,28 @@ export default factories.createCoreController('api::conversation.conversation', 
     ctx.body = { data: { ok: true } };
   },
 
+  async archive(ctx) {
+    const userId = ctx.state.user?.id;
+    if (!userId) return ctx.unauthorized();
+    const conversation = await this.findParticipantConversation(ctx.params.id, userId);
+    if (!conversation) return ctx.notFound('Conversation not found.');
+    const loan = await strapi.db.query('api::loan.loan').findOne({
+      where: { conversation: conversation.id }, populate: { lender: true },
+    });
+    if (!loan) return ctx.badRequest('This conversation has no associated loan.');
+    const field = loan.lender?.id === userId ? 'lenderArchivedAt' : 'borrowerArchivedAt';
+    const updated = await strapi.db.query('api::conversation.conversation').update({
+      where: { id: conversation.id }, data: { [field]: new Date() },
+    });
+    ctx.body = { data: { archived: true, conversation: updated } };
+  },
+
   async messages(ctx) {
     const userId = ctx.state.user?.id;
     if (!userId) return ctx.unauthorized();
     const conversation = await this.findParticipantConversation(ctx.params.id, userId);
     if (!conversation) return ctx.notFound('Conversation not found.');
+    await this.createDueLoanReminders(userId);
     const rows = await strapi.db.query('api::message.message').findMany({
       where: { conversation: conversation.id },
       orderBy: { createdAt: 'asc' },
@@ -80,6 +101,40 @@ export default factories.createCoreController('api::conversation.conversation', 
       where: { ...where, $or: [{ participantOne: userId }, { participantTwo: userId }] },
       populate: { participantOne: true, participantTwo: true },
     });
+  },
+
+  async createDueLoanReminders(userId) {
+    const loans = await strapi.db.query('api::loan.loan').findMany({
+      where: { borrower: userId, status: 'active', borrowerReceivedAt: { $notNull: true } },
+      populate: { book: true, borrower: true, lender: true, conversation: true },
+    });
+    const now = new Date();
+    for (const loan of loans) {
+      const receivedAt = new Date(loan.borrowerReceivedAt);
+      const elapsedDays = Math.floor((now.getTime() - receivedAt.getTime()) / 86400000);
+      const lastReminderAt = loan.lastLoanReminderAt ? new Date(loan.lastLoanReminderAt) : null;
+      const reminderDue = elapsedDays >= 21 && (!lastReminderAt || now.getTime() - lastReminderAt.getTime() >= 7 * 86400000);
+      if (!reminderDue || !loan.conversation?.id || !loan.book) continue;
+      const weeks = Math.floor(elapsedDays / 7);
+      const content = weeks === 3
+        ? `Loan reminder: you have had “${loan.book.title}” for three weeks. A one-month loan is usually a good lending period. We’ll remind you again next week if the book has not been returned.`
+        : `Loan reminder: you have had “${loan.book.title}” for ${weeks} weeks. Please arrange its return with the owner when you are finished. We’ll remind you again next week if needed.`;
+      // The list and the open discussion can be requested at the same time.
+      // Check the exact reminder text first so that concurrent requests cannot
+      // create the same weekly reminder twice.
+      const existingReminder = await strapi.db.query('api::message.message').findOne({
+        where: { conversation: loan.conversation.id, content },
+      });
+      if (existingReminder) {
+        await strapi.db.query('api::loan.loan').update({ where: { id: loan.id }, data: { lastLoanReminderAt: now } });
+        continue;
+      }
+      await strapi.db.query('api::message.message').create({
+        data: { conversation: loan.conversation.id, sender: loan.lender.id, content, isSystem: true },
+      });
+      await strapi.db.query('api::conversation.conversation').update({ where: { id: loan.conversation.id }, data: { lastMessageAt: now } });
+      await strapi.db.query('api::loan.loan').update({ where: { id: loan.id }, data: { lastLoanReminderAt: now } });
+    }
   },
 
   publicUser(user) {

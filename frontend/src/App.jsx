@@ -37,13 +37,13 @@ function App() {
   const [showModal, setShowModal] = useState(false);
   //login new const
   const [isLoggedIn, setIsLoggedIn] = useState(
-    !!localStorage.getItem("jwt")
+    !!sessionStorage.getItem("jwt")
   );
   const [showLogin, setShowLogin] = useState(false);
   const [welcomeMessage, setWelcomeMessage] = useState("");
   const [catalogueState, setCatalogueState] = useState("loading");
   const [user, setUser] = useState(
-    JSON.parse(localStorage.getItem("user")) || null
+    JSON.parse(sessionStorage.getItem("user")) || null
   );
 
   useEffect(() => {
@@ -76,8 +76,8 @@ function App() {
   const handleLoginToggle = () => {
     if (isLoggedIn) {
       // Logout
-      localStorage.removeItem("jwt");
-      localStorage.removeItem("user");
+      sessionStorage.removeItem("jwt");
+      sessionStorage.removeItem("user");
       setIsLoggedIn(false);
       setUser(null);
     } else {

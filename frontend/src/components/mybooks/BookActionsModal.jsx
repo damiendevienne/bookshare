@@ -6,9 +6,18 @@ const legacyText = (value) => Array.isArray(value)
   ? value.map((block) => Array.isArray(block?.children) ? block.children.map((child) => child?.text || "").join("") : "").filter(Boolean).join("\n")
   : typeof value === "string" ? value : "";
 
-export default function BookActionsModal({ book, onClose, onUpdate }) {
+const loanTiming = (value) => {
+  if (!value) return "";
+  const start = new Date(value);
+  if (Number.isNaN(start.getTime())) return "";
+  const days = Math.max(1, Math.ceil((Date.now() - start.getTime()) / 86400000));
+  return `since ${start.toLocaleDateString("en-GB")} (${days} day${days === 1 ? "" : "s"})`;
+};
+
+export default function BookActionsModal({ book, onClose, onUpdate, onOpenConversation }) {
   const [available, setAvailable] = useState(book.available);
   const isLended = book.lended === true;
+  const pendingRequests = book.pendingRequests || [];
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [error, setError] = useState("");
   const [conversationId, setConversationId] = useState(null);
@@ -34,7 +43,7 @@ export default function BookActionsModal({ book, onClose, onUpdate }) {
       const response = await api.put(`/api/books/${bookIdentifier}`, { data: { available: nextAvailable } });
       const updated = { ...book, ...(response.data.data || {}), available: nextAvailable };
       setAvailable(nextAvailable);
-      onUpdate(updated);
+      onUpdate(updated, { keepOpen: true });
     } catch (err) {
       setError(err.response?.data?.error?.message || "Unable to update availability.");
     } finally {
@@ -95,7 +104,7 @@ export default function BookActionsModal({ book, onClose, onUpdate }) {
       <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
         <div className="modal-content book-editor">
           <div className="modal-header">
-            <div><h5 className="modal-title">Manage this book</h5><small className="text-muted">{book.title}</small></div>
+            <h5 className="modal-title">Manage this book</h5>
             <button type="button" className="btn-close" onClick={onClose}></button>
           </div>
           <form className="modal-body" onSubmit={saveDetails}>
@@ -125,14 +134,22 @@ export default function BookActionsModal({ book, onClose, onUpdate }) {
               </section>
               <section className="book-editor-section book-editor-sharing">
                 <h6 className="book-editor-section-title">Sharing</h6>
-                <div className="availability-toggle-row"><strong>{available ? "Available for borrowing" : "Not available for borrowing"}</strong><div className="form-check form-switch"><input className="form-check-input" id="manage-book-available" type="checkbox" role="switch" checked={available} onChange={toggleAvailable} disabled={saving || (!available && isLended)} aria-label="Change borrowing availability" /></div></div>
-                <p>{available ? "Other members can find this book and send you a borrowing request." : "The book remains in your library, but other members cannot request it."}</p>
+                {isLended ? <>
+                  <div className={`active-loan-summary loan-context-${book.loanReceived ? "active" : "accepted"}`}><strong>{book.loanReceived ? "Lent to" : "Awaiting pickup from"} {book.lendedTo || "another member"}</strong>{loanTiming(book.loanStartedAt) && <small>{loanTiming(book.loanStartedAt)}</small>}</div>
+                  <p>{book.loanReceived ? "The borrower has this book. It will become available again after its return is confirmed." : `${book.lendedTo || "The borrower"} has not confirmed receiving this book yet.`}</p>
+                  {book.loanConversationId && <button type="button" className="btn btn-outline-primary btn-sm mt-2" onClick={() => onOpenConversation?.(book.loanConversationId)}>Open the loan discussion</button>}
+                </> : pendingRequests.length > 0 ? <>
+                  <div className="pending-request-list">{[...pendingRequests].sort((first, second) => new Date(first.startedAt || 0) - new Date(second.startedAt || 0)).map((request, index) => <div className="pending-request-item" key={request.conversationId || `${request.borrower}-${index}`}>
+                    <div className="active-loan-summary loan-context-requested"><strong>Pending request from {request.borrower}</strong>{loanTiming(request.startedAt) && <small>{loanTiming(request.startedAt)}</small>}</div>
+                    {request.conversationId && <button type="button" className="btn btn-outline-primary btn-sm" onClick={() => onOpenConversation?.(request.conversationId)}>Open discussion</button>}
+                  </div>)}</div>
+                  <p>{pendingRequests.length === 1 ? "Review this request in the discussion before accepting or refusing it." : "Review each request in its discussion."}</p>
+                  <p className="book-editor-rule">If you accept one request, all other pending requests for this book will be refused automatically.</p>
+                </> : <>
+                  <div className="availability-toggle-row"><strong>{available ? "Available for borrowing" : "Not available for borrowing"}</strong><div className="form-check form-switch"><input className="form-check-input" id="manage-book-available" type="checkbox" role="switch" checked={available} onChange={toggleAvailable} disabled={saving} aria-label="Change borrowing availability" /></div></div>
+                  <p>{available ? "Other members can find this book and send you a borrowing request." : "The book remains in your library, but other members cannot request it."}</p>
+                </>}
               </section>
-              {!available && isLended && (
-                <small className="text-muted d-block px-2">
-                  This book is currently lent. It will become available after the return is confirmed.
-                </small>
-              )}
               <div className="book-editor-actions"><button type="button" className="btn btn-outline-danger btn-sm" onClick={() => setConfirmDelete(true)} disabled={saving}><Trash size={16} className="me-2" />Remove book</button><button type="submit" className="btn btn-primary" disabled={saving}>{saving ? "Saving…" : "Save changes"}</button></div>
             </div>
           </form>

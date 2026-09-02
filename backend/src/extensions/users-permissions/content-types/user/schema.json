@@ -88,6 +88,10 @@
       "enum": ["system", "light", "dark"],
       "default": "system"
     },
+    "communityCharterAccepted": {
+      "type": "boolean",
+      "default": false
+    },
     "favoriteBookIds": {
       "type": "json",
       "default": []

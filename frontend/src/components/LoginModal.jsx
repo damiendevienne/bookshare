@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import api from "../api";
+import { communityCharterIntro, communityCharterPoints, communityCharterClosing } from "../constants/communityCharter";
 
 export default function LoginModal({ show, onClose, onLoginSuccess }) {
   const [username, setUsername] = useState("");
@@ -7,6 +8,8 @@ export default function LoginModal({ show, onClose, onLoginSuccess }) {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [infoMessage, setInfoMessage] = useState("");
+  const [charterAccepted, setCharterAccepted] = useState(false);
+  const [showCharter, setShowCharter] = useState(false);
   const [mode, setMode] = useState("login"); // "login" | "forgot" | "register"
 
   if (!show) return null;
@@ -22,8 +25,8 @@ export default function LoginModal({ show, onClose, onLoginSuccess }) {
       const jwt = res.data.jwt;
       const user = res.data.user;
 
-      localStorage.setItem("jwt", jwt);
-      localStorage.setItem("user", JSON.stringify(user));
+      sessionStorage.setItem("jwt", jwt);
+      sessionStorage.setItem("user", JSON.stringify(user));
 
       onLoginSuccess(user, jwt);
       onClose();
@@ -53,11 +56,16 @@ export default function LoginModal({ show, onClose, onLoginSuccess }) {
   const handleRegister = async () => {
     setError("");
     setInfoMessage("");
+    if (!charterAccepted) {
+      setError("Please accept the Community Charter to create an account.");
+      return;
+    }
     try {
       const res = await api.post("/api/auth/local/register", {
         username,
         email,
         password,
+        communityCharterAccepted: true,
       });
 
       // With email confirmation enabled Strapi deliberately returns no JWT.
@@ -70,8 +78,8 @@ export default function LoginModal({ show, onClose, onLoginSuccess }) {
       }
       const jwt = res.data.jwt;
       const user = res.data.user;
-      localStorage.setItem("jwt", jwt);
-      localStorage.setItem("user", JSON.stringify(user));
+      sessionStorage.setItem("jwt", jwt);
+      sessionStorage.setItem("user", JSON.stringify(user));
       onLoginSuccess(user, jwt);
       onClose();
     } catch (err) {
@@ -211,7 +219,34 @@ export default function LoginModal({ show, onClose, onLoginSuccess }) {
                   />
                 </div>
 
-                <button className="btn btn-primary w-100" onClick={handleRegister}>
+                <div className="form-check mb-3">
+                  <input
+                    id="community-charter-accepted"
+                    className="form-check-input"
+                    type="checkbox"
+                    checked={charterAccepted}
+                    onChange={(e) => setCharterAccepted(e.target.checked)}
+                  />
+                  <label className="form-check-label small" htmlFor="community-charter-accepted">I have read and agree to the</label>{" "}
+                  <button
+                    type="button"
+                    className="btn btn-link p-0 align-baseline small"
+                    aria-expanded={showCharter}
+                    onClick={() => setShowCharter((current) => !current)}
+                  >
+                    Community Charter
+                  </button>.
+                  <div className="form-text">This agreement is required to create an account.</div>
+                  {showCharter && (
+                    <div className="community-charter-preview mt-2 p-3 rounded" role="region" aria-label="Community Charter">
+                      <p className="small mb-2">{communityCharterIntro}</p>
+                      <ul className="small mb-0 ps-3">{communityCharterPoints.map((point) => <li key={point}>{point}</li>)}</ul>
+                      <p className="small mt-3 mb-0 fw-semibold text-center">{communityCharterClosing}</p>
+                    </div>
+                  )}
+                </div>
+
+                <button className="btn btn-primary w-100" onClick={handleRegister} disabled={!charterAccepted}>
                   Register
                 </button>
 

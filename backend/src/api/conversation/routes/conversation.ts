@@ -4,5 +4,6 @@ export default {
     { method: 'GET', path: '/conversations/:id/messages', handler: 'conversation.messages', config: { auth: { scope: [] } } },
     { method: 'POST', path: '/conversations/:id/read', handler: 'conversation.markRead', config: { auth: { scope: [] } } },
     { method: 'POST', path: '/conversations/:id/messages', handler: 'conversation.send', config: { auth: { scope: [] } } },
+    { method: 'POST', path: '/conversations/:id/archive', handler: 'conversation.archive', config: { auth: { scope: [] } } },
   ],
 };

@@ -65,6 +65,7 @@ export default {
       'api::book.favorites', 'api::book.toggleFavorite',
       'api::book.book.favorites', 'api::book.book.toggleFavorite',
       'api::conversation.messages', 'api::conversation.send',
+      'api::conversation.archive',
       // Strapi 5 may derive the scope with the API UID repeated for custom
       // controllers; keep these aliases for existing development databases.
       'api::loan.loan.request', 'api::loan.loan.status', 'api::loan.loan.accept', 'api::loan.loan.refuse',
@@ -73,6 +74,7 @@ export default {
       'api::conversation.conversation.mine', 'api::conversation.conversation.messages',
       'api::conversation.conversation.send', 'api::conversation.markRead',
       'api::conversation.conversation.markRead',
+      'api::conversation.conversation.archive', 'api::conversation.archive',
     ];
     const role = await strapi.db.query('plugin::users-permissions.role').findOne({
       where: { type: 'authenticated' },

@@ -41,6 +41,7 @@ function loanContext(conversation, userId) {
     }
     return { label: loan.lender?.id === userId ? `Lent to ${other}` : `Borrowed from ${other}`, tone: "active" };
   }
+  if (loan.status === "refused") return { label: loan.lender?.id === userId ? `You declined the request from ${other}` : `${other} declined your request`, tone: "past" };
   return { label: `Past loan with ${other}`, tone: "past" };
 }
 
@@ -78,7 +79,13 @@ function messageDayLabel(value) {
   return date.toLocaleDateString([], { day: "numeric", month: "long", year: "numeric" });
 }
 
-export default function MessagesModal({ show, onClose, user, onUnreadCountChange, onBookUpdated }) {
+function renderLoanReminder(content) {
+  const match = content.match(/^Loan reminder: (you have had “.*?” for )(three|four|\d+) (weeks?|week)(\..*)$/);
+  if (!match) return content;
+  return <><div className="loan-reminder-heading">Loan reminder</div><div>{match[1]}<strong className="loan-reminder-duration">{match[2]} {match[3]}</strong>{match[4]}</div></>;
+}
+
+export default function MessagesModal({ show, onClose, onContextBack, user, onUnreadCountChange, onBookUpdated, initialConversationId }) {
   const [conversations, setConversations] = useState([]);
   const [active, setActive] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -89,6 +96,7 @@ export default function MessagesModal({ show, onClose, user, onUnreadCountChange
   const [collapsedDiscussionGroups, setCollapsedDiscussionGroups] = useState({ "past-owned": true, "past-borrowed": true });
   const returnMessageRef = useRef(null);
   const conversationThreadRef = useRef(null);
+  const closeModal = () => { setActive(null); onClose(); };
 
   const loadConversations = useCallback(() => api.get("/api/conversations/mine").then((res) => {
     const next = res.data.data || [];
@@ -110,6 +118,11 @@ export default function MessagesModal({ show, onClose, user, onUnreadCountChange
     const timer = window.setInterval(() => loadConversations().catch(() => {}), 2500);
     return () => window.clearInterval(timer);
   }, [show, user?.id, loadConversations]);
+  useEffect(() => {
+    if (!show || !initialConversationId || conversations.length === 0) return;
+    const requested = conversations.find((conversation) => String(conversation.documentId || conversation.id) === String(initialConversationId));
+    if (requested) setActive((current) => String(current?.documentId || current?.id || "") === String(initialConversationId) ? current : requested);
+  }, [show, initialConversationId, conversations]);
   useEffect(() => {
     if (!active) return;
     const conversationId = active.documentId || active.id;
@@ -135,8 +148,14 @@ export default function MessagesModal({ show, onClose, user, onUnreadCountChange
     if (thread) thread.scrollTop = thread.scrollHeight;
   }, [active?.documentId, active?.id, messages.length, actionPanelSignature]);
   const chatLocked = loans.some((loan) => loan.status === "requested");
-  const currentConversations = conversations.filter((conversation) => conversation.loans?.some((loan) => loan.status === "requested" || loan.status === "active"));
-  const pastConversations = conversations.filter((conversation) => !conversation.loans?.some((loan) => loan.status === "requested" || loan.status === "active"));
+  const refusalIsArchived = (conversation) => {
+    const loan = conversation.loans?.find((item) => item.status === "refused");
+    if (!loan) return false;
+    return loan.lender?.id === user.id ? Boolean(conversation.lenderArchivedAt) : Boolean(conversation.borrowerArchivedAt);
+  };
+  const hasCurrentActivity = (conversation) => conversation.loans?.some((loan) => loan.status === "requested" || loan.status === "active") || (conversation.loans?.some((loan) => loan.status === "refused") && !refusalIsArchived(conversation));
+  const currentConversations = conversations.filter(hasCurrentActivity);
+  const pastConversations = conversations.filter((conversation) => !hasCurrentActivity(conversation));
   const splitByOwnership = (items) => items.reduce((groups, conversation) => {
     const loan = conversation.loans?.find((item) => item.status === "requested" || item.status === "active") || conversation.loans?.[0];
     if (loan?.lender?.id === user.id) groups.owned.push(conversation);
@@ -149,6 +168,18 @@ export default function MessagesModal({ show, onClose, user, onUnreadCountChange
     { label: "Active loans", tone: "current", groups: activeGroups },
     { label: "Past loans", tone: "past", groups: pastGroups },
   ].filter((section) => section.groups.owned.length || section.groups.borrowed.length);
+
+  const archiveRefusal = async () => {
+    if (!active) return;
+    try {
+      await api.post(`/api/conversations/${active.documentId || active.id}/archive`);
+      await loadConversations();
+      setActive(null);
+    } catch (err) {
+      setError(err.response?.data?.error?.message || "Unable to archive this discussion.");
+    }
+  };
+
   const systemMessageText = (message) => {
     if (!message.isSystem) return message.content;
     const loan = loans.find((item) => item.book);
@@ -178,13 +209,14 @@ export default function MessagesModal({ show, onClose, user, onUnreadCountChange
       return `${loan?.lender?.username || "The owner"} recovered their book “${bookTitle}” on ${date}. The book is available again for borrowing.\n\n${closing}`;
     }
     if (!message.content?.startsWith("Borrow request for") || !book) return message.content;
-    if (loan.status !== "requested") return null;
+    // This is a historical event. Keep it visible after the request is accepted
+    // or refused instead of deriving its text from the loan's current status.
     const bookName = `“${book.title}${book.author ? `” by ${book.author}` : "”"}`;
     if (loan.borrower?.id === user.id) {
-      return `Your request for ${bookName} is waiting for the owner’s approval.`;
+      return `You asked to borrow ${bookName} from the owner.`;
     }
     const borrowerName = loan.borrower?.username || otherParticipant(active, user.id)?.username || "the borrower";
-    return `You have a new request from ${borrowerName} for your book ${book.title}. Please click below to accept (or reject) this request.`;
+    return `${borrowerName} asked to borrow your book ${bookName}.`;
   };
   const sendMessage = async (event) => {
     event.preventDefault();
@@ -236,10 +268,10 @@ export default function MessagesModal({ show, onClose, user, onUnreadCountChange
   };
 
   if (!show) return null;
-  return <div className="modal fade show" style={{ display: "block", backgroundColor: "rgba(0,0,0,.5)" }} onClick={onClose}>
+  return <div className="modal fade show" style={{ display: "block", backgroundColor: "rgba(0,0,0,.5)" }} onClick={closeModal}>
     <div className="modal-dialog modal-lg modal-dialog-scrollable" onClick={(e) => e.stopPropagation()}>
       <div className="modal-content">
-        <div className="modal-header"><h5 className="modal-title">Discussions</h5><button className="btn-close" onClick={onClose} aria-label="Close discussions" /></div>
+        <div className="modal-header"><h5 className="modal-title">Discussions</h5><button className="btn-close" onClick={closeModal} aria-label="Close discussions" /></div>
         <div className={`modal-body p-0 ${active ? "messages-modal-body-active" : ""}`}>
           {error && <div className="alert alert-danger m-3">{error}</div>}
           {!active ? <div className="list-group list-group-flush">
@@ -273,7 +305,7 @@ export default function MessagesModal({ show, onClose, user, onUnreadCountChange
           </div> : <div className="conversation-view d-flex flex-column">
             <div className="border-bottom p-2">
               <div className="conversation-header-content">
-                <button className="conversation-back-button" onClick={() => setActive(null)} aria-label="Back to conversations"><ArrowLeft size={20} /></button>
+                <button className="conversation-back-button" onClick={() => { setActive(null); onContextBack?.(); }} aria-label={onContextBack ? "Back to book details" : "Back to conversations"}><ArrowLeft size={20} /></button>
                 <img className="conversation-book-thumbnail conversation-header-thumbnail" src={bookImage(conversationBook(active))} alt="" aria-hidden="true" />
                   <div className="conversation-header-info">
                     <strong className="d-block conversation-header-title">{conversationBook(active)?.title || "Conversation"}</strong>
@@ -293,6 +325,8 @@ export default function MessagesModal({ show, onClose, user, onUnreadCountChange
                 const receiptNotice = message.isSystem && message.content?.startsWith("The borrower confirmed receiving the book.");
                 const completionNotice = message.isSystem && message.content?.startsWith("You recovered your book");
                 const requestNotice = message.isSystem && message.content?.startsWith("Borrow request for");
+                const loanReminderNotice = message.isSystem && message.content?.startsWith("Loan reminder:");
+                if (loanReminderNotice && message.sender?.id === user.id) return null;
                 const content = systemMessageText(message);
                 if (content === null) return null;
                 const handoverLoan = handoverNotice ? loans.find((loan) => loan.book) : null;
@@ -305,14 +339,17 @@ export default function MessagesModal({ show, onClose, user, onUnreadCountChange
                 const returnAlreadyArranged = messages.some((item) => item.purpose === "returnArrangement" && item.sender?.id === user.id);
                 const canArrangeReturn = borrowerReceiptNotice && !returnAlreadyArranged && loans.some((loan) => loan.status === "active" && loan.borrower?.id === user.id && loan.borrowerReceivedAt && !loan.lenderReceivedBackAt);
                 const [receiptConfirmation, returnGuidance] = borrowerReceiptNotice ? content.split("\n\n") : [];
+                const refusedLoan = loans.find((loan) => loan.status === "refused");
+                const refusalArchived = refusedLoan && (refusedLoan.lender?.id === user.id ? active.lenderArchivedAt : active.borrowerArchivedAt);
                 const dayKey = message.createdAt ? new Date(message.createdAt).toDateString() : "";
                 const showDay = dayKey && dayKey !== previousDay;
                 previousDay = dayKey || previousDay;
                 return <React.Fragment key={message.id}>
                   {showDay && <div className="message-date-separator">{messageDayLabel(message.createdAt)}</div>}
-                  <div className={`mb-2 ${handoverNotice || refusalNotice || receiptNotice || completionNotice || requestNotice ? "system-notice" : message.sender?.id === user.id ? "text-end" : ""}`}>
-                  {handoverNotice || refusalNotice || receiptNotice || completionNotice || requestNotice ? <div className={handoverNotice ? (handoverConfirmation ? "handover-notice acceptance-handover-notice" : "handover-notice") : refusalNotice ? "refusal-notice" : completionNotice ? "completion-notice" : requestNotice ? "request-notice" : "acceptance-notice"}>
+                  <div className={`mb-2 ${handoverNotice || refusalNotice || receiptNotice || completionNotice || requestNotice || loanReminderNotice ? "system-notice" : message.sender?.id === user.id ? "text-end" : ""}`}>
+                  {handoverNotice || refusalNotice || receiptNotice || completionNotice || requestNotice || loanReminderNotice ? <div className={handoverNotice ? (handoverConfirmation ? "handover-notice acceptance-handover-notice" : "handover-notice") : refusalNotice ? "refusal-notice" : completionNotice ? "completion-notice" : requestNotice ? "request-notice" : loanReminderNotice ? "loan-reminder-notice" : "acceptance-notice"}>
                     {handoverConfirmation && <div className="acceptance-notice-inline">{handoverConfirmation}</div>}
+                    {refusalNotice ? <><div>{refusedLoan?.lender?.id === user.id ? `You declined ${refusedLoan?.borrower?.username || "the requester"}’s loan request. They were notified.` : "Your loan request wasn’t accepted by the owner."}</div>{!refusalArchived && <><small className="refusal-archive-hint">Clicking OK will archive this discussion.</small><button type="button" className="btn btn-sm refusal-confirm-button mt-2" onClick={archiveRefusal}>OK</button></>}</> : null}
                     {borrowerReceiptNotice ? <>
                       <div className="receipt-confirmation-message">{receiptConfirmation}</div>
                       <div className={`return-guidance-message ${returnAlreadyArranged ? "return-arranged-message" : ""}`}>
@@ -321,7 +358,7 @@ export default function MessagesModal({ show, onClose, user, onUnreadCountChange
                           : returnGuidance}
                       </div>
                       {canArrangeReturn && <button type="button" className="btn btn-outline-success btn-sm arrange-return-button" onClick={openReturnComposer}>Arrange the return</button>}
-                    </> : content}
+                    </> : loanReminderNotice ? renderLoanReminder(content) : !refusalNotice && content}
                   </div> : <span className={`d-inline-block rounded px-3 py-2 ${message.isSystem ? "bg-light text-muted" : message.sender?.id === user.id ? "message-bubble message-outgoing" : "message-bubble message-incoming"}`}>{content}</span>}
                   {message.createdAt && <small className="message-time">{messageTime(message.createdAt)}</small>}
                   </div>

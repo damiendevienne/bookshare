@@ -79,7 +79,6 @@ export default factories.createCoreController('api::loan.loan', ({ strapi }) => 
       where: { id: conversation.id },
       data: { lastMessageAt: new Date() },
     });
-
     ctx.body = { data: { ...loan, conversationId: conversation.documentId ?? conversation.id } };
   },
 
@@ -89,6 +88,14 @@ export default factories.createCoreController('api::loan.loan', ({ strapi }) => 
     if (loan.lender.id !== ctx.state.user.id) return ctx.forbidden();
     if (loan.status !== 'requested') return ctx.badRequest('Only pending requests can be accepted.');
     const updated = await strapi.db.query('api::loan.loan').update({ where: { id: loan.id }, data: { status: 'active' } });
+    const competingRequests = await strapi.db.query('api::loan.loan').findMany({
+      where: { book: loan.book.id, status: 'requested', id: { $ne: loan.id } },
+      populate: { conversation: true },
+    });
+    for (const competingRequest of competingRequests) {
+      await strapi.db.query('api::loan.loan').update({ where: { id: competingRequest.id }, data: { status: 'refused' } });
+      await this.systemMessage(competingRequest, ctx.state.user.id, 'The loan request was refused because another request for this book was accepted.');
+    }
     await strapi.db.query('api::book.book').update({ where: { id: loan.book.id }, data: { available: false } });
     await this.systemMessage(loan, ctx.state.user.id, `You can now discuss and arrange a time and place for the handover of “${loan.book.title}”.`);
     ctx.body = { data: updated };

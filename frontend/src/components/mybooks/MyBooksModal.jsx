@@ -4,9 +4,8 @@ import BookActionsModal from "./BookActionsModal";
 import AddBookModal from "./AddBookModal";
 import api from "../../api";
 
-export default function MyBooksModal({ show, onClose, user, onBookCreated, onBookUpdated, activeZone, activeZoneDocumentId }) {
+export default function MyBooksModal({ show, onClose, user, onBookCreated, onBookUpdated, onOpenConversation, externalRefreshToken = 0, activeZone, activeZoneDocumentId }) {
   const [books, setBooks] = useState([]);
-  const [expandedBookId, setExpandedBookId] = useState(null);
   const [activeBook, setActiveBook] = useState(null);
   const [showAddBook, setShowAddBook] = useState(false);
   const [refreshToken, setRefreshToken] = useState(0);
@@ -19,6 +18,12 @@ export default function MyBooksModal({ show, onClose, user, onBookCreated, onBoo
         )
         .then((res) => {
           const booksData = res.data.data.map((item) => {
+            const activeLoan = item.loans?.find((loan) => loan.status === "active");
+            const pendingRequests = (item.loans || []).filter((loan) => loan.status === "requested").sort((first, second) => new Date(first.createdAt || 0) - new Date(second.createdAt || 0)).map((loan) => ({
+              borrower: loan.borrower?.username || "another member",
+              startedAt: loan.createdAt || loan.updatedAt || null,
+              conversationId: loan.conversation?.documentId || loan.conversation?.id || null,
+            }));
             const firstImage =
               item.image?.[0]?.formats?.small?.url ||
               item.image?.[0]?.formats?.medium?.url ||
@@ -34,8 +39,12 @@ export default function MyBooksModal({ show, onClose, user, onBookCreated, onBoo
               summary: item.summary,
               ownerComment: item.ownerComment,
               available: item.available,
-              lended: item.loans?.some((loan) => loan.status === "active") || false,
-              lendedTo: item.loans?.find((loan) => loan.status === "active")?.borrower?.username || null,
+              lended: Boolean(activeLoan),
+              lendedTo: activeLoan?.borrower?.username || null,
+              loanReceived: Boolean(activeLoan?.borrowerReceivedAt),
+              loanStartedAt: activeLoan?.borrowerReceivedAt || activeLoan?.lenderLentAt || activeLoan?.updatedAt || activeLoan?.createdAt || null,
+              loanConversationId: activeLoan?.conversation?.documentId || activeLoan?.conversation?.id || null,
+              pendingRequests,
               language: item.language,
               age: item.age,
               image: firstImage,
@@ -46,16 +55,19 @@ export default function MyBooksModal({ show, onClose, user, onBookCreated, onBoo
             };
           });
           setBooks(booksData);
+          setActiveBook((current) => current ? booksData.find((book) => book.id === current.id || book.documentId === current.documentId) || null : current);
         })
         .catch((err) => console.error(err));
     }
-  }, [show, user?.id, refreshToken, activeZone]);
+  }, [show, user?.id, refreshToken, externalRefreshToken, activeZone]);
 
   if (!show) return null;
 
-  const toggleAccordion = (bookId) => {
-    setExpandedBookId((prev) => (prev === bookId ? null : bookId));
-  };
+  const bookGroups = [
+    { key: "lent", label: "Current loans", books: books.filter((book) => book.lended || book.pendingRequests?.length) },
+    { key: "available", label: "Available", books: books.filter((book) => !book.lended && !book.pendingRequests?.length && book.available) },
+    { key: "unavailable", label: "Unavailable", books: books.filter((book) => !book.lended && !book.pendingRequests?.length && !book.available) },
+  ].filter((group) => group.books.length > 0);
 
   return (
     <div
@@ -82,42 +94,11 @@ export default function MyBooksModal({ show, onClose, user, onBookCreated, onBoo
             <div className="text-center mb-3"><button type="button" className="btn btn-primary add-book-trigger" onClick={() => setShowAddBook(true)}>＋ Share a book</button></div>
             {books.length === 0 && <p>No books yet.</p>}
 
-            <div className="accordion" id="booksAccordion">
-              {books.map((book) => (
-                <div className="accordion-item" key={book.id}>
-                  <h2 className="accordion-header">
-                    <button
-                      className={`accordion-button ${
-                        expandedBookId === book.id ? "" : "collapsed"
-                      } ${expandedBookId === book.id ? "bg-light" : ""}`}
-                      type="button"
-                      onClick={() => toggleAccordion(book.id)}
-                      aria-expanded={expandedBookId === book.id}
-                    >
-                      <BookRow book={book} />
-                    </button>
-                  </h2>
-
-                  <div
-                    id={`collapse-${book.id}`}
-                    className={`accordion-collapse collapse ${
-                      expandedBookId === book.id ? "show" : ""
-                    }`}
-                    data-bs-parent="#booksAccordion"
-                  >
-                    <div className="accordion-body">
-                      <p><strong>Author:</strong> {book.author}</p>
-                      <p><strong>Language:</strong> {book.language}</p>
-                      <p><strong>Age:</strong> {book.age}</p>
-                      <p><strong>Available:</strong> {book.available ? "Yes" : "No"}</p>
-                      <button className="btn btn-sm btn-outline-primary" onClick={() => setActiveBook(book)}>
-                        Manage this book
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <div className="my-books-groups">{bookGroups.map((group) => <section className={`my-books-group my-books-group-${group.key}`} key={group.key}>
+              <h6>{group.label} <span>({group.books.length})</span></h6>
+              {group.key === "lent" && group.books.some((book) => book.pendingRequests?.length) && <small className="my-books-group-note">If you accept one request, the other pending requests for that book will be refused automatically.</small>}
+              <div className="my-books-list">{group.books.map((book) => <BookRow book={book} onEdit={() => setActiveBook(book)} key={book.id} />)}</div>
+            </section>)}</div>
           </div>
         </div>
       </div>
@@ -125,7 +106,8 @@ export default function MyBooksModal({ show, onClose, user, onBookCreated, onBoo
         <BookActionsModal
           book={activeBook}
           onClose={() => setActiveBook(null)}
-          onUpdate={(updated) => {
+          onOpenConversation={onOpenConversation}
+          onUpdate={(updated, options = {}) => {
             if (!updated) {
               setBooks((current) => current.filter((item) => (
                 item.id !== activeBook.id && item.documentId !== activeBook.documentId
@@ -145,9 +127,10 @@ export default function MyBooksModal({ show, onClose, user, onBookCreated, onBoo
               // Re-read the source of truth as well, keeping the local update
               // instantaneous while guarding against stale response shapes.
               setRefreshToken((value) => value + 1);
+              if (options.keepOpen) setActiveBook((current) => ({ ...current, ...updated, available: updated.available }));
             }
             onBookUpdated?.();
-            setActiveBook(null);
+            if (!options.keepOpen) setActiveBook(null);
           }}
         />
       )}

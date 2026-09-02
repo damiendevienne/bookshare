@@ -45,6 +45,7 @@
     "borrowerReceivedAt": { "type": "datetime" },
     "lenderLentAt": { "type": "datetime" },
     "borrowerReturnedAt": { "type": "datetime" },
-    "lenderReceivedBackAt": { "type": "datetime" }
+    "lenderReceivedBackAt": { "type": "datetime" },
+    "lastLoanReminderAt": { "type": "datetime" }
   }
 }

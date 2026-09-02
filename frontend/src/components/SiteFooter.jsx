@@ -1,11 +1,15 @@
 import React, { useState } from "react";
+import { communityCharterIntro, communityCharterPoints, communityCharterClosing } from "../constants/communityCharter";
 
 export default function SiteFooter() {
   const [section, setSection] = useState(null);
   const content = {
     about: {
       title: "About BookMyBook",
-      body: "BookMyBook helps people share physical books locally and in person. Browse the community library, offer books from your own shelf and arrange exchanges directly with other readers.",
+      body: [
+        "BookMyBook began in Heraklion when a French family moved to Crete and realised they couldn’t bring all the books they wanted to keep reading. 📚 Finding books in French was not always easy, so we created a simple way for local readers to lend and borrow books freely.",
+        "Today, BookMyBook is open to every language and every expat community. 🌍",
+      ],
     },
     help: {
       title: "Help",
@@ -14,6 +18,11 @@ export default function SiteFooter() {
     legal: {
       title: "Legal",
       body: "BookMyBook is an independent project. The application code and BookMyBook identity are protected by copyright. Third-party libraries and catalogue content remain subject to their respective licenses and terms.",
+    },
+    charter: {
+      title: "Community Charter",
+      body: communityCharterIntro,
+      points: communityCharterPoints,
     },
   };
 
@@ -39,7 +48,10 @@ export default function SiteFooter() {
                 <h5 className="modal-title">{section.title}</h5>
                 <button type="button" className="btn-close" onClick={() => setSection(null)} aria-label="Close" />
               </div>
-              <div className="modal-body"><p className="mb-0">{section.body}</p></div>
+              <div className="modal-body">
+                {Array.isArray(section.body) ? section.body.map((paragraph) => <p key={paragraph}>{paragraph}</p>) : <p>{section.body}</p>}
+                {section.points && <><ul>{section.points.map((point) => <li key={point}>{point}</li>)}</ul><p className="mb-0 fw-semibold text-center">{communityCharterClosing}</p></>}
+              </div>
               <div className="modal-footer"><button type="button" className="btn btn-secondary" onClick={() => setSection(null)}>Close</button></div>
             </div>
           </div>

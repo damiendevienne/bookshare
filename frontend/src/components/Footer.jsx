@@ -9,6 +9,8 @@ export default function Footer({ isLoggedIn, user = {}, onLoginToggle, onBookCre
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showMyBooks, setShowMyBooks] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
+  const [initialConversationId, setInitialConversationId] = useState(null);
+  const [myBooksRefreshToken, setMyBooksRefreshToken] = useState(0);
   const [unreadMessages, setUnreadMessages] = useState(0);
 
   useEffect(() => {
@@ -35,6 +37,18 @@ export default function Footer({ isLoggedIn, user = {}, onLoginToggle, onBookCre
   const handleLogout = () => {
     setShowLogoutConfirm(false);
     onLoginToggle(); // trigger logout logic in parent
+  };
+  const openConversation = (conversationId) => {
+    setInitialConversationId(conversationId);
+    setShowMessages(true);
+  };
+  const closeMessages = () => {
+    setShowMessages(false);
+    setInitialConversationId(null);
+  };
+  const handleLoanUpdated = (...args) => {
+    setMyBooksRefreshToken((value) => value + 1);
+    onBookUpdated?.(...args);
   };
 
   return (
@@ -149,9 +163,11 @@ export default function Footer({ isLoggedIn, user = {}, onLoginToggle, onBookCre
           activeZoneDocumentId={activeZoneDocumentId}
           onBookCreated={onBookCreated}
           onBookUpdated={onBookUpdated}
+          onOpenConversation={openConversation}
+          externalRefreshToken={myBooksRefreshToken}
         />
       )}
-      <MessagesModal show={showMessages} onClose={() => setShowMessages(false)} user={user} onUnreadCountChange={setUnreadMessages} onBookUpdated={onBookUpdated} />
+      <MessagesModal show={showMessages} initialConversationId={initialConversationId} onContextBack={initialConversationId ? closeMessages : undefined} onClose={closeMessages} user={user} onUnreadCountChange={setUnreadMessages} onBookUpdated={handleLoanUpdated} />
     </>
   );
 }
