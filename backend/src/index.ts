@@ -43,6 +43,14 @@ export default {
         if (!template?.options) continue;
         template.options.from = { name: 'BookMyBook', email: configuredSender };
         template.options.response_email = process.env.EMAIL_DEFAULT_REPLY_TO || configuredSender;
+        if (templateName === 'email_confirmation') {
+          template.options.object = 'Confirm your BookMyBook account';
+          template.options.message = `<p>Welcome to BookMyBook!</p>
+<p>Please confirm your email address to activate your account.</p>
+<p><a href="<%= URL %>?confirmation=<%= CODE %>" style="display:inline-block;padding:12px 18px;background:#6bb5f3;color:#111;text-decoration:none;border-radius:6px;font-weight:600">Confirm my email address</a></p>
+<p>If you did not create this account, you can ignore this message.</p>
+<p>Happy reading! 📚</p>`;
+        }
       }
       await usersPermissionsStore.set({ key: 'email', value: emailSettings });
     }
