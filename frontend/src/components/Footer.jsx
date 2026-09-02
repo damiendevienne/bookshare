@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Heart, BookOpen, LogIn, UserRoundX, MessageCircle } from "lucide-react";
+import { Heart, BookOpen, LogIn, MessageCircle } from "lucide-react";
 import MyBooksModal from "./mybooks/MyBooksModal";
 import MessagesModal from "./messages/MessagesModal";
 import api from "../api";
@@ -95,24 +95,15 @@ export default function Footer({ isLoggedIn, user = {}, onLoginToggle, onBookCre
             </button>
           )}
 
-          {/* Login / Logout */}
-          <button
+          {/* Login (logout is available in Settings → Account) */}
+          {!isLoggedIn && <button
             className="btn btn-link text-secondary d-flex flex-column align-items-center"
             style={{ textDecoration: "none" }}
             onClick={handleUserClick}
           >
-            {isLoggedIn ? (
-              <>
-                <UserRoundX size={22} color="var(--bookmybook-navy)" />
-                <small className="footer-username" style={{color:"var(--bookmybook-navy)"}} title={user?.username || "User"}>{user?.username || "User"}</small>
-              </>
-            ) : (
-              <>
-                <LogIn size={22} />
-                <small>Login</small>
-              </>
-            )}
-          </button>
+            <LogIn size={22} />
+            <small>Login</small>
+          </button>}
         </div>
       </footer>
 

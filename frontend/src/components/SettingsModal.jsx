@@ -31,6 +31,21 @@ export default function SettingsModal({ show, onClose, isLoggedIn, user, onLogin
             <button type="button" className="btn-close" onClick={onClose} aria-label="Close settings" />
           </div>
           <div className="modal-body">
+            <div className="settings-account settings-field">
+              <div className="settings-account-title"><UserRound size={17} /> Account</div>
+              {isLoggedIn ? (
+                <>
+                  <div>Signed in as <strong>{user?.username || "User"}</strong></div>
+                  {user?.email && <div className="text-muted small">{user.email}</div>}
+                  <button type="button" className="btn btn-outline-danger btn-sm mt-2" onClick={() => { onClose(); onLoginToggle?.(); }}><LogOut size={15} /> Log out</button>
+                </>
+              ) : (
+                <>
+                  <div className="text-muted small">You are not logged in.</div>
+                  <button type="button" className="btn btn-primary btn-sm mt-2" onClick={() => { onClose(); onLoginToggle?.(); }}>Log in</button>
+                </>
+              )}
+            </div>
             <div className="settings-field">
               <label htmlFor="settings-zone">📍 Sharing area</label>
               <select id="settings-zone" className="form-select" value={activeZone || ""} onChange={(event) => onZoneChange?.(event.target.value)}>
@@ -55,23 +70,6 @@ export default function SettingsModal({ show, onClose, isLoggedIn, user, onLogin
                 <button type="button" className={`btn ${theme === "light" ? "btn-primary" : "btn-outline-primary"}`} onClick={() => setTheme("light")}><Sun size={16} /> Light</button>
                 <button type="button" className={`btn ${theme === "dark" ? "btn-primary" : "btn-outline-primary"}`} onClick={() => setTheme("dark")}><Moon size={16} /> Dark</button>
               </div>
-            </div>
-
-            <div className="settings-account">
-              <div className="settings-account-title"><UserRound size={17} /> Account</div>
-              {isLoggedIn ? (
-                <>
-                  <div><strong>{user?.username || "User"}</strong></div>
-                  {user?.email && <div className="text-muted small">{user.email}</div>}
-                  {user?.id && <div className="text-muted small">Account ID: {user.id}</div>}
-                  <button type="button" className="btn btn-outline-danger btn-sm mt-2" onClick={() => { onClose(); onLoginToggle?.(); }}><LogOut size={15} /> Log out</button>
-                </>
-              ) : (
-                <>
-                  <div className="text-muted small">You are not logged in.</div>
-                  <button type="button" className="btn btn-primary btn-sm mt-2" onClick={() => { onClose(); onLoginToggle?.(); }}>Log in</button>
-                </>
-              )}
             </div>
 
             <div className="settings-extra text-muted small">

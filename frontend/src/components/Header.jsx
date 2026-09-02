@@ -1,5 +1,5 @@
 import React from "react";
-import { Settings } from "lucide-react";
+import { UserCog } from "lucide-react";
 import SettingsModal from "./SettingsModal";
 
 export default function Header({ isLoggedIn, user, onLoginToggle, activeZone, zones, onZoneChange, welcomeMessage, onDismissWelcome }) {
@@ -22,7 +22,7 @@ export default function Header({ isLoggedIn, user, onLoginToggle, activeZone, zo
           aria-label="Open settings"
           title="Settings"
         >
-          <Settings size={21} />
+          <UserCog size={21} />
         </button>
         {/*<h1 className="fs-3 mb-2">📚 BookShare Heraklion</h1>*/}
         <div className="text-center my-4 logo-stage">
