@@ -16,6 +16,7 @@ export default function Footer({ isLoggedIn, user = {}, onLoginToggle, onBookCre
   useEffect(() => {
     if (!isLoggedIn || !user?.id) {
       setUnreadMessages(0);
+      navigator.clearAppBadge?.();
       return undefined;
     }
     const refreshUnread = () => api.get(`/api/conversations/mine?zone=${encodeURIComponent(activeZone || "heraklion")}`)
@@ -36,12 +37,17 @@ export default function Footer({ isLoggedIn, user = {}, onLoginToggle, onBookCre
     return () => window.clearInterval(timer);
   }, [isLoggedIn, user?.id, activeZone]);
   useEffect(() => {
-    const handlePushNotification = () => {
-      if (isLoggedIn) setUnreadMessages((current) => current + 1);
+    const keepBadgeVisible = () => {
+      if (!isLoggedIn || !unreadMessages || !("setAppBadge" in navigator)) return;
+      navigator.setAppBadge(unreadMessages).catch(() => {});
     };
-    window.addEventListener("bookmybook:push-notification", handlePushNotification);
-    return () => window.removeEventListener("bookmybook:push-notification", handlePushNotification);
-  }, [isLoggedIn]);
+    document.addEventListener("visibilitychange", keepBadgeVisible);
+    window.addEventListener("pagehide", keepBadgeVisible);
+    return () => {
+      document.removeEventListener("visibilitychange", keepBadgeVisible);
+      window.removeEventListener("pagehide", keepBadgeVisible);
+    };
+  }, [isLoggedIn, unreadMessages]);
   useEffect(() => {
     if (isLoggedIn) return;
     setShowMessages(false);
