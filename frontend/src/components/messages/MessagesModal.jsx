@@ -196,7 +196,7 @@ export default function MessagesModal({ show, onClose, onContextBack, user, acti
       if (loan?.borrower?.id === user.id) {
         return "You confirmed that you received the book. Enjoy your reading!\n\nWhen you’ve finished it, use the button below to arrange the return with the owner. Once the owner confirms its return, the book will become available for others to borrow again.";
       }
-      return `${loan?.borrower?.username || otherParticipant(active, user.id)?.username || "The borrower"} confirmed the reception of the book.`;
+      return `${loan?.borrower?.username || otherParticipant(active, user.id)?.username || "The borrower"} confirmed receiving your book.`;
     }
     if (message.content?.startsWith("You recovered your book")) {
       const recoveredAt = loan?.lenderReceivedBackAt || message.createdAt;
