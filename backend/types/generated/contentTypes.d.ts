@@ -457,7 +457,9 @@ export interface ApiBookBook extends Struct.CollectionTypeSchema {
       true
     >;
     isbn: Schema.Attribute.String;
-    language: Schema.Attribute.Enumeration<['FR', 'EN', 'GR']>;
+    language: Schema.Attribute.Enumeration<
+      ['FR', 'EN', 'GR', 'ES', 'DE', 'IT', 'PT', 'NL', 'AR', 'RU', 'ZH', 'JA']
+    >;
     loans: Schema.Attribute.Relation<'oneToMany', 'api::loan.loan'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<'oneToMany', 'api::book.book'> &
@@ -568,7 +570,7 @@ export interface ApiLoanLoan extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     publishedAt: Schema.Attribute.DateTime;
     status: Schema.Attribute.Enumeration<
-      ['requested', 'refused', 'active', 'returned']
+      ['requested', 'refused', 'cancelled', 'active', 'returned']
     > &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<'requested'>;
@@ -1141,6 +1143,14 @@ export interface PluginUsersPermissionsUser
         minLength: 6;
       }>;
     favoriteBookIds: Schema.Attribute.JSON & Schema.Attribute.DefaultTo<[]>;
+    firstName: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 80;
+      }>;
+    lastName: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 80;
+      }>;
     loansAsBorrower: Schema.Attribute.Relation<'oneToMany', 'api::loan.loan'>;
     loansAsLender: Schema.Attribute.Relation<'oneToMany', 'api::loan.loan'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;

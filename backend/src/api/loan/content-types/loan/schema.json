@@ -10,7 +10,7 @@
   "attributes": {
     "status": {
       "type": "enumeration",
-      "enum": ["requested", "refused", "active", "returned"],
+      "enum": ["requested", "refused", "cancelled", "active", "returned"],
       "default": "requested",
       "required": true
     },

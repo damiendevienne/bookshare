@@ -1370,6 +1370,19 @@ footer .btn small {
   text-align: center;
 }
 
+.cancellation-notice {
+  max-width: 90%;
+  margin: 0.75rem auto 1rem;
+  padding: 0.65rem 0.85rem;
+  border-left: 3px solid #d0a66d;
+  border-radius: 0.45rem;
+  color: #6f5c46;
+  background: #fbf5ec;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
 .refusal-confirm-button {
   display: inline-flex;
   min-width: 3.25rem;

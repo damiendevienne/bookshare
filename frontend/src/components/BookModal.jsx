@@ -7,11 +7,12 @@ const textLines = (value) => Array.isArray(value)
   ? value.map((block) => Array.isArray(block?.children) ? block.children.map((child) => child?.text || "").join("").trim() : "").filter(Boolean)
   : typeof value === "string" ? value.split("\n").map((line) => line.trim()).filter(Boolean) : [];
 
-export default function BookModal({ selectedBook, showModal, onClose, onFilterByOwner, ownerCounts, isLoggedIn, user, onBorrowRequested, isFavorite, onFavoriteToggle }) {
+export default function BookModal({ selectedBook, showModal, onClose, onFilterByOwner, ownerCounts, isLoggedIn, user, onBorrowRequested, onOpenDiscussion, isFavorite, onFavoriteToggle }) {
   const [showOwnerModal, setShowOwnerModal] = useState(false);
   const [borrowing, setBorrowing] = useState(false);
   const [borrowError, setBorrowError] = useState("");
   const [loanStatus, setLoanStatus] = useState(null);
+  const [conversationId, setConversationId] = useState(null);
 
   const book = selectedBook?.attributes || selectedBook || {};
   const owner = book.owner?.username || "Unknown";
@@ -23,9 +24,13 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
 
   useEffect(() => {
     setLoanStatus(null);
+    setConversationId(null);
     if (!showModal || !selectedBook || !isLoggedIn || !user?.id || isOwner || !bookIdentifier) return undefined;
     api.get(`/api/loans/status?bookId=${encodeURIComponent(bookIdentifier)}`)
-      .then((res) => setLoanStatus(res.data.data?.status || null))
+      .then((res) => {
+        setLoanStatus(res.data.data?.status || null);
+        setConversationId(res.data.data?.conversationId || null);
+      })
       .catch(() => {});
     return undefined;
   }, [showModal, selectedBook, isLoggedIn, user?.id, bookIdentifier, isOwner]);
@@ -36,8 +41,9 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
     setBorrowing(true);
     setBorrowError("");
     try {
-      await api.post("/api/loans/request", { bookId: bookIdentifier });
+      const response = await api.post("/api/loans/request", { bookId: bookIdentifier });
       setLoanStatus("requested");
+      setConversationId(response.data.data?.conversationId || null);
       onBorrowRequested?.();
     } catch (err) {
       setBorrowError(err.response?.data?.error?.message || "Unable to send the borrowing request.");
@@ -45,8 +51,6 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
       setBorrowing(false);
     }
   };
-
-
   const legacyDescription = textLines(book.description);
   const summaryLines = textLines(book.summary).length > 0
     ? textLines(book.summary)
@@ -152,6 +156,10 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
               <button className="btn btn-primary" disabled={!isLoggedIn || !book.available || isOwner || borrowing || loanStatus === "requested" || loanStatus === "active"} onClick={requestBorrow}>
                 {borrowing ? "Sending…" : loanStatus === "requested" ? "A request was sent to the owner" : loanStatus === "active" ? "You’re currently borrowing this book" : book.available ? "Borrow this book" : "Currently unavailable"}
               </button>
+              {loanStatus === "requested" && <div className="borrow-request-followup">
+                <small className="text-muted">{owner} has been notified.</small>
+                {conversationId && <button type="button" className="btn btn-link btn-sm" onClick={() => { onClose(); onOpenDiscussion?.(conversationId); }}>Open the discussion</button>}
+              </div>}
             </div>
           </div>
         </div>

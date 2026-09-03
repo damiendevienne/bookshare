@@ -3,6 +3,6 @@ export default {
     method: 'POST',
     path: '/feedback',
     handler: 'feedback.send',
-    config: { auth: true },
+    config: { auth: {} },
   }],
 };

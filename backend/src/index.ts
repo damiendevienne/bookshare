@@ -96,7 +96,7 @@ export default {
       'api::book.book.create',
       'api::book.book.update', 'api::book.book.delete',
       'plugin::upload.content-api.upload',
-      'api::loan.request', 'api::loan.status', 'api::loan.accept', 'api::loan.refuse', 'api::loan.confirmReceived',
+      'api::loan.request', 'api::loan.status', 'api::loan.accept', 'api::loan.refuse', 'api::loan.cancel', 'api::loan.confirmReceived',
       'api::loan.confirmLent', 'api::loan.confirmReturned',
       'api::loan.confirmReceivedBack', 'api::conversation.mine',
       'api::book.catalogSearch', 'api::book.book.catalogSearch',
@@ -106,7 +106,7 @@ export default {
       'api::conversation.archive',
       // Strapi 5 may derive the scope with the API UID repeated for custom
       // controllers; keep these aliases for existing development databases.
-      'api::loan.loan.request', 'api::loan.loan.status', 'api::loan.loan.accept', 'api::loan.loan.refuse',
+      'api::loan.loan.request', 'api::loan.loan.status', 'api::loan.loan.accept', 'api::loan.loan.refuse', 'api::loan.loan.cancel',
       'api::loan.loan.confirmReceived', 'api::loan.loan.confirmLent',
       'api::loan.loan.confirmReturned', 'api::loan.loan.confirmReceivedBack',
       'api::conversation.conversation.mine', 'api::conversation.conversation.messages',

@@ -28,8 +28,8 @@ export default function LoginModal({ show, onClose, onLoginSuccess }) {
       const jwt = res.data.jwt;
       const user = res.data.user;
 
-      sessionStorage.setItem("jwt", jwt);
-      sessionStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("jwt", jwt);
+      localStorage.setItem("user", JSON.stringify(user));
 
       onLoginSuccess(user, jwt);
       onClose();
@@ -87,8 +87,8 @@ export default function LoginModal({ show, onClose, onLoginSuccess }) {
       }
       const jwt = res.data.jwt;
       const user = res.data.user;
-      sessionStorage.setItem("jwt", jwt);
-      sessionStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("jwt", jwt);
+      localStorage.setItem("user", JSON.stringify(user));
       onLoginSuccess(user, jwt);
       onClose();
     } catch (err) {

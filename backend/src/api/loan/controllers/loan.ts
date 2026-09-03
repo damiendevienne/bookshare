@@ -18,9 +18,10 @@ export default factories.createCoreController('api::loan.loan', ({ strapi }) => 
     if (!book) return ctx.notFound('Book not found.');
     const loan = await strapi.db.query('api::loan.loan').findOne({
       where: { book: book.id, $or: [{ borrower: userId }, { lender: userId }], status: { $in: ['requested', 'active'] } },
+      populate: { conversation: true },
       orderBy: { createdAt: 'desc' },
     });
-    ctx.body = { data: loan ? { status: loan.status, id: loan.documentId ?? loan.id } : null };
+    ctx.body = { data: loan ? { status: loan.status, id: loan.documentId ?? loan.id, conversationId: loan.conversation?.documentId ?? loan.conversation?.id } : null };
   },
 
   async request(ctx) {
@@ -112,6 +113,16 @@ export default factories.createCoreController('api::loan.loan', ({ strapi }) => 
       data: { status: 'refused' },
     });
     await this.systemMessage(loan, ctx.state.user.id, 'The loan request was refused.');
+    ctx.body = { data: updated };
+  },
+
+  async cancel(ctx) {
+    const loan = await this.findLoanForParticipant(ctx);
+    if (!loan) return;
+    if (loan.borrower.id !== ctx.state.user.id) return ctx.forbidden();
+    if (loan.status !== 'requested') return ctx.badRequest('Only pending requests can be cancelled.');
+    const updated = await strapi.db.query('api::loan.loan').update({ where: { id: loan.id }, data: { status: 'cancelled' } });
+    await this.systemMessage(loan, ctx.state.user.id, 'The borrowing request was cancelled by the borrower.');
     ctx.body = { data: updated };
   },
 

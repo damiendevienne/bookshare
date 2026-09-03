@@ -5,7 +5,7 @@ import MessagesModal from "./messages/MessagesModal";
 import api from "../api";
 
 
-export default function Footer({ isLoggedIn, user = {}, onLoginToggle, onBookCreated, onBookUpdated, activeZone, activeZoneDocumentId, favoritesCount = 0, favoritesOnly, onToggleFavorites }) {
+export default function Footer({ isLoggedIn, user = {}, onLoginToggle, onBookCreated, onBookUpdated, activeZone, activeZoneDocumentId, favoritesCount = 0, favoritesOnly, onToggleFavorites, openConversationId, onConversationOpened }) {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showMyBooks, setShowMyBooks] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
@@ -49,6 +49,11 @@ export default function Footer({ isLoggedIn, user = {}, onLoginToggle, onBookCre
     setInitialConversationId(conversationId);
     setShowMessages(true);
   };
+  useEffect(() => {
+    if (!openConversationId) return;
+    openConversation(openConversationId);
+    onConversationOpened?.();
+  }, [openConversationId]);
   const closeMessages = () => {
     setShowMessages(false);
     setInitialConversationId(null);

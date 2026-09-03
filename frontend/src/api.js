@@ -5,7 +5,7 @@ const apiBaseUrl = import.meta.env.VITE_API_URL || window.location.origin;
 const api = axios.create({ baseURL: apiBaseUrl });
 
 api.interceptors.request.use((config) => {
-  const jwt = sessionStorage.getItem("jwt");
+  const jwt = localStorage.getItem("jwt");
 
   if (jwt) {
     config.headers.Authorization = `Bearer ${jwt}`;

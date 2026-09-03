@@ -35,15 +35,16 @@ function App() {
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [openConversationId, setOpenConversationId] = useState(null);
   //login new const
   const [isLoggedIn, setIsLoggedIn] = useState(
-    !!sessionStorage.getItem("jwt")
+    !!localStorage.getItem("jwt")
   );
   const [showLogin, setShowLogin] = useState(() => new URLSearchParams(window.location.search).get("login") === "1");
   const [welcomeMessage, setWelcomeMessage] = useState("");
   const [catalogueState, setCatalogueState] = useState("loading");
   const [user, setUser] = useState(
-    JSON.parse(sessionStorage.getItem("user")) || null
+    JSON.parse(localStorage.getItem("user")) || null
   );
 
   useEffect(() => {
@@ -76,8 +77,8 @@ function App() {
   const handleLoginToggle = () => {
     if (isLoggedIn) {
       // Logout
-      sessionStorage.removeItem("jwt");
-      sessionStorage.removeItem("user");
+      localStorage.removeItem("jwt");
+      localStorage.removeItem("user");
       setIsLoggedIn(false);
       setUser(null);
     } else {
@@ -359,6 +360,7 @@ function App() {
         isLoggedIn={isLoggedIn}
         user={user}
         onBorrowRequested={handleBookUpdated}
+        onOpenDiscussion={(conversationId) => setOpenConversationId(conversationId)}
         isFavorite={favoriteBookIds.includes(String((selectedBook?.attributes || selectedBook)?.documentId || (selectedBook?.attributes || selectedBook)?.id || ""))}
         onFavoriteToggle={() => toggleFavorite(selectedBook)}
       />
@@ -373,6 +375,8 @@ function App() {
         favoritesCount={favoriteBookIds.length}
         favoritesOnly={favoritesOnly}
         onToggleFavorites={() => setFavoritesOnly((current) => !current)}
+        openConversationId={openConversationId}
+        onConversationOpened={() => setOpenConversationId(null)}
       />
       <LoginModal
         show={showLogin}
