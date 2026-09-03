@@ -113,6 +113,7 @@ export default {
       'api::conversation.conversation.send', 'api::conversation.markRead',
       'api::conversation.conversation.markRead',
       'api::conversation.conversation.archive', 'api::conversation.archive',
+      'api::feedback.feedback.send',
     ];
     const role = await strapi.db.query('plugin::users-permissions.role').findOne({
       where: { type: 'authenticated' },

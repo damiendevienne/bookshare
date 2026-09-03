@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Globe2, LogOut, Moon, Sun, UserRound } from "lucide-react";
+import { Globe2, LogOut, Mail, Moon, Sun, UserRound } from "lucide-react";
+import api from "../api";
 
 function applyTheme(theme) {
   document.body.classList.toggle("theme-dark", theme === "dark");
@@ -8,6 +9,10 @@ function applyTheme(theme) {
 export default function SettingsModal({ show, onClose, isLoggedIn, user, onLoginToggle, activeZone, zones = [], onZoneChange }) {
   const [language, setLanguage] = useState(() => localStorage.getItem("preferredLanguage") || "en");
   const [theme, setTheme] = useState(() => localStorage.getItem("preferredTheme") || "light");
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [feedback, setFeedback] = useState("");
+  const [feedbackSending, setFeedbackSending] = useState(false);
+  const [feedbackStatus, setFeedbackStatus] = useState("");
 
   useEffect(() => {
     applyTheme(theme);
@@ -20,6 +25,17 @@ export default function SettingsModal({ show, onClose, isLoggedIn, user, onLogin
     const nextLanguage = event.target.value;
     setLanguage(nextLanguage);
     localStorage.setItem("preferredLanguage", nextLanguage);
+  };
+  const sendFeedback = async (event) => {
+    event.preventDefault();
+    if (!feedback.trim() || feedbackSending) return;
+    setFeedbackSending(true); setFeedbackStatus("");
+    try {
+      await api.post("/api/feedback", { message: feedback.trim() });
+      setFeedback(""); setFeedbackOpen(false); setFeedbackStatus("Thanks — your message has been sent.");
+    } catch (error) {
+      setFeedbackStatus(error.response?.data?.error?.message || "Unable to send your message. Please try again.");
+    } finally { setFeedbackSending(false); }
   };
 
   return (
@@ -72,9 +88,14 @@ export default function SettingsModal({ show, onClose, isLoggedIn, user, onLogin
               </div>
             </div>
 
-            <div className="settings-extra text-muted small">
-              <strong>More options</strong><br />Feedback and bug reports will be available here as the app grows.
+            {isLoggedIn && <div className="settings-field">
+              <div className="settings-account-title"><Mail size={17} /> Feedback</div>
+              <p className="text-muted small mb-2">BookMyBook is under continuous development. If you spot a bug, a problematic behaviour or book, or have an idea for improvement, send us a message.</p>
+              <button type="button" className="btn btn-outline-primary btn-sm" onClick={() => { setFeedbackOpen((current) => !current); setFeedbackStatus(""); }}>{feedbackOpen ? "Cancel" : "Report a problem or suggest an improvement"}</button>
+              {feedbackOpen && <form className="mt-2" onSubmit={sendFeedback}><textarea className="form-control mb-2" rows="4" maxLength="3000" value={feedback} onChange={(event) => setFeedback(event.target.value)} placeholder="Tell us what happened or what you would like to suggest…" required /><button type="submit" className="btn btn-primary btn-sm" disabled={feedbackSending || !feedback.trim()}>{feedbackSending ? "Sending…" : "Send message"}</button></form>}
+              {feedbackStatus && <div className="text-muted small mt-2" role="status">{feedbackStatus}</div>}
             </div>
+            }
           </div>
         </div>
       </div>
