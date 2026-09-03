@@ -149,7 +149,7 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
               )}
               {borrowError && <small className="text-danger me-auto">{borrowError}</small>}
               <button className="btn btn-primary" disabled={!isLoggedIn || !book.available || isOwner || borrowing || loanStatus === "requested" || loanStatus === "active"} onClick={requestBorrow}>
-                {borrowing ? "Sending…" : loanStatus === "requested" ? "A request was sent to the owner" : loanStatus === "active" ? "Borrowing in progress" : book.available ? "Borrow this book" : "Currently unavailable"}
+                {borrowing ? "Sending…" : loanStatus === "requested" ? "A request was sent to the owner" : loanStatus === "active" ? "You’re currently borrowing this book" : book.available ? "Borrow this book" : "Currently unavailable"}
               </button>
             </div>
           </div>
