@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Heart } from "lucide-react";
 import api, { mediaUrl } from "../api";
+import { languageLabel } from "../constants/languages";
 
 const textLines = (value) => Array.isArray(value)
   ? value.map((block) => Array.isArray(block?.children) ? block.children.map((child) => child?.text || "").join("").trim() : "").filter(Boolean)
@@ -124,7 +125,7 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
               <div className="book-details-badge-row mb-2">
                 <div>
                   {book.age && <span className="badge bg-primary me-2">{book.age}</span>}
-                  {book.language && <span className="badge bg-warning">{book.language}</span>}
+                  {book.language && <span className="badge bg-warning">{languageLabel(book.language)}</span>}
                 </div>
                 <button type="button" className={`book-modal-favorite-button ${isFavorite ? "is-favorite" : ""}`} aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"} aria-pressed={isFavorite} onClick={onFavoriteToggle}>
                   <Heart size={24} fill={isFavorite ? "currentColor" : "none"} />

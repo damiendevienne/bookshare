@@ -60,9 +60,7 @@
     "language": {
       "type": "enumeration",
       "enum": [
-        "FR",
-        "EN",
-        "GR"
+        "FR", "EN", "GR", "ES", "DE", "IT", "PT", "NL", "AR", "RU", "ZH", "JA"
       ]
     },
     "age": {

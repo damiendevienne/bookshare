@@ -2,6 +2,7 @@ import React from "react";
 import { Heart } from "lucide-react";
 import "../App.css";
 import { mediaUrl } from "../api";
+import { languageLabel } from "../constants/languages";
 
 export default function BookCard({ bookData, onClick, isFavorite, onFavoriteToggle }) {
   const book = bookData.attributes || bookData;
@@ -36,7 +37,7 @@ export default function BookCard({ bookData, onClick, isFavorite, onFavoriteTogg
           />
 
           <span className="badge bg-warning badge-overlay-top-right position-absolute">
-            {language}
+            {languageLabel(language)}
           </span>
           <span
             className={`badge badge-overlay-bottom-left position-absolute ${

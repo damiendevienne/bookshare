@@ -1,4 +1,5 @@
 import React from "react";
+import { languages } from "../constants/languages";
 
 export default function FilterPanel({ filters, setFilters }) {
   return (
@@ -44,9 +45,7 @@ export default function FilterPanel({ filters, setFilters }) {
             onChange={(e) => setFilters({ ...filters, language: e.target.value })}
           >
             <option value="">All</option>
-            <option value="FR">FR</option>
-            <option value="EN">EN</option>
-            <option value="GR">GR</option>
+            {languages.map(([code, name]) => <option value={code} key={code}>{name} ({code})</option>)}
           </select>
         </div>
 

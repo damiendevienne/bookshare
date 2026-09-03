@@ -126,7 +126,7 @@ export default factories.createCoreController('api::book.book', ({ strapi }) => 
       const response = await fetch(`https://openlibrary.org/search.json?${params.toString()}`, { signal: AbortSignal.timeout(6000), headers: { Accept: 'application/json' } });
       if (!response.ok) return ctx.badGateway('The external book catalogue is temporarily unavailable.');
       const payload = await response.json();
-      const languageMap = { fre: 'FR', fra: 'FR', eng: 'EN', gre: 'GR', ell: 'GR' };
+      const languageMap = { fre: 'FR', fra: 'FR', eng: 'EN', gre: 'GR', ell: 'GR', spa: 'ES', ger: 'DE', deu: 'DE', ita: 'IT', por: 'PT', dut: 'NL', nld: 'NL', ara: 'AR', rus: 'RU', chi: 'ZH', zho: 'ZH', jpn: 'JA' };
       ctx.body = { data: (payload.docs || []).filter((book) => book.title).map((book) => ({
         id: book.key, title: book.title, author: book.author_name?.[0] || '', year: book.first_publish_year || null,
         isbn: book.isbn?.[0] || null, summary: Array.isArray(book.first_sentence) ? book.first_sentence[0] : (typeof book.description === 'string' ? book.description : null), language: languageMap[book.language?.[0]] || null,
