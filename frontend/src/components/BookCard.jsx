@@ -52,7 +52,7 @@ export default function BookCard({ bookData, onClick, isFavorite, onFavoriteTogg
 
         <div className="text-muted small px-2 mt-1">
           Owner:{" "}
-            {book.owner?.username || "Unknown"}
+          <strong>{book.owner?.username || "Unknown"}</strong>
         </div>
         <div className="card-body py-2 px-2">
           <h6 className="card-title mb-1 truncate-2">{book.title}</h6>
