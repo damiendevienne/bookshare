@@ -1,6 +1,7 @@
 import React, { useRef, useState } from "react";
 import { Trash } from "lucide-react";
 import api, { mediaUrl } from "../../api";
+import { languages } from "../../constants/languages";
 
 const legacyText = (value) => Array.isArray(value)
   ? value.map((block) => Array.isArray(block?.children) ? block.children.map((child) => child?.text || "").join("") : "").filter(Boolean).join("\n")
@@ -25,6 +26,7 @@ export default function BookActionsModal({ book, onClose, onUpdate, onOpenConver
   const [saving, setSaving] = useState(false);
   const [title, setTitle] = useState(book.title || "");
   const [author, setAuthor] = useState(book.author || "");
+  const [language, setLanguage] = useState(book.language || "FR");
   const imported = book.catalogSource === "openlibrary";
   const oldDescription = legacyText(book.description);
   const [summary, setSummary] = useState(book.summary || (imported ? oldDescription : ""));
@@ -61,8 +63,8 @@ export default function BookActionsModal({ book, onClose, onUpdate, onOpenConver
       if (newFiles.some((file) => !file.type.startsWith("image/") || file.size > 5 * 1024 * 1024)) throw new Error("Each image must be an image file smaller than 5 MB.");
       let imageIds = images.filter((image) => image.id).map((image) => image.id);
       if (newFiles.length) { const formData = new FormData(); newFiles.forEach((file) => formData.append("files", file)); const upload = await api.post("/api/upload", formData); imageIds = [...imageIds, ...upload.data.map((item) => item.id)]; }
-      const response = await api.put(`/api/books/${bookIdentifier}`, { data: { title: imported ? book.title : title.trim(), author: imported ? book.author : author.trim(), summary: summary.trim() || null, ownerComment: ownerComment.trim() || null, age, ...(imported ? {} : { image: imageIds }) } });
-      onUpdate({ ...book, ...(response.data.data || {}), title, author, summary, ownerComment, age, imageRecords: images });
+      const response = await api.put(`/api/books/${bookIdentifier}`, { data: { title: imported ? book.title : title.trim(), author: imported ? book.author : author.trim(), summary: summary.trim() || null, ownerComment: ownerComment.trim() || null, age, ...(imported ? {} : { language, image: imageIds }) } });
+      onUpdate({ ...book, ...(response.data.data || {}), title, author, language, summary, ownerComment, age, imageRecords: images });
     } catch (err) { setError(err.response?.data?.error?.message || err.message || "Unable to save book details."); }
     finally { setSaving(false); }
   };
@@ -128,7 +130,8 @@ export default function BookActionsModal({ book, onClose, onUpdate, onOpenConver
                   <label className="form-label">Title</label><input className="form-control mb-3" value={title} onChange={(event) => setTitle(event.target.value)} required disabled={hasLoanHistory} />
                   <label className="form-label">Author</label><input className="form-control" value={author} onChange={(event) => setAuthor(event.target.value)} required disabled={hasLoanHistory} />
                 </>}
-                <label className="form-label mt-3">Audience</label><select className="form-select mb-3" value={age} onChange={(event) => setAge(event.target.value)} disabled={hasLoanHistory}><option value="kids">Kids (0–10)</option><option value="teenagers">Teenagers (11–15)</option><option value="adults">Adults (16+)</option></select>
+                  <label className="form-label mt-3">Language</label><select className="form-select mb-3" value={language} onChange={(event) => setLanguage(event.target.value)} disabled={hasLoanHistory}>{languages.map(([code, name]) => <option value={code} key={code}>{name} ({code})</option>)}</select>
+                  <label className="form-label">Audience</label><select className="form-select mb-3" value={age} onChange={(event) => setAge(event.target.value)} disabled={hasLoanHistory}><option value="kids">Kids (0–10)</option><option value="teenagers">Teenagers (11–15)</option><option value="adults">Adults (16+)</option></select>
                 {!imported && <><label className="form-label">Cover images</label><input ref={galleryInputRef} className="visually-hidden" type="file" accept="image/*" onChange={handleImageSelection} disabled={hasLoanHistory} /><input ref={cameraInputRef} className="visually-hidden" type="file" accept="image/*" capture="environment" onChange={handleImageSelection} disabled={hasLoanHistory} /><div className="cover-picker-row">{images.map((image, index) => <div className="cover-picker-image" key={image.id || `${image.name}-${image.lastModified}`}><img src={image instanceof File ? URL.createObjectURL(image) : mediaUrl(image.formats?.small?.url || image.formats?.thumbnail?.url || image.url)} alt={`Book cover ${index + 1}`} /><button type="button" className="cover-picker-remove" onClick={() => removeImage(index)} aria-label="Remove image" disabled={hasLoanHistory}>×</button></div>)}{images.length < 2 && <button type="button" className="cover-picker-placeholder" onClick={addImage} aria-label="Add a cover image" disabled={hasLoanHistory}><span>＋</span></button>}{images.length === 2 && <button type="button" className="btn btn-outline-secondary btn-sm align-self-center" onClick={() => setImages((current) => [current[1], current[0]])} disabled={hasLoanHistory}>Change order</button>}</div>{showImageChoices && <div className="image-choice-backdrop" role="dialog" aria-modal="true" onClick={() => setShowImageChoices(false)}><div className="image-choice-modal" onClick={(event) => event.stopPropagation()}><h6>Add a cover image</h6><p className="text-muted small">Choose where to get the image.</p><button type="button" className="btn btn-primary w-100 mb-2" onClick={() => cameraInputRef.current?.click()}>Take a photo</button><button type="button" className="btn btn-outline-primary w-100 mb-2" onClick={() => galleryInputRef.current?.click()}>Choose from gallery</button><button type="button" className="btn btn-link btn-sm" onClick={() => setShowImageChoices(false)}>Cancel</button></div></div>}</>}
               </section>
               <section className="book-editor-section">
