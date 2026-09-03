@@ -30,6 +30,7 @@ function App() {
   const [showZoneChooser, setShowZoneChooser] = useState(() => !window.location.pathname.split("/")[1] && !localStorage.getItem("activeZone"));
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState({ age: "", available: "", language: "", owner: "" });
+  const [pendingFilters, setPendingFilters] = useState({ age: "", available: "", language: "", owner: "" });
   const [sortOrder, setSortOrder] = useState("newest");
   const [favoriteBookIds, setFavoriteBookIds] = useState([]);
   const [favoritesOnly, setFavoritesOnly] = useState(false);
@@ -213,7 +214,7 @@ function App() {
       .replace(/[\u0300-\u036f]/g, ""); // removes accents
   }
 
-  const filteredBooks = books.filter((b) => {
+  const matchesFilters = (b, activeFilters) => {
     const book = b.attributes || b;
     const title = normalize(book.title || "");
     const author = normalize(book.author || "");
@@ -221,22 +222,22 @@ function App() {
   
     // Normalize owner name (for consistent comparison)
     const ownerName = normalize(book.owner?.username || "");
-    const ownerFilter = normalize(filters.owner || "");
+    const ownerFilter = normalize(activeFilters.owner || "");
   
     // Search term logic
     if (term && !title.includes(term) && !author.includes(term)) return false;
   
     // Age filter
-    if (filters.age && book.age !== filters.age) return false;
+    if (activeFilters.age && book.age !== activeFilters.age) return false;
   
     // Availability filter
-    if (filters.available) {
-      if (filters.available === "yes" && !book.available) return false;
-      if (filters.available === "no" && book.available) return false;
+    if (activeFilters.available) {
+      if (activeFilters.available === "yes" && !book.available) return false;
+      if (activeFilters.available === "no" && book.available) return false;
     }
   
     // Language filter
-    if (filters.language && book.language !== filters.language) return false;
+    if (activeFilters.language && book.language !== activeFilters.language) return false;
   
     // 🆕 Owner filter (accent & case insensitive + partial match)
     if (ownerFilter && !ownerName.includes(ownerFilter)) return false;
@@ -245,7 +246,9 @@ function App() {
     if (favoritesOnly && !favoriteBookIds.includes(favoriteId)) return false;
   
     return true;
-  });
+  };
+  const filteredBooks = books.filter((b) => matchesFilters(b, filters));
+  const filterPreviewCount = books.filter((b) => matchesFilters(b, pendingFilters)).length;
   const activeFilterCount = Object.values(filters).filter((v) => v).length;
   const sortedBooks = [...filteredBooks].sort((leftEntry, rightEntry) => {
     const left = leftEntry.attributes || leftEntry;
@@ -294,7 +297,7 @@ function App() {
           </div>
         </div>
       </div>
-      <FilterPanel filters={filters} setFilters={setFilters} />
+      <FilterPanel filters={pendingFilters} setFilters={setPendingFilters} matchingCount={filterPreviewCount} onApply={() => setFilters(pendingFilters)} />
 
       {catalogueState !== "ready" && (
         <div className="container pt-3">

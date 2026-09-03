@@ -1,7 +1,7 @@
 import React from "react";
 import { languages } from "../constants/languages";
 
-export default function FilterPanel({ filters, setFilters }) {
+export default function FilterPanel({ filters, setFilters, matchingCount, onApply }) {
   return (
     <div
       className="offcanvas offcanvas-end"
@@ -88,9 +88,14 @@ export default function FilterPanel({ filters, setFilters }) {
           </div>
         </div>
 
-        {/* 🆕 Reset button */}
+        <div className="filter-preview-count text-muted small text-center mb-3">
+          {matchingCount} {matchingCount === 1 ? "book" : "books"} match these filters
+        </div>
+
+        {/* Reset and apply buttons */}
         <div className="d-grid">
           <button
+            type="button"
             className="btn btn-outline-secondary"
             onClick={() =>
               setFilters({ age: "", available: "", language: "", owner: "" })
@@ -98,6 +103,7 @@ export default function FilterPanel({ filters, setFilters }) {
           >
             Reset all filters
           </button>
+          <button type="button" className="btn btn-primary mt-2" data-bs-dismiss="offcanvas" onClick={onApply}>Apply filters</button>
         </div>
       </div>
     </div>
