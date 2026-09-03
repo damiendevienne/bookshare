@@ -19,7 +19,17 @@ export default function Footer({ isLoggedIn, user = {}, onLoginToggle, onBookCre
       return undefined;
     }
     const refreshUnread = () => api.get(`/api/conversations/mine?zone=${encodeURIComponent(activeZone || "heraklion")}`)
-      .then((res) => setUnreadMessages((res.data.data || []).reduce((sum, item) => sum + (item.unreadCount || 0), 0)))
+      .then((res) => {
+        const count = (res.data.data || []).reduce((sum, item) => {
+          const pendingRequest = item.loans?.some((loan) => loan.status === "requested" && loan.lender?.id === user.id);
+          return sum + Math.max(item.unreadCount || 0, pendingRequest ? 1 : 0);
+        }, 0);
+        setUnreadMessages(count);
+        if ("setAppBadge" in navigator) {
+          if (count > 0) navigator.setAppBadge(count).catch(() => {});
+          else navigator.clearAppBadge?.();
+        }
+      })
       .catch(() => {});
     refreshUnread();
     const timer = window.setInterval(refreshUnread, 5000);

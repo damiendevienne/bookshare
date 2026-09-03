@@ -109,7 +109,10 @@ export default function MessagesModal({ show, onClose, onContextBack, user, acti
       if (!refreshed || loanStateSignature(refreshed) === loanStateSignature(current)) return current;
       return refreshed;
     });
-    onUnreadCountChange?.(next.reduce((sum, item) => sum + (item.unreadCount || 0), 0));
+    onUnreadCountChange?.(next.reduce((sum, item) => {
+      const pendingRequest = item.loans?.some((loan) => loan.status === "requested" && loan.lender?.id === user.id);
+      return sum + Math.max(item.unreadCount || 0, pendingRequest ? 1 : 0);
+    }, 0));
     return next;
   }), [onUnreadCountChange]);
   useEffect(() => {
@@ -142,7 +145,10 @@ export default function MessagesModal({ show, onClose, onContextBack, user, acti
           const pendingRequest = item.loans?.some((loan) => loan.status === "requested" && loan.lender?.id === user.id);
           return { ...item, unreadCount: pendingRequest ? 1 : 0 };
         });
-        onUnreadCountChange?.(next.reduce((sum, item) => sum + (item.unreadCount || 0), 0));
+        onUnreadCountChange?.(next.reduce((sum, item) => {
+          const pendingRequest = item.loans?.some((loan) => loan.status === "requested" && loan.lender?.id === user.id);
+          return sum + Math.max(item.unreadCount || 0, pendingRequest ? 1 : 0);
+        }, 0));
         return next;
       });
       return loadConversations();
