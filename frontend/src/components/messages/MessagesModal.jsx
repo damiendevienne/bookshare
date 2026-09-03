@@ -94,6 +94,7 @@ export default function MessagesModal({ show, onClose, onContextBack, user, acti
   const [error, setError] = useState("");
   const [returnMessage, setReturnMessage] = useState(null);
   const [sendingReturnMessage, setSendingReturnMessage] = useState(false);
+  const [pendingLoanAction, setPendingLoanAction] = useState(null);
   const [collapsedDiscussionGroups, setCollapsedDiscussionGroups] = useState({ "past-owned": true, "past-borrowed": true });
   const returnMessageRef = useRef(null);
   const conversationThreadRef = useRef(null);
@@ -280,6 +281,17 @@ export default function MessagesModal({ show, onClose, onContextBack, user, acti
     } catch (err) { setError(err.response?.data?.error?.message || "Unable to update this loan."); }
   };
 
+  const askLoanAction = (loan, action) => setPendingLoanAction({ loan, action });
+  const confirmLoanAction = async () => {
+    if (!pendingLoanAction) return;
+    const action = pendingLoanAction;
+    setPendingLoanAction(null);
+    await loanAction(action.loan, action.action);
+  };
+  const confirmationCopy = pendingLoanAction?.action === "confirm-received"
+    ? { title: "Confirm book reception", body: "Confirm that you received the book in person? This will record the handover." }
+    : { title: "Confirm book recovery", body: "Confirm that you recovered your book? This will complete the loan and make the book available for others again." };
+
   if (!show || !user?.id) return null;
   return <div className="modal fade show" style={{ display: "block", backgroundColor: "rgba(0,0,0,.5)" }} onClick={closeModal}>
     <div className="modal-dialog modal-lg modal-dialog-scrollable" onClick={(e) => e.stopPropagation()}>
@@ -395,14 +407,14 @@ export default function MessagesModal({ show, onClose, onContextBack, user, acti
                 <div className="receipt-action-title">Have you received the book?</div>
                 <div className="receipt-action-help">Confirm this only after the handover has taken place.</div>
               </div>
-              <button className="btn btn-success receipt-action-button" onClick={() => loanAction(loan, "confirm-received")}>✓ I received the book</button>
+              <button className="btn btn-success receipt-action-button" onClick={() => askLoanAction(loan, "confirm-received")}>✓ I received the book</button>
             </div>)}
             {loans.filter((loan) => loan.status === "active" && loan.lender?.id === user.id && loan.borrowerReceivedAt && !loan.lenderReceivedBackAt).map((loan) => <div className="receipt-action-card" key={loan.documentId || loan.id}>
               <div className="receipt-action-copy">
                 <div className="receipt-action-title">You lent this book to {loan.borrower?.username || otherParticipant(active, user.id)?.username || "the borrower"} on {new Date(loan.borrowerReceivedAt).toLocaleDateString()}.</div>
                 <div className="receipt-action-help">When the borrower returns it, click below to confirm that you received it back. The book will then become available for others to borrow again.</div>
               </div>
-              <button className="btn btn-success receipt-action-button" onClick={() => loanAction(loan, "confirm-received-back")}>✓ I recovered my book</button>
+              <button className="btn btn-success receipt-action-button" onClick={() => askLoanAction(loan, "confirm-received-back")}>✓ I recovered my book</button>
             </div>)}
             <form className="conversation-compose-bar border-top p-2 d-flex gap-2" onSubmit={sendMessage}>
               <input className="form-control" value={draft} onChange={(e) => setDraft(e.target.value)} disabled={chatLocked} placeholder={chatLocked ? "Chat will be available after the request is accepted." : "Write a message…"} />
@@ -430,6 +442,21 @@ export default function MessagesModal({ show, onClose, onContextBack, user, acti
             </button>
           </div>
         </form>
+      </div>
+    </div>}
+    {pendingLoanAction && <div className="modal fade show loan-confirmation-modal" style={{ display: "block", backgroundColor: "rgba(0,0,0,.45)" }} onClick={() => setPendingLoanAction(null)}>
+      <div className="modal-dialog modal-dialog-centered" onClick={(event) => event.stopPropagation()}>
+        <div className="modal-content">
+          <div className="modal-header">
+            <h5 className="modal-title">{confirmationCopy.title}</h5>
+            <button type="button" className="btn-close" aria-label="Close" onClick={() => setPendingLoanAction(null)} />
+          </div>
+          <div className="modal-body"><p className="mb-0">{confirmationCopy.body}</p></div>
+          <div className="modal-footer">
+            <button type="button" className="btn btn-secondary" onClick={() => setPendingLoanAction(null)}>Cancel</button>
+            <button type="button" className="btn btn-success" onClick={confirmLoanAction}>OK</button>
+          </div>
+        </div>
       </div>
     </div>}
   </div>;
