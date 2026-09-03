@@ -26,6 +26,8 @@
       "configurable": false,
       "required": true
     },
+    "firstName": { "type": "string", "maxLength": 80 },
+    "lastName": { "type": "string", "maxLength": 80 },
     "provider": {
       "type": "string",
       "configurable": false

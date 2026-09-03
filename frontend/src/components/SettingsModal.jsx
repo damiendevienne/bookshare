@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Globe2, LogOut, Mail, Moon, Sun, UserRound } from "lucide-react";
+import { Globe2, LogOut, Mail, Moon, Pencil, Sun, UserRound } from "lucide-react";
 import api from "../api";
 
 function applyTheme(theme) {
@@ -13,11 +13,19 @@ export default function SettingsModal({ show, onClose, isLoggedIn, user, onLogin
   const [feedback, setFeedback] = useState("");
   const [feedbackSending, setFeedbackSending] = useState(false);
   const [feedbackStatus, setFeedbackStatus] = useState("");
+  const [profile, setProfile] = useState({ username: user?.username || "", email: user?.email || "", firstName: user?.firstName || "", lastName: user?.lastName || "" });
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileStatus, setProfileStatus] = useState("");
+  const [profileEditing, setProfileEditing] = useState(false);
+  const [editingField, setEditingField] = useState(null);
 
   useEffect(() => {
     applyTheme(theme);
     localStorage.setItem("preferredTheme", theme);
   }, [theme]);
+  useEffect(() => {
+    setProfile({ username: user?.username || "", email: user?.email || "", firstName: user?.firstName || "", lastName: user?.lastName || "" });
+  }, [user?.id]);
 
   if (!show) return null;
 
@@ -25,6 +33,20 @@ export default function SettingsModal({ show, onClose, isLoggedIn, user, onLogin
     const nextLanguage = event.target.value;
     setLanguage(nextLanguage);
     localStorage.setItem("preferredLanguage", nextLanguage);
+  };
+  const updateProfile = async (event) => {
+    event.preventDefault();
+    if (profileSaving) return;
+    setProfileSaving(true); setProfileStatus("");
+    try {
+      const response = await api.put("/api/profile", { data: profile });
+      const updated = response.data.data;
+      localStorage.setItem("user", JSON.stringify(updated));
+      setProfileEditing(false); setEditingField(null);
+      setProfileStatus(response.data.emailConfirmationRequired ? "Your email was changed. Please confirm the new address before logging in again." : "Profile updated.");
+    } catch (error) {
+      setProfileStatus(error.response?.data?.error?.message || "Unable to update your profile.");
+    } finally { setProfileSaving(false); }
   };
   const sendFeedback = async (event) => {
     event.preventDefault();
@@ -51,8 +73,8 @@ export default function SettingsModal({ show, onClose, isLoggedIn, user, onLogin
               <div className="settings-account-title"><UserRound size={17} /> Account</div>
               {isLoggedIn ? (
                 <>
-                  <div>Signed in as <strong>{user?.username || "User"}</strong></div>
-                  {user?.email && <div className="text-muted small">{user.email}</div>}
+                  {!editingField && <><div className="d-flex align-items-center justify-content-between"><span>Signed in as <strong>{profile.username || "User"}</strong></span><button type="button" className="btn btn-link btn-sm p-1" aria-label="Edit username" onClick={() => { setEditingField("username"); setProfileStatus(""); }}><Pencil size={15} /></button></div>{profile.email && <div className="d-flex align-items-center justify-content-between text-muted small"><span>{profile.email}</span><button type="button" className="btn btn-link btn-sm p-1" aria-label="Edit email" onClick={() => { setEditingField("email"); setProfileStatus(""); }}><Pencil size={15} /></button></div>}</>}
+                  {profileStatus && <div className="text-muted small mt-2" role="status">{profileStatus}</div>}
                   <button type="button" className="btn btn-outline-danger btn-sm mt-2" onClick={() => { onClose(); onLoginToggle?.(); }}><LogOut size={15} /> Log out</button>
                 </>
               ) : (
@@ -99,6 +121,15 @@ export default function SettingsModal({ show, onClose, isLoggedIn, user, onLogin
           </div>
         </div>
       </div>
+      {editingField && <div className="modal fade show" style={{ display: "block", backgroundColor: "rgba(0,0,0,0.35)", zIndex: 1060 }} onClick={() => { setEditingField(null); setProfileStatus(""); }}>
+        <div className="modal-dialog modal-dialog-centered modal-sm" onClick={(event) => event.stopPropagation()}>
+          <form className="modal-content" onSubmit={updateProfile}>
+            <div className="modal-header"><h5 className="modal-title">Change my {editingField === "email" ? "email" : "username"}</h5><button type="button" className="btn-close" onClick={() => setEditingField(null)} aria-label="Cancel" /></div>
+            <div className="modal-body"><p className="text-muted small">{editingField === "email" ? "We’ll send a verification email to your new address. Your current email will remain active until the new one is confirmed." : "Your new username will be associated with all the books you share."}</p><label className="form-label" htmlFor="profile-edit-field">{editingField === "email" ? "New email" : "New username"}</label><input id="profile-edit-field" className="form-control" type={editingField === "email" ? "email" : "text"} value={profile[editingField]} onChange={(event) => setProfile({ ...profile, [editingField]: event.target.value })} required /></div>
+            <div className="modal-footer"><button type="button" className="btn btn-secondary" onClick={() => setEditingField(null)}>Cancel</button><button type="submit" className="btn btn-primary" disabled={profileSaving}>{profileSaving ? "Saving…" : `Change ${editingField === "email" ? "email" : "username"}`}</button></div>
+          </form>
+        </div>
+      </div>}
     </div>
   );
 }
