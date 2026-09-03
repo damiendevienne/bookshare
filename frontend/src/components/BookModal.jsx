@@ -131,11 +131,11 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
                 </button>
               </div>
               {(summaryLines.length > 0 || ownerCommentLines.length > 0) && <hr />}
-              {summaryLines.length > 0 && <section className="mt-3">
+              {summaryLines.length > 0 && <section className="book-info-section mt-3">
                 <h6 className="text-muted">Summary</h6>
                 <div>{summaryLines.map((line, index) => <p key={index} className="mb-2">{line}</p>)}</div>
               </section>}
-              {ownerCommentLines.length > 0 && <section className="mt-3">
+              {ownerCommentLines.length > 0 && <section className="book-info-section mt-3">
                 <h6 className="text-muted">Owner’s note</h6>
                 <div>{ownerCommentLines.map((line, index) => <p key={index} className="mb-2">{line}</p>)}</div>
               </section>}

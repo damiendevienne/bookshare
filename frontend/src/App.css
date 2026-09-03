@@ -209,6 +209,16 @@
   font-style: italic;
 }
 
+.book-info-section {
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.55rem;
+  background: #f6f8f9;
+}
+
+.book-info-section h6 {
+  margin-bottom: 0.45rem;
+}
+
 .pending-request-item {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
