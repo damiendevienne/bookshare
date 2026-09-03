@@ -80,7 +80,7 @@ export default function LoginModal({ show, onClose, onLoginSuccess }) {
       // With email confirmation enabled Strapi deliberately returns no JWT.
       // Do not sign the new account in until its email address is verified.
       if (!res.data.jwt) {
-        setInfoMessage("Your account was created. Check your email to confirm your address before logging in.");
+        setInfoMessage("Your account was created. Check your email to confirm your address before logging in. If you don’t see it, please check your spam or junk folder.");
         setMode("login");
         setPassword("");
         return;
