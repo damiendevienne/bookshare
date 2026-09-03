@@ -267,7 +267,7 @@ export default function MessagesModal({ show, onClose, onContextBack, user, acti
     } catch (err) { setError(err.response?.data?.error?.message || "Unable to update this loan."); }
   };
 
-  if (!show) return null;
+  if (!show || !user?.id) return null;
   return <div className="modal fade show" style={{ display: "block", backgroundColor: "rgba(0,0,0,.5)" }} onClick={closeModal}>
     <div className="modal-dialog modal-lg modal-dialog-scrollable" onClick={(e) => e.stopPropagation()}>
       <div className="modal-content">

@@ -25,6 +25,13 @@ export default function Footer({ isLoggedIn, user = {}, onLoginToggle, onBookCre
     const timer = window.setInterval(refreshUnread, 5000);
     return () => window.clearInterval(timer);
   }, [isLoggedIn, user?.id, activeZone]);
+  useEffect(() => {
+    if (isLoggedIn) return;
+    setShowMessages(false);
+    setShowMyBooks(false);
+    setInitialConversationId(null);
+    setShowLogoutConfirm(false);
+  }, [isLoggedIn]);
   const handleUserClick = () => {
     // If logged in, ask for confirmation before logout
     if (isLoggedIn) {
@@ -158,7 +165,7 @@ export default function Footer({ isLoggedIn, user = {}, onLoginToggle, onBookCre
           externalRefreshToken={myBooksRefreshToken}
         />
       )}
-      <MessagesModal show={showMessages} initialConversationId={initialConversationId} onContextBack={initialConversationId ? closeMessages : undefined} onClose={closeMessages} user={user} activeZone={activeZone} onUnreadCountChange={setUnreadMessages} onBookUpdated={handleLoanUpdated} />
+      <MessagesModal show={showMessages} initialConversationId={initialConversationId} onContextBack={initialConversationId ? closeMessages : undefined} onClose={closeMessages} user={user || {}} activeZone={activeZone} onUnreadCountChange={setUnreadMessages} onBookUpdated={handleLoanUpdated} />
     </>
   );
 }
