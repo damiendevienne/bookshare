@@ -271,11 +271,11 @@ export default function MessagesModal({ show, onClose, onContextBack, user, acti
   return <div className="modal fade show" style={{ display: "block", backgroundColor: "rgba(0,0,0,.5)" }} onClick={closeModal}>
     <div className="modal-dialog modal-lg modal-dialog-scrollable" onClick={(e) => e.stopPropagation()}>
       <div className="modal-content">
-        <div className="modal-header"><h5 className="modal-title">Discussions</h5><button className="btn-close" onClick={closeModal} aria-label="Close discussions" /></div>
+        <div className="modal-header"><div><h5 className="modal-title mb-0">Discussions</h5><small className="text-muted">Borrow, lend and arrange returns</small></div><button className="btn-close" onClick={closeModal} aria-label="Close discussions" /></div>
         <div className={`modal-body p-0 ${active ? "messages-modal-body-active" : ""}`}>
           {error && <div className="alert alert-danger m-3">{error}</div>}
           {!active ? <div className="list-group list-group-flush">
-            {conversations.length === 0 && <p className="p-3 text-muted mb-0">No conversations yet.</p>}
+            {conversations.length === 0 && <p className="px-3 pb-3 text-muted text-center mb-0">No discussions yet. When you request to borrow a book or someone requests one of yours, you’ll be able to discuss the exchange, meeting arrangements and returns here.</p>}
             {discussionSections.map((section) => <React.Fragment key={section.tone}>
               <div className={`conversation-section-heading conversation-section-${section.tone} px-3 py-2 text-uppercase small fw-bold`}>{section.label}</div>
               {[{ label: "My books", ownership: "owned", items: section.groups.owned }, { label: "Borrowed books", ownership: "borrowed", items: section.groups.borrowed }].filter((group) => group.items.length).map((group) => {

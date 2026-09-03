@@ -92,7 +92,7 @@ function App() {
 
   const toggleFavorite = async (bookEntry) => {
     if (!isLoggedIn) {
-      setShowLogin(true);
+      setWelcomeMessage("Log in to add books to your favorites.");
       return;
     }
     const book = bookEntry?.attributes || bookEntry;

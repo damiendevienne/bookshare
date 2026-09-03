@@ -43,6 +43,10 @@
     "available": {
       "type": "boolean"
     },
+    "archived": {
+      "type": "boolean",
+      "default": false
+    },
     "image": {
       "type": "media",
       "multiple": true,

@@ -85,19 +85,25 @@ export default factories.createCoreController('api::book.book', ({ strapi }) => 
       const zone = await strapi.db.query('api::zone.zone').findOne({ where: { slug: zoneSlug }, select: ['id', 'name', 'slug'] });
       if (!zone) return ctx.notFound('Sharing area not found.');
       const ownerId = ctx.query.filters?.owner?.id?.$eq;
-      const where = { zone: zone.id, publishedAt: { $notNull: true }, ...(ownerId ? { owner: Number(ownerId) } : {}) };
+      const where = { zone: zone.id, $or: [{ archived: false }, { archived: { $null: true } }], publishedAt: { $notNull: true }, ...(ownerId ? { owner: Number(ownerId) } : {}) };
       const books = await strapi.db.query('api::book.book').findMany({
         where,
         orderBy: { createdAt: 'desc' },
         populate: { owner: true, image: true, zone: true, loans: { populate: { borrower: true, conversation: true } } },
       });
-      const data = (await markBooksWithActiveLoans(strapi, books)).map(publicBook);
+      const data = (await markBooksWithActiveLoans(strapi, books)).map((book) => ({
+        ...publicBook(book),
+        hasLoanHistory: (book.loans || []).some((loan) => loan.status === 'active' || loan.status === 'returned'),
+      }));
       return { data, meta: { pagination: { page: 1, pageSize: data.length, pageCount: data.length ? 1 : 0, total: data.length } } };
     }
     const response = await super.find(ctx);
     if (Array.isArray(response.data)) {
       response.data = await markBooksWithActiveLoans(strapi, response.data);
-      response.data = response.data.map(publicBook);
+      response.data = response.data.map((book) => ({
+        ...publicBook(book),
+        hasLoanHistory: (book.loans || []).some((loan) => loan.status === 'active' || loan.status === 'returned'),
+      }));
     }
     return response;
   },
@@ -107,6 +113,7 @@ export default factories.createCoreController('api::book.book', ({ strapi }) => 
     if (response.data) {
       response.data = (await markBooksWithActiveLoans(strapi, [response.data]))[0];
       response.data = publicBook(response.data);
+      response.data.hasLoanHistory = (response.data.loans || []).some((loan) => loan.status === 'active' || loan.status === 'returned');
     }
     return response;
   },
@@ -229,6 +236,12 @@ export default factories.createCoreController('api::book.book', ({ strapi }) => 
     const data = { ...(ctx.request.body?.data || {}) };
     delete data.owner;
     delete data.description;
+    const historicalLoan = await strapi.db.query('api::loan.loan').findOne({
+      where: { book: book.id, status: { $in: ['active', 'returned'] } },
+    });
+    if (historicalLoan) {
+      ['title', 'author', 'coverUrl', 'isbn', 'catalogSource', 'catalogId', 'image', 'language', 'age', 'summary', 'ownerComment'].forEach((field) => delete data[field]);
+    }
     if (!normalizeUserText(data, 'summary', 1500, ctx) || !normalizeUserText(data, 'ownerComment', 500, ctx)) return;
     if (book.catalogSource === 'openlibrary') {
       ['title', 'author', 'coverUrl', 'isbn', 'catalogSource', 'catalogId', 'image', 'language'].forEach((field) => delete data[field]);
@@ -275,6 +288,16 @@ export default factories.createCoreController('api::book.book', ({ strapi }) => 
         'This book is currently requested or lent. Recover it before removing it.',
         { conversationId: loan.conversation?.documentId ?? loan.conversation?.id, borrower: loan.borrower?.username }
       );
+    }
+    const historicalLoan = await strapi.db.query('api::loan.loan').findOne({
+      where: { book: book.id, status: { $in: ['refused', 'returned'] } },
+    });
+    if (historicalLoan) {
+      const archivedBook = await strapi.db.query('api::book.book').update({
+        where: { id: book.id },
+        data: { archived: true, available: false },
+      });
+      return { data: archivedBook, meta: { archived: true } };
     }
     return super.delete(ctx);
   },

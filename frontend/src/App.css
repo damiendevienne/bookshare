@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&display=swap");
 
 .truncate-2 {
   display: -webkit-box !important;
@@ -540,6 +541,12 @@ footer .btn small {
   background: #f6f8f9;
 }
 
+.book-editor-error {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+}
+
 .book-editor-sections {
   display: grid;
   gap: 0.85rem;
@@ -595,7 +602,7 @@ footer .btn small {
 
 .catalog-book-summary strong {
   color: var(--bookmybook-navy);
-  font-size: 1.05rem;
+  font-size: 1.2rem;
 }
 
 .catalog-book-summary span,
@@ -772,6 +779,12 @@ footer .btn small {
 .welcome-banner-close:hover,
 .welcome-banner-close:focus-visible {
   opacity: 1;
+}
+
+.about-signature {
+  font-family: "Caveat", "Segoe Script", "Bradley Hand", cursive;
+  font-size: 1.05rem;
+  color: var(--bookmybook-navy);
 }
 
 @media (max-width: 576px) {

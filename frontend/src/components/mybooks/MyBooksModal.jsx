@@ -39,6 +39,7 @@ export default function MyBooksModal({ show, onClose, user, onBookCreated, onBoo
               summary: item.summary,
               ownerComment: item.ownerComment,
               available: item.available,
+              hasLoanHistory: Boolean(item.hasLoanHistory),
               lended: Boolean(activeLoan),
               lendedTo: activeLoan?.borrower?.username || null,
               loanReceived: Boolean(activeLoan?.borrowerReceivedAt),
@@ -82,7 +83,7 @@ export default function MyBooksModal({ show, onClose, user, onBookCreated, onBoo
       >
         <div className="modal-content">
           <div className="modal-header">
-            <h5 className="modal-title">My Books</h5>
+            <div><h5 className="modal-title mb-0">My Books</h5><small className="text-muted">Your books and loan status</small></div>
             <button
               type="button"
               className="btn-close"
@@ -92,7 +93,7 @@ export default function MyBooksModal({ show, onClose, user, onBookCreated, onBoo
 
           <div className="modal-body">
             <div className="text-center mb-3"><button type="button" className="btn btn-primary add-book-trigger" onClick={() => setShowAddBook(true)}>＋ Share a book</button></div>
-            {books.length === 0 && <p>No books yet.</p>}
+            {books.length === 0 && <p className="text-muted text-center mb-3">You have no books here yet. Add books from your shelf so other members can borrow them, and keep track of their lending status.</p>}
 
             <div className="my-books-groups">{bookGroups.map((group) => <section className={`my-books-group my-books-group-${group.key}`} key={group.key}>
               <h6>{group.label} <span>({group.books.length})</span></h6>

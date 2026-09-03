@@ -7,9 +7,10 @@ export default function SiteFooter() {
     about: {
       title: "About BookMyBook",
       body: [
-        "BookMyBook began in Heraklion when a French family moved to Crete and realised they couldn’t bring all the books they wanted to keep reading. 📚 Finding books in French was not always easy, so we created a simple way for local readers to lend and borrow books freely.",
+        "We started BookMyBook in Heraklion after moving to Crete as a French family and realising we couldn’t bring all the books we wanted to keep reading. 📚 Finding books in French was not always easy, so we created a simple way for local readers to lend and borrow books freely.",
         "Today, BookMyBook is open to every language and every expat community. 🌍",
       ],
+      signature: "Made with care by Charlotte, Damien, Jeanne, Madeleine and Marius. ❤️",
     },
     help: {
       title: "Help",
@@ -50,6 +51,7 @@ export default function SiteFooter() {
               </div>
               <div className="modal-body">
                 {Array.isArray(section.body) ? section.body.map((paragraph) => <p key={paragraph}>{paragraph}</p>) : <p>{section.body}</p>}
+                {section.signature && <p className="about-signature mb-0">{section.signature}</p>}
                 {section.points && <><ul>{section.points.map((point) => <li key={point}>{point}</li>)}</ul><p className="mb-0 fw-semibold text-center">{communityCharterClosing}</p></>}
               </div>
               <div className="modal-footer"><button type="button" className="btn btn-secondary" onClick={() => setSection(null)}>Close</button></div>
