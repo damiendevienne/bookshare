@@ -24,7 +24,8 @@ export default factories.createCoreController('api::conversation.conversation', 
       const unreadMessages = incoming.filter((message) => message.sender?.id !== userId).length;
       const pendingRefusal = (row.loans || []).some((loan) => loan.status === 'refused'
         && (loan.lender?.id === userId ? !row.lenderArchivedAt : !row.borrowerArchivedAt));
-      return { ...row, unreadCount: unreadMessages + (pendingRefusal ? 1 : 0) };
+      const pendingRequest = (row.loans || []).some((loan) => loan.status === 'requested' && loan.lender?.id === userId);
+      return { ...row, unreadCount: unreadMessages + (pendingRefusal || pendingRequest ? 1 : 0) };
     }));
     ctx.body = { data: withUnread.map((row) => ({
       ...row,
