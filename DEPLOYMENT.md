@@ -5,7 +5,7 @@
 ```bash
 git add .
 git commit -m "Description of the change"
-git push origin feature/book-catalog-api
+git push origin dev
 ```
 
 ## 2. Se connecter à la VM
@@ -20,7 +20,7 @@ ssh -i "$HOME/Téléchargements/ssh-key-2026-09-02.key" ubuntu@158.178.197.142
 
 ```bash
 cd /srv/bookmybook
-git pull --ff-only origin feature/book-catalog-api
+git pull --ff-only origin dev
 ```
 
 Ne jamais faire de `git reset --hard` sur la VM. Le fichier de production `backend/.env` et la base `backend/.tmp/data.db` ne sont pas suivis par Git.
