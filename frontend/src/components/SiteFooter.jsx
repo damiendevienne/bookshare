@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { communityCharterIntro, communityCharterPoints, communityCharterClosing } from "../constants/communityCharter";
 
-export default function SiteFooter() {
+export default function SiteFooter({ canInstallApp = false, onInstallApp }) {
   const [section, setSection] = useState(null);
   const content = {
     about: {
@@ -14,7 +14,11 @@ export default function SiteFooter() {
     },
     help: {
       title: "Help",
-      body: "Choose a book to view its details. You need to be logged in to send a borrowing request. Once the owner accepts, use the Discussions area to arrange the handover and confirm each step of the exchange.",
+      body: [
+        "Choose a book to view its details. You need to be logged in to send a borrowing request. Once the owner accepts, use the Discussions area to arrange the handover and confirm each step of the exchange.",
+        "You can install BookMyBook on your device so it appears on your home screen and opens like an app, without having to find it in the browser each time. On Android/Chrome, use the browser menu and choose Add to Home screen or Install app. On iPhone/Safari, use Share and then Add to Home Screen.",
+      ],
+      installAvailable: true,
     },
     legal: {
       title: "Legal",
@@ -51,6 +55,7 @@ export default function SiteFooter() {
               </div>
               <div className="modal-body">
                 {Array.isArray(section.body) ? section.body.map((paragraph) => <p key={paragraph}>{paragraph}</p>) : <p>{section.body}</p>}
+                {section.installAvailable && canInstallApp && <button type="button" className="btn btn-primary w-100 mb-2" onClick={onInstallApp}>Install BookMyBook as an app</button>}
                 {section.signature && <p className="about-signature mb-0">{section.signature}</p>}
                 {section.points && <><ul>{section.points.map((point) => <li key={point}>{point}</li>)}</ul><p className="mb-0 fw-semibold text-center">{communityCharterClosing}</p></>}
               </div>

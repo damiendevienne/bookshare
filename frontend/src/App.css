@@ -1,5 +1,20 @@
 @import url("https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&display=swap");
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  overflow-x: hidden;
+}
+
 .truncate-2 {
   display: -webkit-box !important;
   -webkit-box-orient: vertical;
@@ -1672,6 +1687,39 @@ footer .btn small {
 .site-header {
   position: relative;
   padding-bottom: 0 !important;
+}
+
+.install-app-prompt {
+  position: fixed;
+  right: 1rem;
+  bottom: 4.75rem;
+  left: 1rem;
+  z-index: 1040;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: 30rem;
+  margin: 0 auto;
+  padding: 0.8rem 1rem;
+  border: 1px solid rgba(49, 90, 115, 0.18);
+  border-radius: 0.8rem;
+  background: #fff;
+  box-shadow: 0 0.35rem 1.2rem rgba(32, 56, 77, 0.16);
+}
+
+.install-app-prompt strong,
+.install-app-prompt small {
+  display: block;
+}
+
+.install-app-prompt strong { color: var(--bookmybook-navy); font-size: 0.88rem; }
+.install-app-prompt small { margin-top: 0.2rem; color: #647985; font-size: 0.76rem; }
+.install-app-prompt-actions { display: flex; align-items: center; gap: 0.2rem; flex-shrink: 0; }
+
+@media (max-width: 480px) {
+  .install-app-prompt { align-items: flex-start; flex-direction: column; gap: 0.55rem; }
+  .install-app-prompt-actions { width: 100%; justify-content: flex-end; }
 }
 
 .settings-field { margin-bottom: 1.15rem; }

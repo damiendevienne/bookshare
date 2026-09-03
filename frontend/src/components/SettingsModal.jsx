@@ -1,14 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Globe2, LogOut, Mail, Moon, Pencil, Sun, UserRound } from "lucide-react";
+import { Globe2, LogOut, Mail, Pencil, UserRound } from "lucide-react";
 import api from "../api";
-
-function applyTheme(theme) {
-  document.body.classList.toggle("theme-dark", theme === "dark");
-}
 
 export default function SettingsModal({ show, onClose, isLoggedIn, user, onLoginToggle, activeZone, zones = [], onZoneChange }) {
   const [language, setLanguage] = useState(() => localStorage.getItem("preferredLanguage") || "en");
-  const [theme, setTheme] = useState(() => localStorage.getItem("preferredTheme") || "light");
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [feedback, setFeedback] = useState("");
   const [feedbackSending, setFeedbackSending] = useState(false);
@@ -19,10 +14,6 @@ export default function SettingsModal({ show, onClose, isLoggedIn, user, onLogin
   const [profileEditing, setProfileEditing] = useState(false);
   const [editingField, setEditingField] = useState(null);
 
-  useEffect(() => {
-    applyTheme(theme);
-    localStorage.setItem("preferredTheme", theme);
-  }, [theme]);
   useEffect(() => {
     setProfile({ username: user?.username || "", email: user?.email || "", firstName: user?.firstName || "", lastName: user?.lastName || "" });
   }, [user?.id]);
@@ -100,14 +91,6 @@ export default function SettingsModal({ show, onClose, isLoggedIn, user, onLogin
                 <option value="el" disabled>Ελληνικά · Coming soon</option>
               </select>
               <small className="text-muted">Your preference is saved for this device.</small>
-            </div>
-
-            <div className="settings-field">
-              <span><Sun size={17} /> Theme</span>
-              <div className="btn-group w-100" role="group" aria-label="Theme">
-                <button type="button" className={`btn ${theme === "light" ? "btn-primary" : "btn-outline-primary"}`} onClick={() => setTheme("light")}><Sun size={16} /> Light</button>
-                <button type="button" className={`btn ${theme === "dark" ? "btn-primary" : "btn-outline-primary"}`} onClick={() => setTheme("dark")}><Moon size={16} /> Dark</button>
-              </div>
             </div>
 
             {isLoggedIn && <div className="settings-field">

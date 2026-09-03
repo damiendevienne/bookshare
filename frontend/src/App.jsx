@@ -47,10 +47,38 @@ function App() {
   const [user, setUser] = useState(
     JSON.parse(localStorage.getItem("user")) || null
   );
+  const [installPromptEvent, setInstallPromptEvent] = useState(null);
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
 
   useEffect(() => {
-    document.body.classList.toggle("theme-dark", localStorage.getItem("preferredTheme") === "dark");
+    localStorage.removeItem("preferredTheme");
+    document.body.classList.remove("theme-dark");
   }, []);
+
+  useEffect(() => {
+    const standalone = window.matchMedia?.("(display-mode: standalone)").matches || window.navigator.standalone;
+    const dismissedAt = Number(localStorage.getItem("installPromptDismissedAt") || 0);
+    const recentlyDismissed = dismissedAt && Date.now() - dismissedAt < 7 * 24 * 60 * 60 * 1000;
+    const handleInstallable = (event) => {
+      event.preventDefault();
+      setInstallPromptEvent(event);
+      if (!standalone && !recentlyDismissed) setShowInstallPrompt(true);
+    };
+    window.addEventListener("beforeinstallprompt", handleInstallable);
+    return () => window.removeEventListener("beforeinstallprompt", handleInstallable);
+  }, []);
+
+  const dismissInstallPrompt = () => {
+    localStorage.setItem("installPromptDismissedAt", String(Date.now()));
+    setShowInstallPrompt(false);
+  };
+
+  const installApp = async () => {
+    if (!installPromptEvent) return dismissInstallPrompt();
+    await installPromptEvent.prompt();
+    setInstallPromptEvent(null);
+    setShowInstallPrompt(false);
+  };
 
   useEffect(() => {
     if (!isLoggedIn || !user?.id) {
@@ -281,6 +309,10 @@ function App() {
         welcomeMessage={welcomeMessage}
         onDismissWelcome={() => setWelcomeMessage("")}
       />
+      {showInstallPrompt && <div className="install-app-prompt" role="status">
+        <div><strong>Add BookMyBook to your home screen</strong><small>Open it quickly like an app whenever you want to borrow or share a book.</small></div>
+        <div className="install-app-prompt-actions"><button type="button" className="btn btn-primary btn-sm" onClick={installApp}>Install</button><button type="button" className="btn btn-link btn-sm" onClick={dismissInstallPrompt}>Not now</button></div>
+      </div>}
       <div className="catalog-sticky-controls">
         <div className="container">
           <div className="catalog-search-row">
@@ -347,7 +379,7 @@ function App() {
           ))}
         </div>
       </div>
-      <SiteFooter />
+      <SiteFooter canInstallApp={Boolean(installPromptEvent)} onInstallApp={installApp} />
 
       {showZoneChooser && zones.length > 0 && (
         <ZoneChooser zones={zones} activeZone={activeZone} onSelect={handleZoneChange} />
