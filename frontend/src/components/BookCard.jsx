@@ -2,13 +2,14 @@ import React from "react";
 import { Heart } from "lucide-react";
 import "../App.css";
 import { mediaUrl } from "../api";
-import { languageLabel } from "../constants/languages";
+import { languageName } from "../constants/languages";
+import { ageBadgeLabel } from "../constants/ages";
 
 export default function BookCard({ bookData, onClick, isFavorite, onFavoriteToggle }) {
   const book = bookData.attributes || bookData;
   const images = book.image || [];
-  const age = book.age || "Unknown";
-  const language = book.language || "Unknown";
+  const age = ageBadgeLabel(book.age);
+  const language = languageName(book.language);
   const image = images[0];
   const imageUrl = image
     ? mediaUrl(image.formats?.small?.url || image.formats?.medium?.url || image.url || image.attributes?.url)
@@ -37,7 +38,7 @@ export default function BookCard({ bookData, onClick, isFavorite, onFavoriteTogg
           />
 
           <span className="badge bg-warning badge-overlay-top-right position-absolute">
-            {languageLabel(language)}
+            {language}
           </span>
           <span
             className={`badge badge-overlay-bottom-left position-absolute ${

@@ -8,3 +8,5 @@ export const languageLabel = (code) => {
   const language = languages.find(([value]) => value === code);
   return language ? `${language[1]} (${language[0]})` : code || "Unknown";
 };
+
+export const languageName = (code) => languages.find(([value]) => value === code)?.[1] || code || "Unknown";

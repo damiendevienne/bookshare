@@ -441,7 +441,9 @@ export interface ApiBookBook extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
-    age: Schema.Attribute.Enumeration<['kids', 'teenagers', 'adults']>;
+    age: Schema.Attribute.Enumeration<
+      ['young_children', 'children', 'teenagers', 'adults']
+    >;
     archived: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     author: Schema.Attribute.String;
     available: Schema.Attribute.Boolean;

@@ -78,14 +78,13 @@ export default {
     for (const book of booksWithoutZone) {
       await strapi.db.query('api::book.book').update({ where: { id: book.id }, data: { zone: heraklion.id } });
     }
-    // Age categories changed from the former kids/adults split to the more
-    // precise Kids (0-10), Teenagers (11-15), Adults (16+) split.
+    // Migrate the former kids category to the current age ranges.
     const formerKidsBooks = await strapi.db.query('api::book.book').findMany({
       where: { age: 'kids' },
       select: ['id'],
     });
     for (const book of formerKidsBooks) {
-      await strapi.db.query('api::book.book').update({ where: { id: book.id }, data: { age: 'teenagers' } });
+      await strapi.db.query('api::book.book').update({ where: { id: book.id }, data: { age: 'young_children' } });
     }
 
     // Keep the authenticated API role in sync for the custom borrowing and
