@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Globe2, LogOut, Mail, Pencil, UserRound } from "lucide-react";
 import api from "../api";
+import { disablePushNotifications, enablePushNotifications, pushNotificationsAvailable } from "../pushNotifications";
 
 export default function SettingsModal({ show, onClose, isLoggedIn, user, onLoginToggle, activeZone, zones = [], onZoneChange }) {
   const [language, setLanguage] = useState(() => localStorage.getItem("preferredLanguage") || "en");
@@ -13,6 +14,8 @@ export default function SettingsModal({ show, onClose, isLoggedIn, user, onLogin
   const [profileStatus, setProfileStatus] = useState("");
   const [profileEditing, setProfileEditing] = useState(false);
   const [editingField, setEditingField] = useState(null);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(() => localStorage.getItem("pushNotificationsEnabled") === "true");
+  const [notificationStatus, setNotificationStatus] = useState("");
 
   useEffect(() => {
     setProfile({ username: user?.username || "", email: user?.email || "", firstName: user?.firstName || "", lastName: user?.lastName || "" });
@@ -49,6 +52,20 @@ export default function SettingsModal({ show, onClose, isLoggedIn, user, onLogin
     } catch (error) {
       setFeedbackStatus(error.response?.data?.error?.message || "Unable to send your message. Please try again.");
     } finally { setFeedbackSending(false); }
+  };
+  const toggleNotifications = async () => {
+    setNotificationStatus("");
+    try {
+      if (notificationsEnabled) {
+        await disablePushNotifications();
+        setNotificationsEnabled(false);
+      } else {
+        await enablePushNotifications();
+        setNotificationsEnabled(true);
+      }
+    } catch (error) {
+      setNotificationStatus(error.message || "Unable to update notification settings.");
+    }
   };
 
   return (
@@ -101,6 +118,12 @@ export default function SettingsModal({ show, onClose, isLoggedIn, user, onLogin
               {feedbackStatus && <div className="text-muted small mt-2" role="status">{feedbackStatus}</div>}
             </div>
             }
+            {isLoggedIn && pushNotificationsAvailable() && <div className="settings-field">
+              <div className="settings-account-title">🔔 Notifications</div>
+              <p className="text-muted small mb-2">Get a notification when you receive a new message, even when BookMyBook is closed.</p>
+              <button type="button" className="btn btn-outline-primary btn-sm" onClick={toggleNotifications}>{notificationsEnabled ? "Turn off notifications" : "Enable notifications"}</button>
+              {notificationStatus && <div className="text-muted small mt-2" role="status">{notificationStatus}</div>}
+            </div>}
           </div>
         </div>
       </div>

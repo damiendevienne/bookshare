@@ -625,6 +625,44 @@ export interface ApiMessageMessage extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiPushSubscriptionPushSubscription
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'push_subscriptions';
+  info: {
+    displayName: 'Push subscription';
+    pluralName: 'push-subscriptions';
+    singularName: 'push-subscription';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    auth: Schema.Attribute.String & Schema.Attribute.Required;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    endpoint: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::push-subscription.push-subscription'
+    > &
+      Schema.Attribute.Private;
+    p256dh: Schema.Attribute.String & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    user: Schema.Attribute.Relation<
+      'manyToOne',
+      'plugin::users-permissions.user'
+    > &
+      Schema.Attribute.Required;
+  };
+}
+
 export interface ApiZoneZone extends Struct.CollectionTypeSchema {
   collectionName: 'zones';
   info: {
@@ -1171,6 +1209,10 @@ export interface PluginUsersPermissionsUser
       Schema.Attribute.DefaultTo<'en'>;
     provider: Schema.Attribute.String;
     publishedAt: Schema.Attribute.DateTime;
+    pushSubscriptions: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::push-subscription.push-subscription'
+    >;
     resetPasswordToken: Schema.Attribute.String & Schema.Attribute.Private;
     role: Schema.Attribute.Relation<
       'manyToOne',
@@ -1206,6 +1248,7 @@ declare module '@strapi/strapi' {
       'api::conversation.conversation': ApiConversationConversation;
       'api::loan.loan': ApiLoanLoan;
       'api::message.message': ApiMessageMessage;
+      'api::push-subscription.push-subscription': ApiPushSubscriptionPushSubscription;
       'api::zone.zone': ApiZoneZone;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;

@@ -17,3 +17,33 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET" || new URL(event.request.url).origin !== self.location.origin) return;
   event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
 });
+
+self.addEventListener("push", (event) => {
+  let payload = {};
+  try { payload = event.data?.json() || {}; } catch { payload = { body: event.data?.text() || "You have a new BookMyBook update." }; }
+  const title = payload.title || "BookMyBook";
+  const options = {
+    body: payload.body || "You have a new message.",
+    icon: "/images/favicon.png",
+    badge: "/images/favicon.png",
+    data: { conversationId: payload.conversationId || null },
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+  event.waitUntil(clients.matchAll({ type: "window", includeUncontrolled: true }).then((windows) => {
+    windows.forEach((client) => client.postMessage({ type: "bookmybook:push-notification" }));
+  }));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const conversationId = event.notification.data?.conversationId;
+  const target = conversationId ? `/?conversation=${encodeURIComponent(conversationId)}` : "/";
+  event.waitUntil(clients.matchAll({ type: "window", includeUncontrolled: true }).then((windows) => {
+    const existing = windows.find((window) => "focus" in window);
+    if (existing) {
+      existing.navigate(target);
+      return existing.focus();
+    }
+    return clients.openWindow(target);
+  }));
+});

@@ -114,6 +114,8 @@ export default {
       'api::conversation.conversation.archive', 'api::conversation.archive',
       'api::feedback.feedback.send',
       'api::profile.profile.update',
+      'api::push-subscription.push-subscription.subscribe',
+      'api::push-subscription.push-subscription.unsubscribe',
     ];
     const role = await strapi.db.query('plugin::users-permissions.role').findOne({
       where: { type: 'authenticated' },

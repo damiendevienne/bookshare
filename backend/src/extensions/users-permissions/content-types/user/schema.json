@@ -116,6 +116,12 @@
       "target": "api::message.message",
       "mappedBy": "sender"
     },
+    "pushSubscriptions": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::push-subscription.push-subscription",
+      "mappedBy": "user"
+    },
     "loansAsLender": {
       "type": "relation",
       "relation": "oneToMany",

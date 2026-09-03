@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { factories } from '@strapi/strapi';
+import { notifyUsers } from '../../../services/push';
 
 export default factories.createCoreController('api::conversation.conversation', ({ strapi }) => ({
   async mine(ctx) {
@@ -96,6 +97,8 @@ export default factories.createCoreController('api::conversation.conversation', 
     await strapi.db.query('api::conversation.conversation').update({
       where: { id: conversation.id }, data: { lastMessageAt: new Date() },
     });
+    const recipientId = conversation.participantOne?.id === userId ? conversation.participantTwo?.id : conversation.participantOne?.id;
+    await notifyUsers(strapi, [recipientId], { title: 'New BookMyBook message', body: content, conversationId: conversation.documentId || conversation.id });
     ctx.body = { data: { ...message, sender: this.publicUser(message.sender) } };
   },
 
@@ -138,6 +141,7 @@ export default factories.createCoreController('api::conversation.conversation', 
       });
       await strapi.db.query('api::conversation.conversation').update({ where: { id: loan.conversation.id }, data: { lastMessageAt: now } });
       await strapi.db.query('api::loan.loan').update({ where: { id: loan.id }, data: { lastLoanReminderAt: now } });
+      await notifyUsers(strapi, [userId], { title: 'Loan reminder', body: content, conversationId: loan.conversation.documentId || loan.conversation.id });
     }
   },
 

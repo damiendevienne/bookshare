@@ -51,6 +51,11 @@ function App() {
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
 
   useEffect(() => {
+    const conversationId = new URLSearchParams(window.location.search).get("conversation");
+    if (conversationId) setOpenConversationId(conversationId);
+  }, []);
+
+  useEffect(() => {
     localStorage.removeItem("preferredTheme");
     document.body.classList.remove("theme-dark");
   }, []);

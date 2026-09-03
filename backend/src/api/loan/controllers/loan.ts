@@ -2,6 +2,7 @@
 // Runtime methods below are intentionally shared within this controller.
 // @ts-nocheck
 import { factories } from '@strapi/strapi';
+import { notifyUsers } from '../../../services/push';
 
 const activeOrRequested = ['requested', 'active'];
 
@@ -80,6 +81,7 @@ export default factories.createCoreController('api::loan.loan', ({ strapi }) => 
       where: { id: conversation.id },
       data: { lastMessageAt: new Date() },
     });
+    await notifyUsers(strapi, [lenderId], { title: 'New borrowing request', body: `${book.title} has a new borrowing request.`, conversationId: conversation.documentId || conversation.id });
     ctx.body = { data: { ...loan, conversationId: conversation.documentId ?? conversation.id } };
   },
 
@@ -222,5 +224,7 @@ export default factories.createCoreController('api::loan.loan', ({ strapi }) => 
     await strapi.db.query('api::conversation.conversation').update({
       where: { id: loan.conversation.id }, data: { lastMessageAt: new Date() },
     });
+    const recipientId = loan.lender?.id === sender ? loan.borrower?.id : loan.lender?.id;
+    await notifyUsers(strapi, [recipientId], { title: 'BookMyBook update', body: content, conversationId: loan.conversation.documentId || loan.conversation.id });
   },
 }));

@@ -26,6 +26,13 @@ export default function Footer({ isLoggedIn, user = {}, onLoginToggle, onBookCre
     return () => window.clearInterval(timer);
   }, [isLoggedIn, user?.id, activeZone]);
   useEffect(() => {
+    const handlePushNotification = () => {
+      if (isLoggedIn) setUnreadMessages((current) => current + 1);
+    };
+    window.addEventListener("bookmybook:push-notification", handlePushNotification);
+    return () => window.removeEventListener("bookmybook:push-notification", handlePushNotification);
+  }, [isLoggedIn]);
+  useEffect(() => {
     if (isLoggedIn) return;
     setShowMessages(false);
     setShowMyBooks(false);

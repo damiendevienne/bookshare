@@ -91,3 +91,27 @@ https://bookmybook.duckdns.org/admin
 - Les secrets de production sont dans `backend/.env` et ne doivent jamais être poussés sur GitHub.
 - La base de données de production est `backend/.tmp/data.db` et est indépendante de la base locale.
 - Le certificat HTTPS est renouvelé automatiquement par `certbot.timer`.
+
+## Notifications sur mobile
+
+Les notifications en arrière-plan utilisent Web Push. Générer une paire VAPID une seule fois dans le dossier `backend` :
+
+```bash
+npx web-push generate-vapid-keys
+```
+
+Conserver la clé privée uniquement dans `backend/.env` sur la VM, et ajouter :
+
+```text
+WEB_PUSH_SUBJECT=mailto:votre-adresse@example.com
+WEB_PUSH_PUBLIC_KEY=...
+WEB_PUSH_PRIVATE_KEY=...
+```
+
+La clé publique doit aussi être fournie au build frontend dans `frontend/.env.production` :
+
+```text
+VITE_WEB_PUSH_PUBLIC_KEY=...
+```
+
+Après configuration, reconstruire le frontend et redémarrer le backend. L’utilisateur connecté pourra ensuite activer les notifications dans Settings. Le navigateur demandera l’autorisation au niveau du système ; le site ne peut pas contourner un refus.
