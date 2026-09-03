@@ -8,7 +8,7 @@ export default function SiteFooter() {
       title: "About BookMyBook",
       body: [
         "We started BookMyBook in Heraklion after moving to Crete as a French family and realising we couldn’t bring all the books we wanted to keep reading. 📚 Finding books in French was not always easy, so we created a simple way for local readers to lend and borrow books freely.",
-        "Today, BookMyBook is open to every language and every expat community. 🌍",
+        "Today, BookMyBook is open to every language. 🌍",
       ],
       signature: "Made with care by Charlotte, Damien, Jeanne, Madeleine and Marius. ❤️",
     },
