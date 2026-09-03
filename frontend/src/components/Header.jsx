@@ -1,5 +1,5 @@
 import React from "react";
-import { UserCog } from "lucide-react";
+import { Settings, UserRound } from "lucide-react";
 import SettingsModal from "./SettingsModal";
 
 export default function Header({ isLoggedIn, user, onLoginToggle, activeZone, zones, onZoneChange, welcomeMessage, onDismissWelcome }) {
@@ -17,12 +17,15 @@ export default function Header({ isLoggedIn, user, onLoginToggle, activeZone, zo
       <div className="container text-center">
         <button
           type="button"
-          className="settings-trigger"
+          className={`settings-trigger ${isLoggedIn ? "is-logged-in" : "is-logged-out"}`}
           onClick={() => setShowSettings(true)}
           aria-label="Open settings"
-          title="Settings"
+          title={isLoggedIn ? `Logged in as ${user?.username || "user"}. Open settings` : "Not logged in. Open settings"}
         >
-          <UserCog size={21} />
+          <span className="account-settings-icons" aria-hidden="true">
+            <span className="account-icon-circle account-user-circle"><UserRound className="account-user-icon" size={21} /></span>
+            <span className="account-icon-circle account-settings-circle"><Settings className="account-settings-icon" size={21} /></span>
+          </span>
         </button>
         {/*<h1 className="fs-3 mb-2">📚 BookShare Heraklion</h1>*/}
         <div className="text-center my-4 logo-stage">

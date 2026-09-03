@@ -1592,19 +1592,81 @@ footer .btn small {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.35rem;
+  width: 4.15rem;
   height: 2.35rem;
   padding: 0;
-  border: 1px solid rgba(49, 90, 115, 0.2);
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.85);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   color: var(--bookmybook-navy);
+}
+
+.settings-trigger.is-logged-in {
+  border-color: rgba(47, 143, 91, 0.45);
+  color: #2f8f5b;
+}
+
+.settings-trigger.is-logged-out {
+  color: var(--bookmybook-navy);
+}
+
+.account-settings-icons {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 4.15rem;
+  height: 2.35rem;
+}
+
+.account-icon-circle {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border: 1px solid rgba(49, 90, 115, 0.22);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.account-user-circle {
+  color: var(--bookmybook-navy);
+}
+
+.account-user-circle .account-user-icon {
+  fill: none;
+}
+
+.account-settings-circle {
+  z-index: 2;
+  margin-left: -0.7rem;
+  color: var(--bookmybook-navy);
+}
+
+.settings-trigger.is-logged-in .account-user-circle {
+  color: #2f8f5b;
+}
+
+.settings-trigger.is-logged-in .account-user-circle .account-user-icon {
+  fill: currentColor;
 }
 
 .settings-trigger:hover,
 .settings-trigger:focus-visible {
-  background: var(--bookmybook-navy);
-  color: #fff;
+  background: transparent;
+  color: inherit;
+}
+
+.settings-trigger:hover .account-icon-circle,
+.settings-trigger:focus-visible .account-icon-circle {
+  background: #eef4f6;
+}
+
+.settings-trigger:hover .account-settings-circle,
+.settings-trigger:focus-visible .account-settings-circle {
+  color: var(--bookmybook-navy);
 }
 
 .site-header {
