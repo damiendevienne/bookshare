@@ -14,7 +14,7 @@ export default function SiteFooter() {
     },
     help: {
       title: "Help",
-      body: "Choose a book to view its details. You need to be logged in to send a borrowing request. Once the owner accepts, use the Messages area to arrange the handover and confirm each step of the exchange.",
+      body: "Choose a book to view its details. You need to be logged in to send a borrowing request. Once the owner accepts, use the Discussions area to arrange the handover and confirm each step of the exchange.",
     },
     legal: {
       title: "Legal",
