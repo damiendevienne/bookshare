@@ -133,14 +133,18 @@ export default function MessagesModal({ show, onClose, onContextBack, user, acti
       .catch((err) => setError(err.response?.data?.error?.message || "Unable to load this conversation."));
     loadMessages();
     api.post(`/api/conversations/${conversationId}/read`).then(() => {
-      // Clear the badge immediately after the thread has been opened. The
-      // next refresh still reconciles the count with the server.
-      setConversations((current) => current.map((item) => (
-        String(item.documentId || item.id) === String(conversationId) ? { ...item, unreadCount: 0 } : item
-      )));
-      onUnreadCountChange?.((conversations || []).reduce((sum, item) => (
-        String(item.documentId || item.id) === String(conversationId) ? sum : sum + (item.unreadCount || 0)
-      ), 0));
+      // Clear ordinary message badges immediately after the thread has been
+      // opened. The next refresh still reconciles the count with the server. A lender's
+      // pending request remains visible until it is accepted or refused.
+      setConversations((current) => {
+        const next = current.map((item) => {
+          if (String(item.documentId || item.id) !== String(conversationId)) return item;
+          const pendingRequest = item.loans?.some((loan) => loan.status === "requested" && loan.lender?.id === user.id);
+          return { ...item, unreadCount: pendingRequest ? 1 : 0 };
+        });
+        onUnreadCountChange?.(next.reduce((sum, item) => sum + (item.unreadCount || 0), 0));
+        return next;
+      });
       return loadConversations();
     }).catch(() => {});
     const timer = window.setInterval(loadMessages, 2500);
@@ -315,7 +319,7 @@ export default function MessagesModal({ show, onClose, onContextBack, user, acti
                   const book = conversationBook(conversation);
                   const context = loanContext(conversation, user.id);
                   const other = otherParticipant(conversation, user.id);
-                  return <button key={conversation.documentId || conversation.id} className={`list-group-item list-group-item-action text-start ${section.tone === "past" ? "conversation-item-past" : "conversation-item-current"}`} onClick={() => { setError(""); setActive(conversation); setConversations((current) => current.map((item) => (String(item.documentId || item.id) === String(conversation.documentId || conversation.id) ? { ...item, unreadCount: 0 } : item))); }}>
+                  return <button key={conversation.documentId || conversation.id} className={`list-group-item list-group-item-action text-start ${section.tone === "past" ? "conversation-item-past" : "conversation-item-current"}`} onClick={() => { setError(""); setActive(conversation); const pendingRequest = conversation.loans?.some((loan) => loan.status === "requested" && loan.lender?.id === user.id); setConversations((current) => current.map((item) => (String(item.documentId || item.id) === String(conversation.documentId || conversation.id) ? { ...item, unreadCount: pendingRequest ? 1 : 0 } : item))); }}>
                     <span className="conversation-item-content">
                       <img className="conversation-book-thumbnail" src={bookImage(book)} alt="" aria-hidden="true" />
                       <span className="conversation-item-details"><strong className={`conversation-item-title ${conversation.unreadCount > 0 ? "fw-bold" : "fw-normal"}`}>{book?.title || "Conversation"}</strong>{book?.author && <small className="conversation-item-author d-block text-muted">{book.author}</small>}<small className="d-block conversation-with">Discussion with {other?.username || "User"}</small></span>
