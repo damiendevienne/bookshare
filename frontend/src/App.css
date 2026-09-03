@@ -509,16 +509,40 @@ footer .btn small {
 }
 
 .book-saving-overlay {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  z-index: 10;
+  z-index: 2000;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.72);
+  gap: 0.65rem;
+  background: rgba(30, 48, 61, 0.34);
   color: var(--bookmybook-navy, #18324a);
   font-weight: 600;
   pointer-events: all;
+}
+
+.book-saving-overlay span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.7rem 1rem;
+  border-radius: 0.6rem;
+  background: rgba(255, 255, 255, 0.94);
+}
+
+.book-saving-overlay span::before {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(24, 50, 74, 0.25);
+  border-top-color: var(--bookmybook-navy, #18324a);
+  border-radius: 50%;
+  animation: book-saving-spin 0.75s linear infinite;
+  content: "";
+}
+
+@keyframes book-saving-spin {
+  to { transform: rotate(360deg); }
 }
 
 .book-editor {
