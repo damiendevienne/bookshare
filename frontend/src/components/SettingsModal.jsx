@@ -96,8 +96,8 @@ export default function SettingsModal({ show, onClose, isLoggedIn, user, onLogin
               <label htmlFor="settings-language"><Globe2 size={17} /> Interface language</label>
               <select id="settings-language" className="form-select" value={language} onChange={updateLanguage}>
                 <option value="en">English</option>
-                <option value="fr">Français</option>
-                <option value="el">Ελληνικά</option>
+                <option value="fr" disabled>Français · Coming soon</option>
+                <option value="el" disabled>Ελληνικά · Coming soon</option>
               </select>
               <small className="text-muted">Your preference is saved for this device.</small>
             </div>
