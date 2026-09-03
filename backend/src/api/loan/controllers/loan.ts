@@ -81,7 +81,8 @@ export default factories.createCoreController('api::loan.loan', ({ strapi }) => 
       where: { id: conversation.id },
       data: { lastMessageAt: new Date() },
     });
-    await notifyUsers(strapi, [lenderId], { title: 'New borrowing request', body: `${book.title} has a new borrowing request.`, conversationId: conversation.documentId || conversation.id });
+    const borrowerName = ctx.state.user?.username || 'A reader';
+    await notifyUsers(strapi, [lenderId], { title: 'New borrowing request', body: `You have a new borrowing request from ${borrowerName} for “${book.title}”.`, conversationId: conversation.documentId || conversation.id });
     ctx.body = { data: { ...loan, conversationId: conversation.documentId ?? conversation.id } };
   },
 
