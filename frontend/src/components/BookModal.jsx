@@ -13,6 +13,8 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
   const [borrowError, setBorrowError] = useState("");
   const [loanStatus, setLoanStatus] = useState(null);
   const [conversationId, setConversationId] = useState(null);
+  const [zoomedImage, setZoomedImage] = useState(null);
+  const [imageScale, setImageScale] = useState(1);
 
   const book = selectedBook?.attributes || selectedBook || {};
   const owner = book.owner?.username || "Unknown";
@@ -34,6 +36,9 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
       .catch(() => {});
     return undefined;
   }, [showModal, selectedBook, isLoggedIn, user?.id, bookIdentifier, isOwner]);
+
+  const openImageViewer = (src) => { setZoomedImage(src); setImageScale(1); };
+  const closeImageViewer = () => { setZoomedImage(null); setImageScale(1); };
 
   if (!showModal || !selectedBook) return null;
 
@@ -100,7 +105,8 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
                           src={mediaUrl(img.formats?.medium?.url || img.formats?.small?.url || img.url || img.attributes?.url)}
                           className="d-block w-100"
                           alt={book.title}
-                          style={{ maxHeight: "400px", objectFit: "contain" }}
+                          style={{ maxHeight: "400px", objectFit: "contain", cursor: "zoom-in" }}
+                          onClick={() => openImageViewer(mediaUrl(img.formats?.large?.url || img.formats?.medium?.url || img.url || img.attributes?.url))}
                         />
                       </div>
                     ))}
@@ -124,7 +130,7 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
                     <span className="visually-hidden">Next</span>
                   </button>
                 </div>
-              ) : <img src={book.coverUrl || "/images/open-book.png"} className="d-block mx-auto mb-3" alt={book.title || "Book cover"} style={{ maxHeight: "400px", maxWidth: "100%", objectFit: "contain" }} />}
+              ) : <img src={book.coverUrl || "/images/open-book.png"} className="d-block mx-auto mb-3" alt={book.title || "Book cover"} style={{ maxHeight: "400px", maxWidth: "100%", objectFit: "contain", cursor: "zoom-in" }} onClick={() => openImageViewer(book.coverUrl || "/images/open-book.png")} />}
 
               <div className="book-details-badge-row mb-2">
                 <div>
@@ -164,6 +170,20 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
           </div>
         </div>
       </div>
+
+      {zoomedImage && <div className="book-image-viewer" role="dialog" aria-modal="true" aria-label="Enlarged book image" onClick={closeImageViewer}>
+        <div className="book-image-viewer-topbar" onClick={(event) => event.stopPropagation()}>
+          <span>{book.title || "Book image"}</span>
+          <button type="button" className="book-image-viewer-close btn-close" aria-label="Close enlarged image" onClick={closeImageViewer} />
+        </div>
+        <div className="book-image-viewer-viewport" onClick={(event) => event.stopPropagation()} onWheel={(event) => { setImageScale((value) => Math.min(4, Math.max(1, value + (event.deltaY < 0 ? 0.15 : -0.15)))); }}>
+          <img src={zoomedImage} alt={book.title || "Book image"} style={{ transform: `scale(${imageScale})` }} />
+        </div>
+        <div className="book-image-viewer-bottombar" onClick={(event) => event.stopPropagation()}>
+          <span>Scroll to zoom</span>
+          <button type="button" className="btn btn-sm btn-light" onClick={() => setImageScale(1)}>Reset zoom</button>
+        </div>
+      </div>}
 
       {/* === OWNER INFO SMALL MODAL === */}
       {showOwnerModal && (

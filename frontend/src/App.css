@@ -1370,6 +1370,67 @@ footer .btn small {
   text-align: center;
 }
 
+.book-image-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 1080;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  width: 100vw;
+  background: #fff;
+}
+
+.book-image-viewer-topbar,
+.book-image-viewer-bottombar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 3.25rem;
+  padding: 0.65rem 1rem;
+  color: #243944;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.book-image-viewer-topbar {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.book-image-viewer-bottombar {
+  justify-content: center;
+  gap: 1rem;
+  color: #526b78;
+  font-size: 0.78rem;
+}
+
+.book-image-viewer-viewport {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 100%;
+  max-width: none;
+  max-height: calc(100vh - 8rem);
+  overflow: auto;
+  cursor: zoom-in;
+}
+
+.book-image-viewer-viewport img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: contain;
+  transform-origin: center;
+  transition: transform 120ms ease;
+}
+
+.book-image-viewer-close {
+  flex: 0 0 auto;
+}
+
 .cancellation-notice {
   max-width: 90%;
   margin: 0.75rem auto 1rem;
