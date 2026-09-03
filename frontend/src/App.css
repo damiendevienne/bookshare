@@ -875,6 +875,21 @@ footer .btn small {
   text-decoration: underline;
 }
 
+.support-link {
+  display: block;
+  width: fit-content;
+  margin: 1rem auto 0;
+  color: var(--bookmybook-navy, #20384d);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.support-link:hover,
+.support-link:focus-visible {
+  color: #315a73;
+}
+
 .site-footer-copyright {
   color: #6c757d;
   font-size: 0.78rem;

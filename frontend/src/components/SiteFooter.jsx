@@ -3,6 +3,7 @@ import { communityCharterIntro, communityCharterPoints, communityCharterClosing 
 
 export default function SiteFooter({ canInstallApp = false, onInstallApp }) {
   const [section, setSection] = useState(null);
+  const supportUrl = import.meta.env.VITE_SUPPORT_URL || "https://buymeacoffee.com/damiendevienne";
   const content = {
     about: {
       title: "About BookMyBook",
@@ -24,6 +25,12 @@ export default function SiteFooter({ canInstallApp = false, onInstallApp }) {
       title: "Legal",
       body: "BookMyBook is an independent family project. The original code, text and visual design are © 2026 Damien Devienne. They may not be copied, modified or redistributed without permission. Third-party software and catalogue content follow their own licenses. User-submitted content remains the responsibility of its author.",
     },
+    support: {
+      title: "Want to support BookMyBook?",
+      footerLabel: "Support ☕",
+      body: "If BookMyBook is useful to your family and you’d like to help us keep it running, you can support this family-made project. Contributions help with hosting, email delivery and ongoing development. ☕✨",
+      supportUrl,
+    },
     charter: {
       title: "Community Charter",
       body: communityCharterIntro,
@@ -37,7 +44,7 @@ export default function SiteFooter({ canInstallApp = false, onInstallApp }) {
         <div className="container">
         <div className="site-footer-links">
           {Object.entries(content).map(([key, value]) => (
-            <button type="button" key={key} onClick={() => setSection(value)}>{value.title.replace("BookMyBook", "").trim() || "About"}</button>
+            <button type="button" key={key} onClick={() => setSection(value)}>{value.footerLabel || value.title.replace("BookMyBook", "").trim() || "About"}</button>
           ))}
         </div>
         <div className="site-footer-copyright">
@@ -56,6 +63,7 @@ export default function SiteFooter({ canInstallApp = false, onInstallApp }) {
               <div className="modal-body">
                 {Array.isArray(section.body) ? section.body.map((paragraph) => <p key={paragraph}>{paragraph}</p>) : <p>{section.body}</p>}
                 {section.installAvailable && canInstallApp && <button type="button" className="btn btn-primary w-100 mb-2" onClick={onInstallApp}>Install BookMyBook as an app</button>}
+                {section.supportUrl && <a className="support-link" href={section.supportUrl} target="_blank" rel="noreferrer">Buy us a coffee! ☕</a>}
                 {section.signature && <p className="about-signature mb-0">{section.signature}</p>}
                 {section.points && <><ul>{section.points.map((point) => <li key={point}>{point}</li>)}</ul><p className="mb-0 fw-semibold text-center">{communityCharterClosing}</p></>}
               </div>
