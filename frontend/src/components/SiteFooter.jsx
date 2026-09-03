@@ -22,7 +22,7 @@ export default function SiteFooter({ canInstallApp = false, onInstallApp }) {
     },
     legal: {
       title: "Legal",
-      body: "BookMyBook is an independent project. The application code and BookMyBook identity are protected by copyright. Third-party libraries and catalogue content remain subject to their respective licenses and terms.",
+      body: "BookMyBook is an independent family project. The original code, text and visual design are © 2026 Damien Devienne. They may not be copied, modified or redistributed without permission. Third-party software and catalogue content follow their own licenses. User-submitted content remains the responsibility of its author.",
     },
     charter: {
       title: "Community Charter",
