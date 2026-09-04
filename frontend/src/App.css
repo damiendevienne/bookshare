@@ -55,6 +55,9 @@ body,
 }
 
 .conversation-section-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
   border-left: 4px solid transparent;
   letter-spacing: 0.06em;
 }
@@ -908,9 +911,9 @@ footer .btn small {
 }
 
 .conversation-section-active {
-  border-left-color: #6da8c5;
-  color: #28566d;
-  background: #dceef7;
+  border-left-color: #72b58a;
+  color: #2f6945;
+  background: #e0f2e5;
 }
 
 .conversation-section-recent {
@@ -950,8 +953,8 @@ footer .btn small {
 }
 
 .conversation-subsection-active {
-  border-left-color: #6da8c5;
-  background: #f1f8fb;
+  border-left-color: #72b58a;
+  background: #f1faf3;
 }
 
 .conversation-subsection-recent {
@@ -960,7 +963,7 @@ footer .btn small {
 }
 
 .conversation-item-active {
-  border-left: 4px solid #6da8c5 !important;
+  border-left: 4px solid #72b58a !important;
 }
 
 .conversation-item-recent {

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ChevronDown, ChevronRight, Send } from "lucide-react";
+import { Archive, ArrowLeft, BookOpenCheck, ChevronDown, ChevronRight, Clock3, Send } from "lucide-react";
 import api, { mediaUrl } from "../../api";
 
 function otherParticipant(conversation, userId) {
@@ -331,7 +331,10 @@ export default function MessagesModal({ show, onClose, onContextBack, user, acti
           {!active ? <div className="list-group list-group-flush">
             {conversations.length === 0 && <p className="px-3 pb-3 text-muted text-center mb-0">No discussions yet. When you request to borrow a book or someone requests one of yours, you’ll be able to discuss the exchange, meeting arrangements and returns here.</p>}
             {discussionSections.map((section) => <React.Fragment key={section.tone}>
-              <div className={`conversation-section-heading conversation-section-${section.tone} px-3 py-2 text-uppercase small fw-bold`}>{section.label}</div>
+              <div className={`conversation-section-heading conversation-section-${section.tone} px-3 py-2 text-uppercase small fw-bold`}>
+                {section.tone === "active" ? <BookOpenCheck size={16} aria-hidden="true" /> : section.tone === "recent" ? <Clock3 size={16} aria-hidden="true" /> : <Archive size={16} aria-hidden="true" />}
+                <span>{section.label}</span>
+              </div>
               {[{ label: "My books", ownership: "owned", items: section.groups.owned }, { label: "Borrowed books", ownership: "borrowed", items: section.groups.borrowed }].filter((group) => group.items.length).map((group) => {
                 const groupKey = `${section.tone}-${group.ownership}`;
                 const isCollapsed = Boolean(collapsedDiscussionGroups[groupKey]);
