@@ -245,7 +245,7 @@ export default function MessagesModal({ show, onClose, onContextBack, user, acti
       const recoveredAt = loan?.lenderReceivedBackAt || message.createdAt;
       const date = recoveredAt ? new Date(recoveredAt).toLocaleDateString() : "today";
       const bookTitle = book?.title || "the book";
-      const closing = "This conversation is now in “Past loans”, but you can continue chatting here if needed.";
+      const closing = "This discussion remains available for 24 hours after the loan ends. It will then be archived in “Past loans”.";
       if (loan?.lender?.id === user.id) {
         return `You recovered “${bookTitle}” on ${date}. The book is available again for borrowing.\n\n${closing}`;
       }
