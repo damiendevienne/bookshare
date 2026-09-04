@@ -1503,6 +1503,26 @@ footer .btn small {
   flex: 0 0 auto;
 }
 
+.carousel-item,
+.book-single-image-wrap {
+  position: relative;
+}
+
+.book-image-count-badge {
+  position: absolute;
+  right: 0.65rem;
+  bottom: 0.65rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.28rem 0.48rem;
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(32, 56, 77, 0.72);
+  font-size: 0.72rem;
+  line-height: 1;
+}
+
 .cancellation-notice {
   max-width: 90%;
   margin: 0.75rem auto 1rem;

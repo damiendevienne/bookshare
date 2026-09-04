@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Heart } from "lucide-react";
+import { Camera, Heart } from "lucide-react";
 import api, { mediaUrl } from "../api";
 import { languageName } from "../constants/languages";
 import { ageBadgeLabel } from "../constants/ages";
@@ -20,6 +20,8 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
   const [imageChangeDirection, setImageChangeDirection] = useState("");
   const [imageScale, setImageScale] = useState(1);
   const [imagePan, setImagePan] = useState({ x: 0, y: 0 });
+  const [galleryImageIndex, setGalleryImageIndex] = useState(0);
+  const galleryCarouselRef = useRef(null);
   const touchGesture = useRef(null);
 
   const book = selectedBook?.attributes || selectedBook || {};
@@ -29,6 +31,15 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
   const booksCount = ownerCounts?.[book.owner?.id] || 0;
   const bookIdentifier = selectedBook?.documentId || selectedBook?.id;
   const isOwner = user?.id && book.owner?.id === user.id;
+
+  useEffect(() => {
+    setGalleryImageIndex(0);
+    const carousel = galleryCarouselRef.current;
+    if (!carousel) return undefined;
+    const handleSlide = (event) => setGalleryImageIndex(event.to);
+    carousel.addEventListener("slid.bs.carousel", handleSlide);
+    return () => carousel.removeEventListener("slid.bs.carousel", handleSlide);
+  }, [selectedBook]);
 
   useEffect(() => {
     setLoanStatus(null);
@@ -173,11 +184,11 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
 
             <div className="modal-body">
               {images.length > 0 ? (
-                <div id="carouselBookImages" className="carousel slide mb-3" data-bs-ride="carousel">
+                <div ref={galleryCarouselRef} id="carouselBookImages" className="carousel slide mb-3" data-bs-ride="carousel">
                   <div className="carousel-inner">
                     {images.map((img, idx) => (
                       <div
-                        className={`carousel-item ${idx === 0 ? "active" : ""}`}
+                        className={`carousel-item ${idx === galleryImageIndex ? "active" : ""}`}
                         key={idx}
                       >
                         <img
@@ -187,6 +198,7 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
                           style={{ maxHeight: "400px", objectFit: "contain", cursor: "zoom-in" }}
                           onClick={(event) => { event.stopPropagation(); openImageViewer(imageSources[idx], idx); }}
                         />
+                        <span className="book-image-count-badge"><Camera size={14} aria-hidden="true" /><span>{idx + 1}/{images.length}</span></span>
                       </div>
                     ))}
                   </div>
@@ -209,7 +221,7 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
                     <span className="visually-hidden">Next</span>
                   </button>
                 </div>
-              ) : <img src={book.coverUrl || "/images/open-book.png"} className="d-block mx-auto mb-3" alt={book.title || "Book cover"} style={{ maxHeight: "400px", maxWidth: "100%", objectFit: "contain", cursor: "zoom-in" }} onClick={(event) => { event.stopPropagation(); openImageViewer(book.coverUrl || "/images/open-book.png"); }} />}
+              ) : <div className="book-single-image-wrap"><img src={book.coverUrl || "/images/open-book.png"} className="d-block mx-auto mb-3" alt={book.title || "Book cover"} style={{ maxHeight: "400px", maxWidth: "100%", objectFit: "contain", cursor: "zoom-in" }} onClick={(event) => { event.stopPropagation(); openImageViewer(book.coverUrl || "/images/open-book.png"); }} /><span className="book-image-count-badge"><Camera size={14} aria-hidden="true" /><span>1/1</span></span></div>}
 
               <div className="book-details-badge-row mb-2">
                 <div>
