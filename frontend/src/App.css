@@ -1481,6 +1481,24 @@ footer .btn small {
   transition: transform 120ms ease;
 }
 
+.book-image-viewer-viewport img.image-swipe-left {
+  animation: image-swipe-in-left 220ms ease-out;
+}
+
+.book-image-viewer-viewport img.image-swipe-right {
+  animation: image-swipe-in-right 220ms ease-out;
+}
+
+@keyframes image-swipe-in-left {
+  from { opacity: 0.35; transform: translateX(28px) scale(1); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@keyframes image-swipe-in-right {
+  from { opacity: 0.35; transform: translateX(-28px) scale(1); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+
 .book-image-viewer-close {
   flex: 0 0 auto;
 }

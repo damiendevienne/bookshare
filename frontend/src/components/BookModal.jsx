@@ -18,6 +18,7 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
   const [zoomedImage, setZoomedImage] = useState(null);
   const [zoomedImageIndex, setZoomedImageIndex] = useState(0);
   const [imageScale, setImageScale] = useState(1);
+  const [imageSwipeDirection, setImageSwipeDirection] = useState("");
   const touchGesture = useRef(null);
 
   const book = selectedBook?.attributes || selectedBook || {};
@@ -56,11 +57,12 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
   const imageSources = images.length > 0
     ? images.map((img) => mediaUrl(img.formats?.large?.url || img.formats?.medium?.url || img.url || img.attributes?.url))
     : [book.coverUrl || "/images/open-book.png"];
-  const openImageViewer = (src, index = 0) => { setZoomedImage(src); setZoomedImageIndex(index); setImageScale(1); };
+  const openImageViewer = (src, index = 0) => { setZoomedImage(src); setZoomedImageIndex(index); setImageScale(1); setImageSwipeDirection(""); };
   const closeImageViewer = () => { setZoomedImage(null); setImageScale(1); };
   const showAdjacentImage = (direction) => {
     if (imageSources.length < 2 || imageScale !== 1) return;
     const nextIndex = (zoomedImageIndex + direction + imageSources.length) % imageSources.length;
+    setImageSwipeDirection(direction > 0 ? "left" : "right");
     setZoomedImageIndex(nextIndex);
     setZoomedImage(imageSources[nextIndex]);
     setImageScale(1);
@@ -228,7 +230,7 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
               if (Math.abs(deltaX) > 60 && Math.abs(deltaX) > Math.abs(deltaY)) showAdjacentImage(deltaX < 0 ? 1 : -1);
             }
           }}>
-          <img src={imageSources[zoomedImageIndex] || zoomedImage} alt={book.title || "Book image"} style={{ transform: `scale(${imageScale})` }} />
+          <img key={zoomedImageIndex} className={imageSwipeDirection ? `image-swipe-${imageSwipeDirection}` : ""} src={imageSources[zoomedImageIndex] || zoomedImage} alt={book.title || "Book image"} style={{ transform: `scale(${imageScale})` }} onAnimationEnd={() => setImageSwipeDirection("")} />
         </div>
         <div className="book-image-viewer-bottombar" onClick={(event) => event.stopPropagation()}>
           <span>{imageSources.length > 1 ? "Swipe to browse · pinch to zoom" : "Pinch to zoom"}</span>
