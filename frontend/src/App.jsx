@@ -173,10 +173,22 @@ function App() {
       .catch(() => setZones([{ name: "Heraklion", slug: "heraklion" }]));
   }, [activeZone]);
 
+  const applyCatalogueBooks = (entries) => {
+    const nextBooks = entries.map(normalizeBookAvailability);
+    setBooks(nextBooks);
+    if (isLoggedIn) {
+      const visibleIds = new Set(nextBooks.map((entry) => {
+        const book = entry.attributes || entry;
+        return String(book.documentId || book.id || "");
+      }));
+      setFavoriteBookIds((current) => current.filter((id) => visibleIds.has(String(id))));
+    }
+  };
+
   const handleBookCreated = () => {
     api
       .get(catalogueUrl)
-      .then((res) => setBooks(res.data.data.map(normalizeBookAvailability)))
+      .then((res) => applyCatalogueBooks(res.data.data))
       .catch((err) => console.error("Unable to refresh the book catalogue:", err));
   };
 
@@ -192,7 +204,7 @@ function App() {
     }
     api
       .get(catalogueUrl)
-      .then((res) => setBooks(res.data.data.map(normalizeBookAvailability)))
+      .then((res) => applyCatalogueBooks(res.data.data))
       .catch((err) => console.error("Unable to refresh the book catalogue:", err));
   };
 
@@ -204,7 +216,7 @@ function App() {
         .get(catalogueUrl)
         .then((res) => {
           if (!cancelled) {
-            setBooks(res.data.data.map(normalizeBookAvailability));
+            applyCatalogueBooks(res.data.data);
             setCatalogueState("ready");
           }
         })
