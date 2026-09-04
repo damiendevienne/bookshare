@@ -1,4 +1,4 @@
-const CACHE_NAME = "bookmybook-shell-v1";
+const CACHE_NAME = "bookmybook-shell-v2";
 const APP_SHELL = ["/", "/manifest.webmanifest", "/images/favicon.png"];
 
 self.addEventListener("install", (event) => {

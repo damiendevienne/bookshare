@@ -88,7 +88,7 @@ export default factories.createCoreController('api::loan.loan', ({ strapi }) => 
       data: { lastMessageAt: new Date() },
     });
     const borrowerName = ctx.state.user?.username || 'A reader';
-    await notifyUsers(strapi, [lenderId], { title: 'New borrowing request', body: `You have a new borrowing request from ${borrowerName} for “${book.title}”.`, conversationId: conversation.documentId || conversation.id });
+    await notifyUsers(strapi, [lenderId], { title: `Message from ${borrowerName}`, body: `New borrowing request for “${book.title}”.`, conversationId: conversation.documentId || conversation.id });
     ctx.body = { data: { ...loan, conversationId: conversation.documentId ?? conversation.id } };
   },
 
@@ -232,6 +232,7 @@ export default factories.createCoreController('api::loan.loan', ({ strapi }) => 
       where: { id: loan.conversation.id }, data: { lastMessageAt: new Date() },
     });
     const recipientId = loan.lender?.id === sender ? loan.borrower?.id : loan.lender?.id;
-    await notifyUsers(strapi, [recipientId], { title: 'BookMyBook update', body: content, conversationId: loan.conversation.documentId || loan.conversation.id });
+    const senderName = loan.lender?.id === sender ? loan.lender?.username : loan.borrower?.username;
+    await notifyUsers(strapi, [recipientId], { title: `Message from ${senderName || 'a reader'}`, body: content, conversationId: loan.conversation.documentId || loan.conversation.id });
   },
 }));
