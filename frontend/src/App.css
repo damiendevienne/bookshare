@@ -1470,22 +1470,6 @@ footer .btn small {
   touch-action: none;
 }
 
-.book-image-viewer-carousel,
-.book-image-viewer-carousel .carousel-inner,
-.book-image-viewer-carousel .carousel-item {
-  height: 100%;
-}
-
-.book-gallery-zoom-wrapper,
-.book-gallery-zoom-content {
-  width: 100% !important;
-  min-height: 220px;
-}
-
-.book-gallery-zoom-wrapper {
-  overflow: hidden;
-}
-
 .book-image-viewer-viewport img {
   display: block;
   width: 100%;

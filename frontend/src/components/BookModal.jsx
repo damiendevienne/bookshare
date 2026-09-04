@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Heart } from "lucide-react";
-import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 import api, { mediaUrl } from "../api";
 import { languageName } from "../constants/languages";
 import { ageBadgeLabel } from "../constants/ages";
@@ -17,10 +16,8 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
   const [loanInfo, setLoanInfo] = useState(null);
   const [conversationId, setConversationId] = useState(null);
   const [zoomedImage, setZoomedImage] = useState(null);
-  const [zoomedImageIndex, setZoomedImageIndex] = useState(0);
   const [imageScale, setImageScale] = useState(1);
   const [imagePan, setImagePan] = useState({ x: 0, y: 0 });
-  const imageCarouselRef = useRef(null);
   const touchGesture = useRef(null);
 
   const book = selectedBook?.attributes || selectedBook || {};
@@ -59,19 +56,8 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
   const imageSources = images.length > 0
     ? images.map((img) => mediaUrl(img.formats?.large?.url || img.formats?.medium?.url || img.url || img.attributes?.url))
     : [book.coverUrl || "/images/open-book.png"];
-  const openImageViewer = (src, index = 0) => { setZoomedImage(src); setZoomedImageIndex(index); setImageScale(1); setImagePan({ x: 0, y: 0 }); };
+  const openImageViewer = (src) => { setZoomedImage(src); setImageScale(1); setImagePan({ x: 0, y: 0 }); };
   const closeImageViewer = () => { setZoomedImage(null); setImageScale(1); setImagePan({ x: 0, y: 0 }); };
-  useEffect(() => {
-    const carousel = imageCarouselRef.current;
-    if (!carousel) return undefined;
-    const handleSlide = (event) => {
-      setZoomedImageIndex(event.to);
-      setImageScale(1);
-      setImagePan({ x: 0, y: 0 });
-    };
-    carousel.addEventListener("slid.bs.carousel", handleSlide);
-    return () => carousel.removeEventListener("slid.bs.carousel", handleSlide);
-  }, [zoomedImage]);
   const handlePinchStart = (event) => {
     if (event.touches.length === 1 && imageScale > 1) {
       event.stopPropagation();
@@ -105,33 +91,6 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
     if (nextScale === 1) setImagePan({ x: 0, y: 0 });
   };
   const handlePinchEnd = (event) => { if (touchGesture.current?.panning || touchGesture.current?.pinch) event.stopPropagation(); touchGesture.current = null; };
-  const triggerCarouselSlide = (direction) => {
-    const selector = direction > 0 ? ".carousel-control-next" : ".carousel-control-prev";
-    imageCarouselRef.current?.querySelector(selector)?.click();
-  };
-  const handleTouchStartCapture = (event) => {
-    event.stopPropagation();
-    if (event.touches.length === 2) return handlePinchStart(event);
-    if (event.touches.length === 1) {
-      if (imageScale > 1) return handlePinchStart(event);
-      touchGesture.current = { swipe: true, startX: event.touches[0].clientX, startY: event.touches[0].clientY };
-    }
-  };
-  const handleTouchMoveCapture = (event) => {
-    event.stopPropagation();
-    if (touchGesture.current?.pinch || touchGesture.current?.panning) return handlePinchMove(event);
-  };
-  const handleTouchEndCapture = (event) => {
-    event.stopPropagation();
-    const gesture = touchGesture.current;
-    if (gesture?.pinch || gesture?.panning) return handlePinchEnd(event);
-    touchGesture.current = null;
-    if (gesture?.swipe && event.changedTouches.length === 1) {
-      const deltaX = event.changedTouches[0].clientX - gesture.startX;
-      const deltaY = event.changedTouches[0].clientY - gesture.startY;
-      if (Math.abs(deltaX) > 60 && Math.abs(deltaX) > Math.abs(deltaY)) triggerCarouselSlide(deltaX < 0 ? 1 : -1);
-    }
-  };
 
   if (!showModal || !selectedBook) return null;
 
@@ -194,17 +153,13 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
                         className={`carousel-item ${idx === 0 ? "active" : ""}`}
                         key={idx}
                       >
-                        <TransformWrapper minScale={1} maxScale={4} centerOnInit limitToBounds wheel={{ disabled: true }} doubleClick={{ disabled: true }}>
-                          <TransformComponent wrapperClass="book-gallery-zoom-wrapper" contentClass="book-gallery-zoom-content">
-                            <img
-                              src={mediaUrl(img.formats?.medium?.url || img.formats?.small?.url || img.url || img.attributes?.url)}
-                              className="d-block w-100"
-                              alt={book.title}
-                              style={{ maxHeight: "400px", objectFit: "contain", cursor: "zoom-in" }}
-                              onClick={() => openImageViewer(imageSources[idx], idx)}
-                            />
-                          </TransformComponent>
-                        </TransformWrapper>
+                        <img
+                          src={mediaUrl(img.formats?.medium?.url || img.formats?.small?.url || img.url || img.attributes?.url)}
+                          className="d-block w-100"
+                          alt={book.title}
+                          style={{ maxHeight: "400px", objectFit: "contain", cursor: "zoom-in" }}
+                          onClick={() => openImageViewer(imageSources[idx])}
+                        />
                       </div>
                     ))}
                   </div>
@@ -274,18 +229,11 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
           <span>{book.title || "Book image"}</span>
           <button type="button" className="book-image-viewer-close btn-close" aria-label="Close enlarged image" onClick={closeImageViewer} />
         </div>
-        <div ref={imageCarouselRef} id="book-image-viewer-carousel" className="carousel slide book-image-viewer-carousel" data-bs-interval="false" data-bs-touch="true" onClick={(event) => event.stopPropagation()}>
-          <div className="carousel-inner">
-            {imageSources.map((src, index) => <div className={`carousel-item ${index === zoomedImageIndex ? "active" : ""}`} key={src || index}>
-              <div className="book-image-viewer-viewport" onWheel={(event) => { const nextScale = Math.min(4, Math.max(1, imageScale + (event.deltaY < 0 ? 0.15 : -0.15))); setImageScale(nextScale); if (nextScale === 1) setImagePan({ x: 0, y: 0 }); }} onTouchStartCapture={handleTouchStartCapture} onTouchMoveCapture={handleTouchMoveCapture} onTouchEndCapture={handleTouchEndCapture}>
-                <img src={src} alt={book.title || "Book image"} style={{ transform: `translate(${index === zoomedImageIndex ? imagePan.x : 0}px, ${index === zoomedImageIndex ? imagePan.y : 0}px) scale(${index === zoomedImageIndex ? imageScale : 1})` }} />
-              </div>
-            </div>)}
-          </div>
-          {imageSources.length > 1 && <><button className="carousel-control-prev" type="button" data-bs-target="#book-image-viewer-carousel" data-bs-slide="prev"><span className="carousel-control-prev-icon" aria-hidden="true" /><span className="visually-hidden">Previous</span></button><button className="carousel-control-next" type="button" data-bs-target="#book-image-viewer-carousel" data-bs-slide="next"><span className="carousel-control-next-icon" aria-hidden="true" /><span className="visually-hidden">Next</span></button></>}
+        <div className="book-image-viewer-viewport" onClick={(event) => event.stopPropagation()} onWheel={(event) => { const nextScale = Math.min(4, Math.max(1, imageScale + (event.deltaY < 0 ? 0.15 : -0.15))); setImageScale(nextScale); if (nextScale === 1) setImagePan({ x: 0, y: 0 }); }} onTouchStart={handlePinchStart} onTouchMove={handlePinchMove} onTouchEnd={handlePinchEnd}>
+          <img src={zoomedImage} alt={book.title || "Book image"} style={{ transform: `translate(${imagePan.x}px, ${imagePan.y}px) scale(${imageScale})` }} />
         </div>
         <div className="book-image-viewer-bottombar" onClick={(event) => event.stopPropagation()}>
-          <span>{imageSources.length > 1 ? "Swipe to browse · pinch to zoom" : "Pinch to zoom"}</span>
+          <span>Pinch or scroll to zoom · drag to move</span>
           <button type="button" className="btn btn-sm btn-light" onClick={() => { setImageScale(1); setImagePan({ x: 0, y: 0 }); }}>Reset zoom</button>
         </div>
       </div>}
