@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Globe2, LogOut, Mail, Pencil, UserRound } from "lucide-react";
 import api from "../api";
+import packageJson from "../../package.json";
 import { disablePushNotifications, enablePushNotifications, pushNotificationsAvailable } from "../pushNotifications";
 
 export default function SettingsModal({ show, onClose, isLoggedIn, user, onLoginToggle, activeZone, zones = [], onZoneChange }) {
@@ -77,6 +78,10 @@ export default function SettingsModal({ show, onClose, isLoggedIn, user, onLogin
             <button type="button" className="btn-close" onClick={onClose} aria-label="Close settings" />
           </div>
           <div className="modal-body">
+            <div className="settings-app-identity" aria-label={`${packageJson.appName} version ${packageJson.version}`}>
+              <div className="settings-app-name">{packageJson.appName}</div>
+              <div className="settings-app-version">v{packageJson.version}</div>
+            </div>
             <div className="settings-account settings-field">
               <div className="settings-account-title"><UserRound size={17} /> Account</div>
               {isLoggedIn ? (

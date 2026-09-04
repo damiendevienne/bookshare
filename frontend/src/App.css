@@ -1801,6 +1801,24 @@ footer .btn small {
 }
 
 .settings-field { margin-bottom: 1.15rem; }
+.settings-app-identity {
+  margin: -0.15rem 0 1.25rem;
+  padding-bottom: 0.9rem;
+  text-align: center;
+  border-bottom: 1px solid rgba(49, 90, 115, 0.14);
+}
+.settings-app-name {
+  color: var(--bookmybook-navy);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.15rem;
+  letter-spacing: 0.04em;
+}
+.settings-app-version {
+  margin-top: 0.12rem;
+  color: var(--bookmybook-gray);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+}
 .settings-field > label,
 .settings-field > span,
 .settings-account-title {
