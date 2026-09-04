@@ -29,6 +29,9 @@ self.addEventListener("push", (event) => {
     data: { conversationId: payload.conversationId || null },
   };
   event.waitUntil(self.registration.showNotification(title, options));
+  event.waitUntil(clients.matchAll({ type: "window", includeUncontrolled: true }).then((windows) => {
+    windows.forEach((client) => client.postMessage({ type: "bookmybook-push", conversationId: payload.conversationId || null }));
+  }));
   if ("setAppBadge" in self.registration) event.waitUntil(self.registration.setAppBadge(Number(payload.badgeCount) || 1));
 });
 

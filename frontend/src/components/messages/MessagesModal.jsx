@@ -114,14 +114,19 @@ export default function MessagesModal({ show, onClose, onContextBack, user, acti
       return sum + Math.max(item.unreadCount || 0, pendingRequest ? 1 : 0);
     }, 0));
     return next;
-  }), [onUnreadCountChange]);
+  }), [activeZone, onUnreadCountChange, user?.id]);
   useEffect(() => {
     if (!show || !user?.id) return undefined;
     loadConversations().catch((err) => setError(err.response?.data?.error?.message || "Unable to load messages."));
-    // Keep loan status (and therefore contextual action buttons) near real-time
-    // while avoiding a refresh loop when the active conversation is unchanged.
-    const timer = window.setInterval(() => loadConversations().catch(() => {}), 2500);
-    return () => window.clearInterval(timer);
+    const refreshOnReturn = () => {
+      if (document.visibilityState === "visible") loadConversations().catch(() => {});
+    };
+    window.addEventListener("focus", refreshOnReturn);
+    document.addEventListener("visibilitychange", refreshOnReturn);
+    return () => {
+      window.removeEventListener("focus", refreshOnReturn);
+      document.removeEventListener("visibilitychange", refreshOnReturn);
+    };
   }, [show, user?.id, loadConversations]);
   useEffect(() => {
     if (!show || !initialConversationId || conversations.length === 0) return;
@@ -153,8 +158,15 @@ export default function MessagesModal({ show, onClose, onContextBack, user, acti
       });
       return loadConversations();
     }).catch(() => {});
-    const timer = window.setInterval(loadMessages, 2500);
-    return () => window.clearInterval(timer);
+    const refreshOnReturn = () => {
+      if (document.visibilityState === "visible") loadMessages();
+    };
+    window.addEventListener("focus", refreshOnReturn);
+    document.addEventListener("visibilitychange", refreshOnReturn);
+    return () => {
+      window.removeEventListener("focus", refreshOnReturn);
+      document.removeEventListener("visibilitychange", refreshOnReturn);
+    };
   }, [active, loadConversations]);
   useEffect(() => {
     if (returnMessage === null) return;

@@ -28,14 +28,20 @@ export default function Footer({ isLoggedIn, user = {}, onLoginToggle, onBookCre
       })
       .catch(() => {});
     refreshUnread();
-    const timer = window.setInterval(refreshUnread, 5000);
     const handleVisibility = () => {
       if (document.visibilityState === "visible") refreshUnread();
     };
+    const handleFocus = () => refreshUnread();
+    const handlePush = (event) => {
+      if (event.data?.type === "bookmybook-push") refreshUnread();
+    };
     document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("focus", handleFocus);
+    navigator.serviceWorker?.addEventListener("message", handlePush);
     return () => {
-      window.clearInterval(timer);
       document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("focus", handleFocus);
+      navigator.serviceWorker?.removeEventListener("message", handlePush);
     };
   }, [isLoggedIn, user?.id, activeZone]);
   useEffect(() => {

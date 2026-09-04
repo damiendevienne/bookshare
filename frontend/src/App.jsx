@@ -233,12 +233,17 @@ function App() {
     window.addEventListener("offline", handleOffline);
     window.addEventListener("online", handleOnline);
     refreshCatalogue();
-    const timer = window.setInterval(refreshCatalogue, 5000);
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") refreshCatalogue();
+    };
+    window.addEventListener("focus", refreshCatalogue);
+    document.addEventListener("visibilitychange", handleVisibility);
     return () => {
       cancelled = true;
-      window.clearInterval(timer);
       window.removeEventListener("offline", handleOffline);
       window.removeEventListener("online", handleOnline);
+      window.removeEventListener("focus", refreshCatalogue);
+      document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, [catalogueUrl]);
 

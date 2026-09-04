@@ -40,8 +40,15 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
       })
       .catch(() => {});
     refreshLoanStatus();
-    const timer = window.setInterval(refreshLoanStatus, 3000);
-    return () => window.clearInterval(timer);
+    const refreshOnReturn = () => {
+      if (document.visibilityState === "visible") refreshLoanStatus();
+    };
+    window.addEventListener("focus", refreshOnReturn);
+    document.addEventListener("visibilitychange", refreshOnReturn);
+    return () => {
+      window.removeEventListener("focus", refreshOnReturn);
+      document.removeEventListener("visibilitychange", refreshOnReturn);
+    };
   }, [showModal, selectedBook, isLoggedIn, user?.id, bookIdentifier, isOwner]);
 
   const openImageViewer = (src) => { setZoomedImage(src); setImageScale(1); };
