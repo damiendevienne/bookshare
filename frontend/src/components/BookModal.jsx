@@ -198,7 +198,6 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
                           style={{ maxHeight: "400px", objectFit: "contain", cursor: "zoom-in" }}
                           onClick={(event) => { event.stopPropagation(); openImageViewer(imageSources[idx], idx); }}
                         />
-                        <span className="book-image-count-badge"><Camera size={14} aria-hidden="true" /><span>{idx + 1}/{images.length}</span></span>
                       </div>
                     ))}
                   </div>
@@ -221,7 +220,7 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
                     <span className="visually-hidden">Next</span>
                   </button>
                 </div>
-              ) : <div className="book-single-image-wrap"><img src={book.coverUrl || "/images/open-book.png"} className="d-block mx-auto mb-3" alt={book.title || "Book cover"} style={{ maxHeight: "400px", maxWidth: "100%", objectFit: "contain", cursor: "zoom-in" }} onClick={(event) => { event.stopPropagation(); openImageViewer(book.coverUrl || "/images/open-book.png"); }} /><span className="book-image-count-badge"><Camera size={14} aria-hidden="true" /><span>1/1</span></span></div>}
+              ) : <img src={book.coverUrl || "/images/open-book.png"} className="d-block mx-auto mb-3" alt={book.title || "Book cover"} style={{ maxHeight: "400px", maxWidth: "100%", objectFit: "contain", cursor: "zoom-in" }} onClick={(event) => { event.stopPropagation(); openImageViewer(book.coverUrl || "/images/open-book.png"); }} />}
 
               <div className="book-details-badge-row mb-2">
                 <div>
@@ -270,6 +269,7 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
         </div>
         <div className="book-image-viewer-viewport" onClick={(event) => event.stopPropagation()} onWheel={(event) => { const nextScale = Math.min(4, Math.max(1, imageScale + (event.deltaY < 0 ? 0.15 : -0.15))); setImageScale(nextScale); if (nextScale === 1) setImagePan({ x: 0, y: 0 }); }} onTouchStart={handleViewerTouchStart} onTouchMove={handlePinchMove} onTouchEnd={handleViewerTouchEnd}>
           <img key={zoomedImageIndex} className={imageChangeDirection ? `book-image-change-${imageChangeDirection}` : ""} src={zoomedImage} alt={book.title || "Book image"} style={{ transform: `translate(${imagePan.x}px, ${imagePan.y}px) scale(${imageScale})` }} onAnimationEnd={() => setImageChangeDirection("")} />
+          <span className="book-image-count-badge"><Camera size={14} aria-hidden="true" /><span>{zoomedImageIndex + 1}/{imageSources.length}</span></span>
         </div>
         <div className="book-image-viewer-bottombar" onClick={(event) => event.stopPropagation()}>
           <span>{imageScale === 1 ? "Swipe to browse · pinch or scroll to zoom" : "Drag to move · reset zoom to browse"}</span>
