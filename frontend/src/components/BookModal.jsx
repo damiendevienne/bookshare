@@ -158,7 +158,7 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
                           className="d-block w-100"
                           alt={book.title}
                           style={{ maxHeight: "400px", objectFit: "contain", cursor: "zoom-in" }}
-                          onClick={() => openImageViewer(imageSources[idx])}
+                          onClick={(event) => { event.stopPropagation(); openImageViewer(imageSources[idx]); }}
                         />
                       </div>
                     ))}
@@ -182,7 +182,7 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
                     <span className="visually-hidden">Next</span>
                   </button>
                 </div>
-              ) : <img src={book.coverUrl || "/images/open-book.png"} className="d-block mx-auto mb-3" alt={book.title || "Book cover"} style={{ maxHeight: "400px", maxWidth: "100%", objectFit: "contain", cursor: "zoom-in" }} onClick={() => openImageViewer(book.coverUrl || "/images/open-book.png")} />}
+              ) : <img src={book.coverUrl || "/images/open-book.png"} className="d-block mx-auto mb-3" alt={book.title || "Book cover"} style={{ maxHeight: "400px", maxWidth: "100%", objectFit: "contain", cursor: "zoom-in" }} onClick={(event) => { event.stopPropagation(); openImageViewer(book.coverUrl || "/images/open-book.png"); }} />}
 
               <div className="book-details-badge-row mb-2">
                 <div>
