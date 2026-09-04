@@ -12,7 +12,9 @@ if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
   exit 2
 fi
 
-if [[ -n "$(git status --short)" ]]; then
+dirty_tracked="$(git diff --name-only; git diff --cached --name-only)"
+dirty_untracked="$(git ls-files --others --exclude-standard | grep -v '^frontend/\.env\.production$' || true)"
+if [[ -n "$dirty_tracked$dirty_untracked" ]]; then
   echo "Working tree is not clean. Commit or stash existing changes first." >&2
   exit 1
 fi
