@@ -17,6 +17,7 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
   const [conversationId, setConversationId] = useState(null);
   const [zoomedImage, setZoomedImage] = useState(null);
   const [zoomedImageIndex, setZoomedImageIndex] = useState(0);
+  const [imageChangeDirection, setImageChangeDirection] = useState("");
   const [imageScale, setImageScale] = useState(1);
   const [imagePan, setImagePan] = useState({ x: 0, y: 0 });
   const touchGesture = useRef(null);
@@ -57,11 +58,12 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
   const imageSources = images.length > 0
     ? images.map((img) => mediaUrl(img.formats?.large?.url || img.formats?.medium?.url || img.url || img.attributes?.url))
     : [book.coverUrl || "/images/open-book.png"];
-  const openImageViewer = (src, index = 0) => { setZoomedImage(src); setZoomedImageIndex(index); setImageScale(1); setImagePan({ x: 0, y: 0 }); };
+  const openImageViewer = (src, index = 0) => { setZoomedImage(src); setZoomedImageIndex(index); setImageScale(1); setImagePan({ x: 0, y: 0 }); setImageChangeDirection(""); };
   const closeImageViewer = () => { setZoomedImage(null); setImageScale(1); setImagePan({ x: 0, y: 0 }); };
   const showAdjacentImage = (direction) => {
     if (imageSources.length < 2 || imageScale !== 1) return;
     const nextIndex = (zoomedImageIndex + direction + imageSources.length) % imageSources.length;
+    setImageChangeDirection(direction > 0 ? "left" : "right");
     setZoomedImageIndex(nextIndex);
     setZoomedImage(imageSources[nextIndex]);
     setImagePan({ x: 0, y: 0 });
@@ -255,7 +257,7 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
           <button type="button" className="book-image-viewer-close btn-close" aria-label="Close enlarged image" onClick={closeImageViewer} />
         </div>
         <div className="book-image-viewer-viewport" onClick={(event) => event.stopPropagation()} onWheel={(event) => { const nextScale = Math.min(4, Math.max(1, imageScale + (event.deltaY < 0 ? 0.15 : -0.15))); setImageScale(nextScale); if (nextScale === 1) setImagePan({ x: 0, y: 0 }); }} onTouchStart={handleViewerTouchStart} onTouchMove={handlePinchMove} onTouchEnd={handleViewerTouchEnd}>
-          <img src={zoomedImage} alt={book.title || "Book image"} style={{ transform: `translate(${imagePan.x}px, ${imagePan.y}px) scale(${imageScale})` }} />
+          <img key={zoomedImageIndex} className={imageChangeDirection ? `book-image-change-${imageChangeDirection}` : ""} src={zoomedImage} alt={book.title || "Book image"} style={{ transform: `translate(${imagePan.x}px, ${imagePan.y}px) scale(${imageScale})` }} onAnimationEnd={() => setImageChangeDirection("")} />
         </div>
         <div className="book-image-viewer-bottombar" onClick={(event) => event.stopPropagation()}>
           <span>{imageScale === 1 ? "Swipe to browse · pinch or scroll to zoom" : "Drag to move · reset zoom to browse"}</span>
