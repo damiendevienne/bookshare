@@ -1481,6 +1481,26 @@ footer .btn small {
   transition: transform 120ms ease;
 }
 
+.book-image-drag-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.book-image-drag-stage > img {
+  position: absolute;
+  inset: 0;
+}
+
+.book-image-drag-neighbour {
+  z-index: 1;
+}
+
+.book-image-drag-stage > img:not(.book-image-drag-neighbour) {
+  z-index: 2;
+}
+
 .book-image-viewer-viewport img.image-swipe-left {
   animation: image-swipe-in-left 320ms cubic-bezier(.22, .61, .36, 1);
 }

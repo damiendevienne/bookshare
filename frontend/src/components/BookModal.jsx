@@ -19,6 +19,7 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
   const [zoomedImageIndex, setZoomedImageIndex] = useState(0);
   const [imageScale, setImageScale] = useState(1);
   const [imageSwipeDirection, setImageSwipeDirection] = useState("");
+  const [imageDragOffset, setImageDragOffset] = useState(0);
   const touchGesture = useRef(null);
 
   const book = selectedBook?.attributes || selectedBook || {};
@@ -57,8 +58,8 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
   const imageSources = images.length > 0
     ? images.map((img) => mediaUrl(img.formats?.large?.url || img.formats?.medium?.url || img.url || img.attributes?.url))
     : [book.coverUrl || "/images/open-book.png"];
-  const openImageViewer = (src, index = 0) => { setZoomedImage(src); setZoomedImageIndex(index); setImageScale(1); setImageSwipeDirection(""); };
-  const closeImageViewer = () => { setZoomedImage(null); setImageScale(1); };
+  const openImageViewer = (src, index = 0) => { setZoomedImage(src); setZoomedImageIndex(index); setImageScale(1); setImageSwipeDirection(""); setImageDragOffset(0); };
+  const closeImageViewer = () => { setZoomedImage(null); setImageScale(1); setImageDragOffset(0); };
   const showAdjacentImage = (direction) => {
     if (imageSources.length < 2 || imageScale !== 1) return;
     const nextIndex = (zoomedImageIndex + direction + imageSources.length) % imageSources.length;
@@ -66,6 +67,7 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
     setZoomedImageIndex(nextIndex);
     setZoomedImage(imageSources[nextIndex]);
     setImageScale(1);
+    setImageDragOffset(0);
   };
 
   if (!showModal || !selectedBook) return null;
@@ -216,7 +218,12 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
           }}
           onTouchMove={(event) => {
             const gesture = touchGesture.current;
-            if (!gesture || event.touches.length !== 2 || !gesture.pinch) return;
+            if (!gesture) return;
+            if (event.touches.length === 1 && !gesture.pinch && imageScale === 1) {
+              setImageDragOffset(event.touches[0].clientX - gesture.startX);
+              return;
+            }
+            if (event.touches.length !== 2 || !gesture.pinch) return;
             const [first, second] = event.touches;
             const distance = Math.hypot(second.clientX - first.clientX, second.clientY - first.clientY);
             setImageScale(Math.min(4, Math.max(1, gesture.scale * (distance / gesture.distance))));
@@ -227,10 +234,15 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
             if (!gesture?.pinch && gesture?.startX != null && imageScale === 1 && event.changedTouches.length === 1) {
               const deltaX = event.changedTouches[0].clientX - gesture.startX;
               const deltaY = event.changedTouches[0].clientY - gesture.startY;
+              setImageDragOffset(0);
               if (Math.abs(deltaX) > 60 && Math.abs(deltaX) > Math.abs(deltaY)) showAdjacentImage(deltaX < 0 ? 1 : -1);
             }
           }}>
-          <img key={zoomedImageIndex} className={imageSwipeDirection ? `image-swipe-${imageSwipeDirection}` : ""} src={imageSources[zoomedImageIndex] || zoomedImage} alt={book.title || "Book image"} style={{ transform: `scale(${imageScale})` }} onAnimationEnd={() => setImageSwipeDirection("")} />
+          <div className="book-image-drag-stage">
+            {imageDragOffset < 0 && imageSources.length > 1 && <img className="book-image-drag-neighbour book-image-drag-next" src={imageSources[(zoomedImageIndex + 1) % imageSources.length]} alt="" aria-hidden="true" style={{ transform: `translateX(calc(100% + ${imageDragOffset}px))` }} />}
+            {imageDragOffset > 0 && imageSources.length > 1 && <img className="book-image-drag-neighbour book-image-drag-previous" src={imageSources[(zoomedImageIndex - 1 + imageSources.length) % imageSources.length]} alt="" aria-hidden="true" style={{ transform: `translateX(calc(-100% + ${imageDragOffset}px))` }} />}
+            <img key={zoomedImageIndex} className={imageSwipeDirection ? `image-swipe-${imageSwipeDirection}` : ""} src={imageSources[zoomedImageIndex] || zoomedImage} alt={book.title || "Book image"} style={{ transform: `translateX(${imageDragOffset}px) scale(${imageScale})` }} onAnimationEnd={() => setImageSwipeDirection("")} />
+          </div>
         </div>
         <div className="book-image-viewer-bottombar" onClick={(event) => event.stopPropagation()}>
           <span>{imageSources.length > 1 ? "Swipe to browse · pinch to zoom" : "Pinch to zoom"}</span>
