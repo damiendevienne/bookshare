@@ -51,7 +51,11 @@ export default factories.createCoreController('api::conversation.conversation', 
     if (!userId) return ctx.unauthorized();
     const conversation = await this.findParticipantConversation(ctx.params.id, userId);
     if (!conversation) return ctx.notFound('Conversation not found.');
-    if (conversation.closedAt && Date.now() - new Date(conversation.closedAt).getTime() >= 24 * 60 * 60 * 1000) {
+    const loans = await strapi.db.query('api::loan.loan').findMany({ where: { conversation: conversation.id }, select: ['status'] });
+    const hasOpenLoan = loans.some((loan) => loan.status === 'requested' || loan.status === 'active');
+    const withinGracePeriod = conversation.closedAt
+      && Date.now() - new Date(conversation.closedAt).getTime() < 24 * 60 * 60 * 1000;
+    if (loans.length && !hasOpenLoan && !withinGracePeriod) {
       return ctx.badRequest('This discussion is archived because the loan ended more than 24 hours ago.');
     }
     const unread = await strapi.db.query('api::message.message').findMany({

@@ -181,7 +181,9 @@ export default function MessagesModal({ show, onClose, onContextBack, user, acti
     const thread = conversationThreadRef.current;
     if (thread) thread.scrollTop = thread.scrollHeight;
   }, [active?.documentId, active?.id, messages.length, actionPanelSignature]);
-  const conversationClosed = active?.closedAt && Date.now() - new Date(active.closedAt).getTime() >= 24 * 60 * 60 * 1000;
+  const hasOpenLoan = loans.some((loan) => loan.status === "requested" || loan.status === "active");
+  const withinGracePeriod = active?.closedAt && Date.now() - new Date(active.closedAt).getTime() < 24 * 60 * 60 * 1000;
+  const conversationClosed = Boolean(loans.length && !hasOpenLoan && !withinGracePeriod);
   const chatLocked = conversationClosed || loans.some((loan) => loan.status === "requested" && loan.borrower?.id !== user.id);
   const refusalIsArchived = (conversation) => {
     const loan = conversation.loans?.find((item) => item.status === "refused");
