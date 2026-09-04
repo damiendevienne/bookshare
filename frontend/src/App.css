@@ -1501,6 +1501,10 @@ footer .btn small {
   z-index: 2;
 }
 
+.book-image-drag-stage > img.book-image-transition-old {
+  z-index: 3;
+}
+
 .book-image-viewer-viewport img.image-swipe-left {
   animation: image-swipe-in-left 320ms cubic-bezier(.22, .61, .36, 1);
 }
@@ -1517,6 +1521,24 @@ footer .btn small {
 @keyframes image-swipe-in-right {
   from { transform: translateX(-100%) scale(1); }
   to { transform: translateX(0) scale(1); }
+}
+
+.book-image-transition-old.image-swipe-out-left {
+  animation: image-swipe-out-left 320ms cubic-bezier(.22, .61, .36, 1);
+}
+
+.book-image-transition-old.image-swipe-out-right {
+  animation: image-swipe-out-right 320ms cubic-bezier(.22, .61, .36, 1);
+}
+
+@keyframes image-swipe-out-left {
+  from { transform: translateX(0) scale(1); }
+  to { transform: translateX(-100%) scale(1); }
+}
+
+@keyframes image-swipe-out-right {
+  from { transform: translateX(0) scale(1); }
+  to { transform: translateX(100%) scale(1); }
 }
 
 .book-image-viewer-close {
