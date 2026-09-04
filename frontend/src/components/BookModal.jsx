@@ -242,8 +242,8 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
           }}>
           <div className="book-image-drag-stage">
             {transitioningImage && <img className={`book-image-transition-old image-swipe-out-${transitioningImage.direction}`} src={transitioningImage.src} alt="" aria-hidden="true" onAnimationEnd={() => setTransitioningImage(null)} />}
-            {imageDragOffset < 0 && imageSources.length > 1 && <img className="book-image-drag-neighbour book-image-drag-next" src={imageSources[(zoomedImageIndex + 1) % imageSources.length]} alt="" aria-hidden="true" style={{ transform: `translateX(calc(100% + ${imageDragOffset}px))` }} />}
-            {imageDragOffset > 0 && imageSources.length > 1 && <img className="book-image-drag-neighbour book-image-drag-previous" src={imageSources[(zoomedImageIndex - 1 + imageSources.length) % imageSources.length]} alt="" aria-hidden="true" style={{ transform: `translateX(calc(-100% + ${imageDragOffset}px))` }} />}
+            {!transitioningImage && !imageSwipeDirection && imageDragOffset < 0 && imageSources.length > 1 && <img className="book-image-drag-neighbour book-image-drag-next" src={imageSources[(zoomedImageIndex + 1) % imageSources.length]} alt="" aria-hidden="true" style={{ transform: `translateX(calc(100% + ${imageDragOffset}px))` }} />}
+            {!transitioningImage && !imageSwipeDirection && imageDragOffset > 0 && imageSources.length > 1 && <img className="book-image-drag-neighbour book-image-drag-previous" src={imageSources[(zoomedImageIndex - 1 + imageSources.length) % imageSources.length]} alt="" aria-hidden="true" style={{ transform: `translateX(calc(-100% + ${imageDragOffset}px))` }} />}
             <img key={zoomedImageIndex} className={imageSwipeDirection ? `image-swipe-${imageSwipeDirection}` : ""} src={imageSources[zoomedImageIndex] || zoomedImage} alt={book.title || "Book image"} style={{ transform: `translateX(${imageDragOffset}px) scale(${imageScale})` }} onAnimationEnd={() => setImageSwipeDirection("")} />
           </div>
         </div>
