@@ -907,16 +907,22 @@ footer .btn small {
   margin-top: 0.4rem;
 }
 
-.conversation-section-current {
-  border-left-color: var(--bookmybook-navy);
-  color: var(--bookmybook-navy);
-  background: #d9eaf2;
+.conversation-section-active {
+  border-left-color: #6da8c5;
+  color: #28566d;
+  background: #dceef7;
+}
+
+.conversation-section-recent {
+  border-left-color: #d6a744;
+  color: #765816;
+  background: #fff1cf;
 }
 
 .conversation-section-past {
-  border-left-color: var(--bookmybook-terracotta);
-  color: #6b5845;
-  background: #eee3d3;
+  border-left-color: #a8aab8;
+  color: #626475;
+  background: #ececf1;
 }
 
 .conversation-subsection-heading {
@@ -943,13 +949,27 @@ footer .btn small {
   opacity: 0.68;
 }
 
-.conversation-item-current {
-  border-left: 4px solid var(--bookmybook-sage) !important;
+.conversation-subsection-active {
+  border-left-color: #6da8c5;
+  background: #f1f8fb;
+}
+
+.conversation-subsection-recent {
+  border-left-color: #d6a744;
+  background: #fff9e9;
+}
+
+.conversation-item-active {
+  border-left: 4px solid #6da8c5 !important;
+}
+
+.conversation-item-recent {
+  border-left: 4px solid #d6a744 !important;
 }
 
 .conversation-item-past {
-  border-left: 4px solid #ced4da !important;
-  background-color: #f8f9fa;
+  border-left: 4px solid #b8bac6 !important;
+  background-color: #f4f4f7;
   opacity: 0.68;
 }
 

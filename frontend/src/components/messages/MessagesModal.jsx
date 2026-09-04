@@ -207,8 +207,8 @@ export default function MessagesModal({ show, onClose, onContextBack, user, acti
   const recentGroups = splitByOwnership(recentlyCompletedConversations);
   const pastGroups = splitByOwnership(pastConversations);
   const discussionSections = [
-    { label: "Active loans", tone: "current", groups: activeGroups },
-    { label: "Recently completed", tone: "current", groups: recentGroups },
+    { label: "Active loans", tone: "active", groups: activeGroups },
+    { label: "Recently completed", tone: "recent", groups: recentGroups },
     { label: "Past loans", tone: "past", groups: pastGroups },
   ].filter((section) => section.groups.owned.length || section.groups.borrowed.length);
 
@@ -336,7 +336,7 @@ export default function MessagesModal({ show, onClose, onContextBack, user, acti
                 const groupKey = `${section.tone}-${group.ownership}`;
                 const isCollapsed = Boolean(collapsedDiscussionGroups[groupKey]);
                 return <React.Fragment key={group.ownership}>
-                <button type="button" className={`conversation-subsection-heading ${section.tone === "past" ? "conversation-subsection-past" : ""} px-3 py-2 text-uppercase fw-bold`} aria-expanded={!isCollapsed} onClick={() => setCollapsedDiscussionGroups((current) => ({ ...current, [groupKey]: !current[groupKey] }))}>
+                <button type="button" className={`conversation-subsection-heading conversation-subsection-${section.tone} px-3 py-2 text-uppercase fw-bold`} aria-expanded={!isCollapsed} onClick={() => setCollapsedDiscussionGroups((current) => ({ ...current, [groupKey]: !current[groupKey] }))}>
                   <span>{group.label} ({group.items.length})</span>
                   {isCollapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
                 </button>
@@ -344,7 +344,7 @@ export default function MessagesModal({ show, onClose, onContextBack, user, acti
                   const book = conversationBook(conversation);
                   const context = loanContext(conversation, user.id);
                   const other = otherParticipant(conversation, user.id);
-                  return <button key={conversation.documentId || conversation.id} className={`list-group-item list-group-item-action text-start ${section.tone === "past" ? "conversation-item-past" : "conversation-item-current"}`} onClick={() => { setError(""); setActive(conversation); const pendingRequest = conversation.loans?.some((loan) => loan.status === "requested" && loan.lender?.id === user.id); setConversations((current) => current.map((item) => (String(item.documentId || item.id) === String(conversation.documentId || conversation.id) ? { ...item, unreadCount: pendingRequest ? 1 : 0 } : item))); }}>
+                  return <button key={conversation.documentId || conversation.id} className={`list-group-item list-group-item-action text-start conversation-item-${section.tone}`} onClick={() => { setError(""); setActive(conversation); const pendingRequest = conversation.loans?.some((loan) => loan.status === "requested" && loan.lender?.id === user.id); setConversations((current) => current.map((item) => (String(item.documentId || item.id) === String(conversation.documentId || conversation.id) ? { ...item, unreadCount: pendingRequest ? 1 : 0 } : item))); }}>
                     <span className="conversation-item-content">
                       <img className="conversation-book-thumbnail" src={bookImage(book)} alt="" aria-hidden="true" />
                       <span className="conversation-item-details"><strong className={`conversation-item-title ${conversation.unreadCount > 0 ? "fw-bold" : "fw-normal"}`}>{book?.title || "Conversation"}</strong>{book?.author && <small className="conversation-item-author d-block text-muted">{book.author}</small>}<small className="d-block conversation-with">Discussion with {other?.username || "User"}</small></span>
