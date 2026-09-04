@@ -91,10 +91,10 @@ function App() {
       setFavoritesOnly(false);
       return;
     }
-    api.get("/api/favorites")
+    api.get(`/api/favorites?zone=${encodeURIComponent(activeZone)}`)
       .then((response) => setFavoriteBookIds(response.data.data || []))
       .catch(() => setFavoriteBookIds([]));
-  }, [isLoggedIn, user?.id]);
+  }, [isLoggedIn, user?.id, activeZone]);
 
   useEffect(() => {
     if (!welcomeMessage) return undefined;
@@ -137,8 +137,11 @@ function App() {
     const wasFavorite = favoriteBookIds.includes(favoriteId);
     setFavoriteBookIds((current) => wasFavorite ? current.filter((id) => id !== favoriteId) : [...current, favoriteId]);
     try {
-      const response = await api.post(`/api/books/${encodeURIComponent(identifier)}/favorite`);
-      setFavoriteBookIds(response.data.data?.favoriteBookIds || []);
+      await api.post(`/api/books/${encodeURIComponent(identifier)}/favorite`);
+      // Reload the area-scoped list so favorites from another sharing area do
+      // not inflate the badge or appear in the current catalogue.
+      const favoritesResponse = await api.get(`/api/favorites?zone=${encodeURIComponent(activeZone)}`);
+      setFavoriteBookIds(favoritesResponse.data.data || []);
     } catch (error) {
       setFavoriteBookIds((current) => wasFavorite
         ? [...new Set([...current, favoriteId])]

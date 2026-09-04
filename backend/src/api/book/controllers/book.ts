@@ -145,7 +145,26 @@ export default factories.createCoreController('api::book.book', ({ strapi }) => 
       select: ['favoriteBookIds'],
     });
     const ids = Array.isArray(account?.favoriteBookIds) ? account.favoriteBookIds.filter((id) => typeof id === 'string') : [];
-    ctx.body = { data: ids };
+    const zoneSlug = String(ctx.query.zone || '').trim();
+    const zone = zoneSlug ? await strapi.db.query('api::zone.zone').findOne({ where: { slug: zoneSlug }, select: ['id'] }) : null;
+    // Clean stale references globally, but only return favorites belonging to
+    // the currently selected area. Changing area must not erase other areas'
+    // favorites from the user's profile.
+    const existingBooks = ids.length ? await strapi.db.query('api::book.book').findMany({
+      where: {
+        documentId: { $in: ids },
+        publishedAt: { $notNull: true },
+        $or: [{ archived: false }, { archived: { $null: true } }],
+      },
+      select: ['documentId'],
+      populate: { zone: true },
+    }) : [];
+    const validIds = existingBooks.map((book) => book.documentId).filter(Boolean);
+    if (validIds.length !== ids.length) {
+      await strapi.db.query('plugin::users-permissions.user').update({ where: { id: userId }, data: { favoriteBookIds: ids.filter((id) => validIds.includes(id)) } });
+    }
+    const scopedIds = zone ? existingBooks.filter((book) => book.zone?.id === zone.id).map((book) => book.documentId) : validIds;
+    ctx.body = { data: ids.filter((id) => scopedIds.includes(id)) };
   },
 
   async toggleFavorite(ctx) {
@@ -153,7 +172,11 @@ export default factories.createCoreController('api::book.book', ({ strapi }) => 
     if (!userId) return ctx.unauthorized();
     const identifier = String(ctx.params.id || '');
     const book = await strapi.db.query('api::book.book').findOne({
-      where: { ...idFilter(identifier), publishedAt: { $notNull: true } },
+      where: {
+        ...idFilter(identifier),
+        publishedAt: { $notNull: true },
+        $or: [{ archived: false }, { archived: { $null: true } }],
+      },
       select: ['documentId'],
     });
     if (!book?.documentId) return ctx.notFound('Book not found.');
@@ -297,9 +320,21 @@ export default factories.createCoreController('api::book.book', ({ strapi }) => 
         where: { id: book.id },
         data: { archived: true, available: false },
       });
+      await this.removeFromFavorites(strapi, book.documentId);
       return { data: archivedBook, meta: { archived: true } };
     }
-    return super.delete(ctx);
+    const result = await super.delete(ctx);
+    await this.removeFromFavorites(strapi, book.documentId);
+    return result;
+  },
+
+  async removeFromFavorites(strapi, documentId) {
+    if (!documentId) return;
+    const users = await strapi.db.query('plugin::users-permissions.user').findMany({ select: ['id', 'favoriteBookIds'] });
+    for (const user of users) {
+      if (!Array.isArray(user.favoriteBookIds) || !user.favoriteBookIds.includes(documentId)) continue;
+      await strapi.db.query('plugin::users-permissions.user').update({ where: { id: user.id }, data: { favoriteBookIds: user.favoriteBookIds.filter((id) => id !== documentId) } });
+    }
   },
 
   async findOwnedBook(ctx) {
