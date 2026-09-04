@@ -1155,15 +1155,6 @@ footer .btn small {
   background: #e8f0f4;
 }
 
-.loan-cancel-action-card {
-  border-top-color: rgba(200, 93, 85, 0.28);
-  background: #fff8f5;
-}
-
-.loan-cancel-action-card .receipt-action-title {
-  color: #a94f48;
-}
-
 .receipt-action-copy {
   min-width: 0;
 }

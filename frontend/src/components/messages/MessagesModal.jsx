@@ -464,12 +464,8 @@ export default function MessagesModal({ show, onClose, onContextBack, user, acti
               </div>
               <button className="btn btn-success receipt-action-button" onClick={() => askLoanAction(loan, "confirm-received")}>✓ I received the book</button>
             </div>)}
-            {loans.filter((loan) => loan.status === "active" && loan.borrower?.id === user.id && !loan.borrowerReceivedAt).map((loan) => <div className="receipt-action-card loan-cancel-action-card" key={`cancel-${loan.documentId || loan.id}`}>
-              <div className="receipt-action-copy">
-                <div className="receipt-action-title">Changed your mind?</div>
-                <div className="receipt-action-help">You can cancel before receiving the book. The owner will be notified and the book will become available again.</div>
-              </div>
-              <button className="btn btn-outline-danger receipt-action-button" onClick={() => askLoanAction(loan, "cancel-active")}>I changed my mind</button>
+            {loans.filter((loan) => loan.status === "active" && loan.borrower?.id === user.id && !loan.borrowerReceivedAt).map((loan) => <div className="loan-request-actions text-center" key={`cancel-${loan.documentId || loan.id}`}>
+              <span className="text-muted small me-2">Changed your mind?</span><button className="btn btn-sm btn-outline-danger" onClick={() => askLoanAction(loan, "cancel-active")}>Cancel request</button>
             </div>)}
             {loans.filter((loan) => loan.status === "active" && loan.lender?.id === user.id && loan.borrowerReceivedAt && !loan.lenderReceivedBackAt).map((loan) => <div className="receipt-action-card" key={loan.documentId || loan.id}>
               <div className="receipt-action-copy">
