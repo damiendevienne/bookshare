@@ -406,7 +406,7 @@ export default function MessagesModal({ show, onClose, onContextBack, user, acti
                 <button className="btn btn-sm btn-outline-danger" onClick={() => loanAction(loan, "refuse")}>Refuse</button>
               </div>)}
               {loans.filter((loan) => loan.status === "requested" && loan.borrower?.id === user.id).map((loan) => <div className="loan-request-actions text-center mt-3" key={loan.documentId || loan.id}>
-                <button className="btn btn-sm btn-outline-danger" onClick={() => loanAction(loan, "cancel")}>Cancel borrowing request</button>
+                <span className="text-muted small me-2">Changed your mind?</span><button className="btn btn-sm btn-outline-danger" onClick={() => loanAction(loan, "cancel")}>Cancel request</button>
               </div>)}
               {loans.filter((loan) => loan.status === "active" && loan.lender?.id === user.id && !loan.borrowerReceivedAt).map((loan) => <div className="handover-waiting-notice" key={loan.documentId || loan.id}>
                 Once you have handed over the book, ask {loan.borrower?.username || "the borrower"} to click “I received the book”.
