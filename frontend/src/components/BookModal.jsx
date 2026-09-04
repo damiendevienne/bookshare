@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Heart } from "lucide-react";
+import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 import api, { mediaUrl } from "../api";
 import { languageName } from "../constants/languages";
 import { ageBadgeLabel } from "../constants/ages";
@@ -193,13 +194,17 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
                         className={`carousel-item ${idx === 0 ? "active" : ""}`}
                         key={idx}
                       >
-                        <img
-                          src={mediaUrl(img.formats?.medium?.url || img.formats?.small?.url || img.url || img.attributes?.url)}
-                          className="d-block w-100"
-                          alt={book.title}
-                          style={{ maxHeight: "400px", objectFit: "contain", cursor: "zoom-in" }}
-                          onClick={() => openImageViewer(imageSources[idx], idx)}
-                        />
+                        <TransformWrapper minScale={1} maxScale={4} centerOnInit limitToBounds wheel={{ disabled: true }} doubleClick={{ disabled: true }}>
+                          <TransformComponent wrapperClass="book-gallery-zoom-wrapper" contentClass="book-gallery-zoom-content">
+                            <img
+                              src={mediaUrl(img.formats?.medium?.url || img.formats?.small?.url || img.url || img.attributes?.url)}
+                              className="d-block w-100"
+                              alt={book.title}
+                              style={{ maxHeight: "400px", objectFit: "contain", cursor: "zoom-in" }}
+                              onClick={() => openImageViewer(imageSources[idx], idx)}
+                            />
+                          </TransformComponent>
+                        </TransformWrapper>
                       </div>
                     ))}
                   </div>
