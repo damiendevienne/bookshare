@@ -13,6 +13,7 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
   const [borrowing, setBorrowing] = useState(false);
   const [borrowError, setBorrowError] = useState("");
   const [loanStatus, setLoanStatus] = useState(null);
+  const [loanInfo, setLoanInfo] = useState(null);
   const [conversationId, setConversationId] = useState(null);
   const [zoomedImage, setZoomedImage] = useState(null);
   const [imageScale, setImageScale] = useState(1);
@@ -27,15 +28,20 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
 
   useEffect(() => {
     setLoanStatus(null);
+    setLoanInfo(null);
     setConversationId(null);
-    if (!showModal || !selectedBook || !isLoggedIn || !user?.id || isOwner || !bookIdentifier) return undefined;
-    api.get(`/api/loans/status?bookId=${encodeURIComponent(bookIdentifier)}`)
+    if (!showModal || !selectedBook || !isLoggedIn || !user?.id || !bookIdentifier) return undefined;
+    const refreshLoanStatus = () => api.get(`/api/loans/status?bookId=${encodeURIComponent(bookIdentifier)}`)
       .then((res) => {
-        setLoanStatus(res.data.data?.status || null);
-        setConversationId(res.data.data?.conversationId || null);
+        const info = res.data.data || null;
+        setLoanInfo(info);
+        setLoanStatus(info?.status || null);
+        setConversationId(info?.conversationId || null);
       })
       .catch(() => {});
-    return undefined;
+    refreshLoanStatus();
+    const timer = window.setInterval(refreshLoanStatus, 3000);
+    return () => window.clearInterval(timer);
   }, [showModal, selectedBook, isLoggedIn, user?.id, bookIdentifier, isOwner]);
 
   const openImageViewer = (src) => { setZoomedImage(src); setImageScale(1); };
@@ -164,9 +170,10 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
                 {borrowing ? "Sending…" : loanStatus === "requested" ? "A request was sent to the owner" : loanStatus === "active" ? "You’re currently borrowing this book" : book.available ? "Borrow this book" : "Currently unavailable"}
               </button>
               {loanStatus === "requested" && <div className="borrow-request-followup">
-                <small className="text-muted">{owner} has been notified.</small>
+                <small className="text-muted">{isOwner ? `${loanInfo?.borrower?.username || "The borrower"} has requested this book.` : `${owner} has been notified.`}</small>
                 {conversationId && <button type="button" className="btn btn-link btn-sm" onClick={() => { onClose(); onOpenDiscussion?.(conversationId); }}>Open the discussion</button>}
               </div>}
+              {loanStatus === "active" && isOwner && <div className="borrow-request-followup"><small className="text-muted">{loanInfo?.borrower?.username || "The borrower"} is currently borrowing this book.</small>{conversationId && <button type="button" className="btn btn-link btn-sm" onClick={() => { onClose(); onOpenDiscussion?.(conversationId); }}>Open the discussion</button>}</div>}
             </div>
           </div>
         </div>

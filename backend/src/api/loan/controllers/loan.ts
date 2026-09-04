@@ -19,10 +19,16 @@ export default factories.createCoreController('api::loan.loan', ({ strapi }) => 
     if (!book) return ctx.notFound('Book not found.');
     const loan = await strapi.db.query('api::loan.loan').findOne({
       where: { book: book.id, $or: [{ borrower: userId }, { lender: userId }], status: { $in: ['requested', 'active'] } },
-      populate: { conversation: true },
+      populate: { conversation: true, borrower: true, lender: true },
       orderBy: { createdAt: 'desc' },
     });
-    ctx.body = { data: loan ? { status: loan.status, id: loan.documentId ?? loan.id, conversationId: loan.conversation?.documentId ?? loan.conversation?.id } : null };
+    ctx.body = { data: loan ? {
+      status: loan.status,
+      id: loan.documentId ?? loan.id,
+      conversationId: loan.conversation?.documentId ?? loan.conversation?.id,
+      borrower: loan.borrower ? { id: loan.borrower.id, username: loan.borrower.username } : null,
+      lender: loan.lender ? { id: loan.lender.id, username: loan.lender.username } : null,
+    } : null };
   },
 
   async request(ctx) {
