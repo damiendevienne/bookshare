@@ -1482,21 +1482,21 @@ footer .btn small {
 }
 
 .book-image-viewer-viewport img.image-swipe-left {
-  animation: image-swipe-in-left 220ms ease-out;
+  animation: image-swipe-in-left 320ms cubic-bezier(.22, .61, .36, 1);
 }
 
 .book-image-viewer-viewport img.image-swipe-right {
-  animation: image-swipe-in-right 220ms ease-out;
+  animation: image-swipe-in-right 320ms cubic-bezier(.22, .61, .36, 1);
 }
 
 @keyframes image-swipe-in-left {
-  from { opacity: 0.35; transform: translateX(28px) scale(1); }
-  to { opacity: 1; transform: translateX(0) scale(1); }
+  from { transform: translateX(100%) scale(1); }
+  to { transform: translateX(0) scale(1); }
 }
 
 @keyframes image-swipe-in-right {
-  from { opacity: 0.35; transform: translateX(-28px) scale(1); }
-  to { opacity: 1; transform: translateX(0) scale(1); }
+  from { transform: translateX(-100%) scale(1); }
+  to { transform: translateX(0) scale(1); }
 }
 
 .book-image-viewer-close {
