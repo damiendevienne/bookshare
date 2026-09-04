@@ -13,13 +13,7 @@ export default function Footer({ isLoggedIn, user = {}, onLoginToggle, onBookCre
   const [myBooksRefreshToken, setMyBooksRefreshToken] = useState(0);
   const [unreadMessages, setUnreadMessages] = useState(0);
 
-  const applyUnreadCount = (count) => {
-    const next = Math.max(0, Number(count) || 0);
-    setUnreadMessages(next);
-    if (!("setAppBadge" in navigator)) return;
-    if (next > 0) navigator.setAppBadge(next).catch(() => {});
-    else navigator.clearAppBadge?.();
-  };
+  const applyUnreadCount = (count) => setUnreadMessages(Math.max(0, Number(count) || 0));
 
   useEffect(() => {
     if (!isLoggedIn || !user?.id) {
@@ -30,38 +24,20 @@ export default function Footer({ isLoggedIn, user = {}, onLoginToggle, onBookCre
     const refreshUnread = () => api.get(`/api/conversations/unread-count?zone=${encodeURIComponent(activeZone || "heraklion")}`)
       .then((res) => {
         const count = Number(res.data.data?.count || 0);
-        applyUnreadCount(count);
+        setUnreadMessages(count);
       })
       .catch(() => {});
     refreshUnread();
     const timer = window.setInterval(refreshUnread, 5000);
-    const handlePushNotification = () => {
-      setUnreadMessages((current) => {
-        const next = current + 1;
-        if ("setAppBadge" in navigator) navigator.setAppBadge(next).catch(() => {});
-        return next;
-      });
-      refreshUnread();
-    };
     const handleVisibility = () => {
       if (document.visibilityState === "visible") refreshUnread();
-      else applyUnreadCount(unreadMessages);
     };
-    window.addEventListener("bookmybook:push-notification", handlePushNotification);
     document.addEventListener("visibilitychange", handleVisibility);
-    const handlePageHide = () => applyUnreadCount(unreadMessages);
-    window.addEventListener("pagehide", handlePageHide);
     return () => {
       window.clearInterval(timer);
-      window.removeEventListener("bookmybook:push-notification", handlePushNotification);
       document.removeEventListener("visibilitychange", handleVisibility);
-      window.removeEventListener("pagehide", handlePageHide);
     };
-  }, [isLoggedIn, user?.id, activeZone, unreadMessages]);
-  useEffect(() => {
-    if (!isLoggedIn) return;
-    applyUnreadCount(unreadMessages);
-  }, [unreadMessages, isLoggedIn]);
+  }, [isLoggedIn, user?.id, activeZone]);
   useEffect(() => {
     if (isLoggedIn) return;
     setShowMessages(false);
