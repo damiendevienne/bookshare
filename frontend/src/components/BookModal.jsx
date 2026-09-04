@@ -245,7 +245,11 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
         <div ref={imageCarouselRef} id="book-image-viewer-carousel" className="carousel slide book-image-viewer-carousel" data-bs-interval="false" data-bs-touch="true" onClick={(event) => event.stopPropagation()}>
           <div className="carousel-inner">
             {imageSources.map((src, index) => <div className={`carousel-item ${index === zoomedImageIndex ? "active" : ""}`} key={src || index}>
-              <div className="book-image-viewer-viewport" onWheel={(event) => { const nextScale = Math.min(4, Math.max(1, imageScale + (event.deltaY < 0 ? 0.15 : -0.15))); setImageScale(nextScale); if (nextScale === 1) setImagePan({ x: 0, y: 0 }); }} onTouchStart={handlePinchStart} onTouchMove={handlePinchMove} onTouchEnd={handlePinchEnd}>
+              <div className="book-image-viewer-viewport" onWheel={(event) => { const nextScale = Math.min(4, Math.max(1, imageScale + (event.deltaY < 0 ? 0.15 : -0.15))); setImageScale(nextScale); if (nextScale === 1) setImagePan({ x: 0, y: 0 }); }}
+                onTouchStartCapture={(event) => { if (event.touches.length === 2 || imageScale > 1) { handlePinchStart(event); event.stopPropagation(); } }}
+                onTouchMoveCapture={(event) => { if (touchGesture.current?.pinch || touchGesture.current?.panning) { handlePinchMove(event); event.stopPropagation(); } }}
+                onTouchEndCapture={(event) => { if (touchGesture.current?.pinch || touchGesture.current?.panning) { handlePinchEnd(event); event.stopPropagation(); } }}
+                onTouchStart={handlePinchStart} onTouchMove={handlePinchMove} onTouchEnd={handlePinchEnd}>
                 <img src={src} alt={book.title || "Book image"} style={{ transform: `translate(${index === zoomedImageIndex ? imagePan.x : 0}px, ${index === zoomedImageIndex ? imagePan.y : 0}px) scale(${index === zoomedImageIndex ? imageScale : 1})` }} />
               </div>
             </div>)}
