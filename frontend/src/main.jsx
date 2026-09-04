@@ -10,6 +10,7 @@ import "bootstrap/dist/js/bootstrap.bundle.min.js";
 const path = window.location.pathname;
 const Root = path === "/reset-password" ? PasswordResetPage : path === "/email-confirmed" ? EmailConfirmedPage : App;
 ReactDOM.createRoot(document.getElementById("root")).render(<Root />);
+requestAnimationFrame(() => document.getElementById("app-loading")?.remove());
 
 if ("serviceWorker" in navigator && window.isSecureContext) {
   navigator.clearAppBadge?.();

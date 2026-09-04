@@ -2,15 +2,29 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/images/favicon.png" />
-    <link rel="apple-touch-icon" href="/images/favicon.png" />
+    <link rel="icon" type="image/png" href="/images/app-icon.png" />
+    <link rel="apple-touch-icon" href="/images/app-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#315a73" />
     <meta name="description" content="Borrow and share physical books with people around you." />
-    <title>bookmybook</title>
+    <title>%APP_NAME%</title>
+    <style>
+      #app-loading { position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center; background: #fbf6ed; }
+      #app-loading-content { display: flex; flex-direction: column; align-items: center; gap: .45rem; color: #315a73; }
+      #app-loading img { width: min(42vw, 190px); height: auto; }
+      #app-loading-name { font-family: Georgia, "Times New Roman", serif; font-size: 1.35rem; letter-spacing: .06em; }
+      #app-loading-version { color: #7d8790; font-size: .78rem; letter-spacing: .08em; }
+    </style>
   </head>
   <body>
+    <div id="app-loading" role="status" aria-label="Loading %APP_NAME%">
+      <div id="app-loading-content">
+        <img src="/images/app-icon.png" alt="" />
+        <div id="app-loading-name">%APP_NAME%</div>
+        <div id="app-loading-version">v%APP_VERSION%</div>
+      </div>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

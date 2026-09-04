@@ -1,5 +1,5 @@
 const CACHE_NAME = "bookmybook-shell-v2";
-const APP_SHELL = ["/", "/manifest.webmanifest", "/images/favicon.png"];
+const APP_SHELL = ["/", "/manifest.webmanifest", "/images/app-icon.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
