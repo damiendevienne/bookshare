@@ -25,7 +25,9 @@ export default factories.createCoreController('api::conversation.conversation', 
       const pendingRefusal = (row.loans || []).some((loan) => loan.status === 'refused'
         && (loan.lender?.id === userId ? !row.lenderArchivedAt : !row.borrowerArchivedAt));
       const pendingRequest = (row.loans || []).some((loan) => loan.status === 'requested' && loan.lender?.id === userId);
-      return { ...row, unreadCount: Math.max(unreadMessages, pendingRequest ? 1 : 0) + (pendingRefusal ? 1 : 0) };
+      const pendingCancellation = (row.loans || []).some((loan) => loan.status === 'cancelled'
+        && loan.lender?.id === userId && !row.lenderArchivedAt);
+      return { ...row, unreadCount: Math.max(unreadMessages, pendingRequest ? 1 : 0, pendingCancellation ? 1 : 0) + (pendingRefusal ? 1 : 0) };
     }));
     ctx.body = { data: withUnread.map((row) => ({
       ...row,

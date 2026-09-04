@@ -131,10 +131,21 @@ export default factories.createCoreController('api::loan.loan', ({ strapi }) => 
     const loan = await this.findLoanForParticipant(ctx);
     if (!loan) return;
     if (loan.borrower.id !== ctx.state.user.id) return ctx.forbidden();
-    if (loan.status !== 'requested') return ctx.badRequest('Only pending requests can be cancelled.');
+    if (loan.status !== 'requested' && loan.status !== 'active') return ctx.badRequest('This loan can no longer be cancelled.');
+    if (loan.status === 'active' && loan.borrowerReceivedAt) {
+      return ctx.badRequest('This loan has already been received. Please arrange its return instead.');
+    }
     const updated = await strapi.db.query('api::loan.loan').update({ where: { id: loan.id }, data: { status: 'cancelled' } });
-    await this.systemMessage(loan, ctx.state.user.id, 'The borrowing request was cancelled by the borrower.');
-    await this.closeIfLoanCompleted(loan.conversation.id);
+    const message = loan.status === 'active'
+      ? 'The loan was cancelled by the borrower after acceptance.'
+      : 'The borrowing request was cancelled by the borrower.';
+    await this.systemMessage(loan, ctx.state.user.id, message);
+    await strapi.db.query('api::book.book').update({ where: { id: loan.book.id }, data: { available: true } });
+    // The borrower has completed their side. Keep the lender's side active
+    // until they acknowledge the cancellation with OK.
+    await strapi.db.query('api::conversation.conversation').update({
+      where: { id: loan.conversation.id }, data: { borrowerArchivedAt: new Date() },
+    });
     ctx.body = { data: updated };
   },
 
