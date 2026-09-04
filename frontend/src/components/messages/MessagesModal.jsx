@@ -453,13 +453,6 @@ export default function MessagesModal({ show, onClose, onContextBack, user, acti
               {loans.filter((loan) => loan.status === "requested" && loan.borrower?.id === user.id).map((loan) => <div className="loan-request-actions text-center mt-3" key={loan.documentId || loan.id}>
                 <span className="text-muted small me-2">Changed your mind?</span><button className="btn btn-sm btn-outline-danger" onClick={() => loanAction(loan, "cancel")}>Cancel request</button>
               </div>)}
-              {loans.filter((loan) => loan.status === "active" && loan.borrower?.id === user.id && !loan.borrowerReceivedAt).map((loan) => <div className="receipt-action-card loan-cancel-action-card" key={`cancel-${loan.documentId || loan.id}`}>
-                <div className="receipt-action-copy">
-                  <div className="receipt-action-title">Changed your mind?</div>
-                  <div className="receipt-action-help">You can cancel before receiving the book. The owner will be notified and the book will become available again.</div>
-                </div>
-                <button className="btn btn-outline-danger receipt-action-button" onClick={() => askLoanAction(loan, "cancel-active")}>I changed my mind</button>
-              </div>)}
               {loans.filter((loan) => loan.status === "active" && loan.lender?.id === user.id && !loan.borrowerReceivedAt).map((loan) => <div className="handover-waiting-notice" key={loan.documentId || loan.id}>
                 Once you have handed over the book, ask {loan.borrower?.username || "the borrower"} to click “I received the book”.
               </div>)}
@@ -470,6 +463,13 @@ export default function MessagesModal({ show, onClose, onContextBack, user, acti
                 <div className="receipt-action-help">Confirm this only after the handover has taken place.</div>
               </div>
               <button className="btn btn-success receipt-action-button" onClick={() => askLoanAction(loan, "confirm-received")}>✓ I received the book</button>
+            </div>)}
+            {loans.filter((loan) => loan.status === "active" && loan.borrower?.id === user.id && !loan.borrowerReceivedAt).map((loan) => <div className="receipt-action-card loan-cancel-action-card" key={`cancel-${loan.documentId || loan.id}`}>
+              <div className="receipt-action-copy">
+                <div className="receipt-action-title">Changed your mind?</div>
+                <div className="receipt-action-help">You can cancel before receiving the book. The owner will be notified and the book will become available again.</div>
+              </div>
+              <button className="btn btn-outline-danger receipt-action-button" onClick={() => askLoanAction(loan, "cancel-active")}>I changed my mind</button>
             </div>)}
             {loans.filter((loan) => loan.status === "active" && loan.lender?.id === user.id && loan.borrowerReceivedAt && !loan.lenderReceivedBackAt).map((loan) => <div className="receipt-action-card" key={loan.documentId || loan.id}>
               <div className="receipt-action-copy">
