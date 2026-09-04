@@ -82,6 +82,14 @@ export default factories.createCoreController('api::conversation.conversation', 
     const updated = await strapi.db.query('api::conversation.conversation').update({
       where: { id: conversation.id }, data: { [field]: new Date() },
     });
+    // Archiving is the user's explicit acknowledgement of the final system
+    // notice. Do not leave that incoming message counted as unread in badges.
+    const unread = await strapi.db.query('api::message.message').findMany({
+      where: { conversation: conversation.id, readAt: null }, populate: { sender: true },
+    });
+    for (const message of unread.filter((item) => item.sender?.id !== userId)) {
+      await strapi.db.query('api::message.message').update({ where: { id: message.id }, data: { readAt: new Date() } });
+    }
     ctx.body = { data: { archived: true, conversation: updated } };
   },
 
