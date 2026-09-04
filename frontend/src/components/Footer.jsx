@@ -13,6 +13,14 @@ export default function Footer({ isLoggedIn, user = {}, onLoginToggle, onBookCre
   const [myBooksRefreshToken, setMyBooksRefreshToken] = useState(0);
   const [unreadMessages, setUnreadMessages] = useState(0);
 
+  const applyUnreadCount = (count) => {
+    const next = Math.max(0, Number(count) || 0);
+    setUnreadMessages(next);
+    if (!("setAppBadge" in navigator)) return;
+    if (next > 0) navigator.setAppBadge(next).catch(() => {});
+    else navigator.clearAppBadge?.();
+  };
+
   useEffect(() => {
     if (!isLoggedIn || !user?.id) {
       setUnreadMessages(0);
@@ -22,29 +30,35 @@ export default function Footer({ isLoggedIn, user = {}, onLoginToggle, onBookCre
     const refreshUnread = () => api.get(`/api/conversations/unread-count?zone=${encodeURIComponent(activeZone || "heraklion")}`)
       .then((res) => {
         const count = Number(res.data.data?.count || 0);
-        setUnreadMessages(count);
-        if ("setAppBadge" in navigator) {
-          if (count > 0) navigator.setAppBadge(count).catch(() => {});
-          else navigator.clearAppBadge?.();
-        }
+        applyUnreadCount(count);
       })
       .catch(() => {});
     refreshUnread();
     const timer = window.setInterval(refreshUnread, 5000);
-    return () => window.clearInterval(timer);
-  }, [isLoggedIn, user?.id, activeZone]);
-  useEffect(() => {
-    const keepBadgeVisible = () => {
-      if (!isLoggedIn || !unreadMessages || !("setAppBadge" in navigator)) return;
-      navigator.setAppBadge(unreadMessages).catch(() => {});
+    const handlePushNotification = () => {
+      setUnreadMessages((current) => {
+        const next = current + 1;
+        if ("setAppBadge" in navigator) navigator.setAppBadge(next).catch(() => {});
+        return next;
+      });
+      refreshUnread();
     };
-    document.addEventListener("visibilitychange", keepBadgeVisible);
-    window.addEventListener("pagehide", keepBadgeVisible);
+    const handleVisibility = () => { if (document.visibilityState === "visible") refreshUnread(); };
+    window.addEventListener("bookmybook:push-notification", handlePushNotification);
+    document.addEventListener("visibilitychange", handleVisibility);
+    const handlePageHide = () => applyUnreadCount(unreadMessages);
+    window.addEventListener("pagehide", handlePageHide);
     return () => {
-      document.removeEventListener("visibilitychange", keepBadgeVisible);
-      window.removeEventListener("pagehide", keepBadgeVisible);
+      window.clearInterval(timer);
+      window.removeEventListener("bookmybook:push-notification", handlePushNotification);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("pagehide", handlePageHide);
     };
-  }, [isLoggedIn, unreadMessages]);
+  }, [isLoggedIn, user?.id, activeZone, unreadMessages]);
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    applyUnreadCount(unreadMessages);
+  }, [unreadMessages, isLoggedIn]);
   useEffect(() => {
     if (isLoggedIn) return;
     setShowMessages(false);
@@ -190,7 +204,7 @@ export default function Footer({ isLoggedIn, user = {}, onLoginToggle, onBookCre
           externalRefreshToken={myBooksRefreshToken}
         />
       )}
-      <MessagesModal show={showMessages} initialConversationId={initialConversationId} onContextBack={initialConversationId ? closeMessages : undefined} onClose={closeMessages} user={user || {}} activeZone={activeZone} onUnreadCountChange={setUnreadMessages} onBookUpdated={handleLoanUpdated} />
+      <MessagesModal show={showMessages} initialConversationId={initialConversationId} onContextBack={initialConversationId ? closeMessages : undefined} onClose={closeMessages} user={user || {}} activeZone={activeZone} onUnreadCountChange={applyUnreadCount} onBookUpdated={handleLoanUpdated} />
     </>
   );
 }
