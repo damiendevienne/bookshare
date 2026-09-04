@@ -1467,6 +1467,7 @@ footer .btn small {
   max-height: calc(100vh - 8rem);
   overflow: auto;
   cursor: zoom-in;
+  touch-action: none;
 }
 
 .book-image-viewer-viewport img {
