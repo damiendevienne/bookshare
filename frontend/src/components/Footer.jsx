@@ -43,7 +43,10 @@ export default function Footer({ isLoggedIn, user = {}, onLoginToggle, onBookCre
       });
       refreshUnread();
     };
-    const handleVisibility = () => { if (document.visibilityState === "visible") refreshUnread(); };
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") refreshUnread();
+      else applyUnreadCount(unreadMessages);
+    };
     window.addEventListener("bookmybook:push-notification", handlePushNotification);
     document.addEventListener("visibilitychange", handleVisibility);
     const handlePageHide = () => applyUnreadCount(unreadMessages);
