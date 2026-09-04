@@ -1465,7 +1465,7 @@ footer .btn small {
   height: 100%;
   max-width: none;
   max-height: calc(100vh - 8rem);
-  overflow: auto;
+  overflow: hidden;
   cursor: zoom-in;
   touch-action: none;
 }
