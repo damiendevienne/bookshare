@@ -181,7 +181,8 @@ export default function MessagesModal({ show, onClose, onContextBack, user, acti
     const thread = conversationThreadRef.current;
     if (thread) thread.scrollTop = thread.scrollHeight;
   }, [active?.documentId, active?.id, messages.length, actionPanelSignature]);
-  const chatLocked = loans.some((loan) => loan.status === "requested" && loan.borrower?.id !== user.id);
+  const conversationClosed = active?.closedAt && Date.now() - new Date(active.closedAt).getTime() >= 24 * 60 * 60 * 1000;
+  const chatLocked = conversationClosed || loans.some((loan) => loan.status === "requested" && loan.borrower?.id !== user.id);
   const refusalIsArchived = (conversation) => {
     const loan = conversation.loans?.find((item) => item.status === "refused");
     if (!loan) return false;
@@ -190,8 +191,12 @@ export default function MessagesModal({ show, onClose, onContextBack, user, acti
   const hasCurrentActivity = (conversation) => conversation.loans?.some((loan) => loan.status === "requested" || loan.status === "active")
     || (conversation.loans?.some((loan) => loan.status === "cancelled") && conversation.unreadCount > 0)
     || (conversation.loans?.some((loan) => loan.status === "refused") && !refusalIsArchived(conversation));
-  const currentConversations = conversations.filter(hasCurrentActivity);
-  const pastConversations = conversations.filter((conversation) => !hasCurrentActivity(conversation));
+  const isRecentlyCompleted = (conversation) => Boolean(conversation.closedAt)
+    && Date.now() - new Date(conversation.closedAt).getTime() < 24 * 60 * 60 * 1000
+    && !conversation.loans?.some((loan) => loan.status === "requested" || loan.status === "active");
+  const currentConversations = conversations.filter((conversation) => hasCurrentActivity(conversation) && !isRecentlyCompleted(conversation));
+  const recentlyCompletedConversations = conversations.filter(isRecentlyCompleted);
+  const pastConversations = conversations.filter((conversation) => !hasCurrentActivity(conversation) && !isRecentlyCompleted(conversation));
   const splitByOwnership = (items) => items.reduce((groups, conversation) => {
     const loan = conversation.loans?.find((item) => item.status === "requested" || item.status === "active") || conversation.loans?.[0];
     if (loan?.lender?.id === user.id) groups.owned.push(conversation);
@@ -199,9 +204,11 @@ export default function MessagesModal({ show, onClose, onContextBack, user, acti
     return groups;
   }, { owned: [], borrowed: [] });
   const activeGroups = splitByOwnership(currentConversations);
+  const recentGroups = splitByOwnership(recentlyCompletedConversations);
   const pastGroups = splitByOwnership(pastConversations);
   const discussionSections = [
     { label: "Active loans", tone: "current", groups: activeGroups },
+    { label: "Recently completed", tone: "current", groups: recentGroups },
     { label: "Past loans", tone: "past", groups: pastGroups },
   ].filter((section) => section.groups.owned.length || section.groups.borrowed.length);
 
@@ -439,7 +446,7 @@ export default function MessagesModal({ show, onClose, onContextBack, user, acti
               <button className="btn btn-success receipt-action-button" onClick={() => askLoanAction(loan, "confirm-received-back")}>✓ I recovered my book</button>
             </div>)}
             <form className="conversation-compose-bar border-top p-2 d-flex gap-2" onSubmit={sendMessage}>
-              <input className="form-control" value={draft} onChange={(e) => setDraft(e.target.value)} disabled={chatLocked} placeholder={chatLocked ? "Chat will be available after the request is accepted." : "Write a message…"} />
+              <input className="form-control" value={draft} onChange={(e) => setDraft(e.target.value)} disabled={chatLocked} placeholder={conversationClosed ? "This discussion is archived." : chatLocked ? "Chat will be available after the request is accepted." : "Write a message…"} />
               <button className="btn btn-primary" disabled={chatLocked || !draft.trim()}><Send size={17} /></button>
             </form>
           </div>}

@@ -501,6 +501,7 @@ export interface ApiConversationConversation
   };
   attributes: {
     borrowerArchivedAt: Schema.Attribute.DateTime;
+    closedAt: Schema.Attribute.DateTime;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;

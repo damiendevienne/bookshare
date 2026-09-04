@@ -105,6 +105,7 @@ export default factories.createCoreController('api::loan.loan', ({ strapi }) => 
     for (const competingRequest of competingRequests) {
       await strapi.db.query('api::loan.loan').update({ where: { id: competingRequest.id }, data: { status: 'refused' } });
       await this.systemMessage(competingRequest, ctx.state.user.id, 'The loan request was refused because another request for this book was accepted.');
+      await this.closeIfLoanCompleted(competingRequest.conversation.id);
     }
     await strapi.db.query('api::book.book').update({ where: { id: loan.book.id }, data: { available: false } });
     await this.systemMessage(loan, ctx.state.user.id, `You can now discuss and arrange a time and place for the handover of “${loan.book.title}”.`);
@@ -122,6 +123,7 @@ export default factories.createCoreController('api::loan.loan', ({ strapi }) => 
       data: { status: 'refused' },
     });
     await this.systemMessage(loan, ctx.state.user.id, 'The loan request was refused.');
+    await this.closeIfLoanCompleted(loan.conversation.id);
     ctx.body = { data: updated };
   },
 
@@ -132,6 +134,7 @@ export default factories.createCoreController('api::loan.loan', ({ strapi }) => 
     if (loan.status !== 'requested') return ctx.badRequest('Only pending requests can be cancelled.');
     const updated = await strapi.db.query('api::loan.loan').update({ where: { id: loan.id }, data: { status: 'cancelled' } });
     await this.systemMessage(loan, ctx.state.user.id, 'The borrowing request was cancelled by the borrower.');
+    await this.closeIfLoanCompleted(loan.conversation.id);
     ctx.body = { data: updated };
   },
 
@@ -179,6 +182,7 @@ export default factories.createCoreController('api::loan.loan', ({ strapi }) => 
     });
     await strapi.db.query('api::book.book').update({ where: { id: loan.book.id }, data: { available: true } });
     await this.systemMessage(loan, ctx.state.user.id, `You recovered your book “${loan.book.title}”. It is available again for other readers.`);
+    await this.closeIfLoanCompleted(loan.conversation.id);
     ctx.body = { data: updated };
   },
 
@@ -234,5 +238,11 @@ export default factories.createCoreController('api::loan.loan', ({ strapi }) => 
     const recipientId = loan.lender?.id === sender ? loan.borrower?.id : loan.lender?.id;
     const senderName = loan.lender?.id === sender ? loan.lender?.username : loan.borrower?.username;
     await notifyUsers(strapi, [recipientId], { title: `Message from ${senderName || 'a reader'}`, body: content, conversationId: loan.conversation.documentId || loan.conversation.id });
+  },
+
+  async closeIfLoanCompleted(conversationId) {
+    const loans = await strapi.db.query('api::loan.loan').findMany({ where: { conversation: conversationId }, select: ['status'] });
+    if (!loans.length || loans.some((item) => item.status === 'requested' || item.status === 'active')) return;
+    await strapi.db.query('api::conversation.conversation').update({ where: { id: conversationId }, data: { closedAt: new Date() } });
   },
 }));
