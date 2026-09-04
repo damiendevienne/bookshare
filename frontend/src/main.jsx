@@ -13,7 +13,4 @@ ReactDOM.createRoot(document.getElementById("root")).render(<Root />);
 
 if ("serviceWorker" in navigator && window.isSecureContext) {
   window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").then((registration) => registration.update()).catch(() => {}));
-  navigator.serviceWorker.addEventListener("message", (event) => {
-    if (event.data?.type === "bookmybook:push-notification") window.dispatchEvent(new Event("bookmybook:push-notification"));
-  });
 }

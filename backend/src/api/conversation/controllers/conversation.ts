@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { factories } from '@strapi/strapi';
-import { notifyUsers } from '../../../services/push';
+import { getUnreadCount, notifyUsers } from '../../../services/push';
 
 export default factories.createCoreController('api::conversation.conversation', ({ strapi }) => ({
   async mine(ctx) {
@@ -25,7 +25,7 @@ export default factories.createCoreController('api::conversation.conversation', 
       const pendingRefusal = (row.loans || []).some((loan) => loan.status === 'refused'
         && (loan.lender?.id === userId ? !row.lenderArchivedAt : !row.borrowerArchivedAt));
       const pendingRequest = (row.loans || []).some((loan) => loan.status === 'requested' && loan.lender?.id === userId);
-      return { ...row, unreadCount: unreadMessages + (pendingRefusal || pendingRequest ? 1 : 0) };
+      return { ...row, unreadCount: Math.max(unreadMessages, pendingRequest ? 1 : 0) + (pendingRefusal ? 1 : 0) };
     }));
     ctx.body = { data: withUnread.map((row) => ({
       ...row,
@@ -37,6 +37,13 @@ export default factories.createCoreController('api::conversation.conversation', 
         borrower: this.publicUser(loan.borrower),
       })),
     })) };
+  },
+
+  async unreadCount(ctx) {
+    const userId = ctx.state.user?.id;
+    if (!userId) return ctx.unauthorized();
+    const count = await getUnreadCount(strapi, userId, String(ctx.query.zone || '').trim());
+    ctx.body = { data: { count } };
   },
 
   async markRead(ctx) {

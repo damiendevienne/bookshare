@@ -109,6 +109,7 @@ export default {
       'api::loan.loan.confirmReceived', 'api::loan.loan.confirmLent',
       'api::loan.loan.confirmReturned', 'api::loan.loan.confirmReceivedBack',
       'api::conversation.conversation.mine', 'api::conversation.conversation.messages',
+      'api::conversation.conversation.unreadCount',
       'api::conversation.conversation.send', 'api::conversation.markRead',
       'api::conversation.conversation.markRead',
       'api::conversation.conversation.archive', 'api::conversation.archive',

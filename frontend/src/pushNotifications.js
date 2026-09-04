@@ -17,6 +17,11 @@ export async function enablePushNotifications() {
   const permission = await Notification.requestPermission();
   if (permission !== "granted") throw new Error("Notifications were not enabled.");
   const registration = await navigator.serviceWorker.ready;
+  const existing = await registration.pushManager.getSubscription();
+  if (existing) {
+    await api.delete("/api/push-subscriptions", { data: { endpoint: existing.endpoint } }).catch(() => {});
+    await existing.unsubscribe();
+  }
   const subscription = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: decodeBase64Url(vapidPublicKey) });
   await api.post("/api/push-subscriptions", subscription.toJSON());
   localStorage.setItem("pushNotificationsEnabled", "true");

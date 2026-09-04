@@ -19,12 +19,9 @@ export default function Footer({ isLoggedIn, user = {}, onLoginToggle, onBookCre
       navigator.clearAppBadge?.();
       return undefined;
     }
-    const refreshUnread = () => api.get(`/api/conversations/mine?zone=${encodeURIComponent(activeZone || "heraklion")}`)
+    const refreshUnread = () => api.get(`/api/conversations/unread-count?zone=${encodeURIComponent(activeZone || "heraklion")}`)
       .then((res) => {
-        const count = (res.data.data || []).reduce((sum, item) => {
-          const pendingRequest = item.loans?.some((loan) => loan.status === "requested" && loan.lender?.id === user.id);
-          return sum + Math.max(item.unreadCount || 0, pendingRequest ? 1 : 0);
-        }, 0);
+        const count = Number(res.data.data?.count || 0);
         setUnreadMessages(count);
         if ("setAppBadge" in navigator) {
           if (count > 0) navigator.setAppBadge(count).catch(() => {});

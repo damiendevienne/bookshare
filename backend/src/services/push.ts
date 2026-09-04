@@ -18,7 +18,12 @@ export async function notifyUsers(strapi, userIds, payload) {
   if (!configure()) return;
   const ids = [...new Set(userIds.filter(Boolean))];
   for (const userId of ids) {
-    const badgeCount = await getUnreadCount(strapi, userId);
+    let badgeCount = 1;
+    try {
+      badgeCount = await getUnreadCount(strapi, userId);
+    } catch (error) {
+      strapi.log.warn(`Unable to calculate push badge count: ${error.message}`);
+    }
     const subscriptions = await strapi.db.query('api::push-subscription.push-subscription').findMany({ where: { user: userId } });
     for (const subscription of subscriptions) {
       try {
@@ -34,19 +39,22 @@ export async function notifyUsers(strapi, userIds, payload) {
   }
 }
 
-async function getUnreadCount(strapi, userId) {
+export async function getUnreadCount(strapi, userId, zoneSlug = '') {
   const conversations = await strapi.db.query('api::conversation.conversation').findMany({
     where: { $or: [{ participantOne: userId }, { participantTwo: userId }] },
-    populate: { loans: { populate: { lender: true } } },
+    populate: { loans: { populate: { lender: true, book: { populate: { zone: true } } } } },
   });
   let total = 0;
   for (const conversation of conversations) {
+    if (zoneSlug && !(conversation.loans || []).some((loan) => loan.book?.zone?.slug === zoneSlug)) continue;
     const incoming = await strapi.db.query('api::message.message').findMany({
       where: { conversation: conversation.id, readAt: null }, populate: { sender: true },
     });
     const unreadMessages = incoming.filter((message) => message.sender?.id !== userId).length;
     const pendingRequest = (conversation.loans || []).some((loan) => loan.status === 'requested' && loan.lender?.id === userId);
-    total += Math.max(unreadMessages, pendingRequest ? 1 : 0);
+    const pendingRefusal = (conversation.loans || []).some((loan) => loan.status === 'refused'
+      && (loan.lender?.id === userId ? !conversation.lenderArchivedAt : !conversation.borrowerArchivedAt));
+    total += Math.max(unreadMessages, pendingRequest ? 1 : 0) + (pendingRefusal ? 1 : 0);
   }
   return total;
 }
