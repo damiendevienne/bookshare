@@ -191,10 +191,10 @@ export default function MessagesModal({ show, onClose, onContextBack, user, acti
     return loan.lender?.id === user.id ? Boolean(conversation.lenderArchivedAt) : Boolean(conversation.borrowerArchivedAt);
   };
   const hasCurrentActivity = (conversation) => conversation.loans?.some((loan) => loan.status === "requested" || loan.status === "active")
-    || (conversation.loans?.some((loan) => loan.status === "cancelled") && conversation.unreadCount > 0)
     || (conversation.loans?.some((loan) => loan.status === "refused") && !refusalIsArchived(conversation));
   const isRecentlyCompleted = (conversation) => Boolean(conversation.closedAt)
     && Date.now() - new Date(conversation.closedAt).getTime() < 24 * 60 * 60 * 1000
+    && conversation.loans?.some((loan) => loan.status === "returned")
     && !conversation.loans?.some((loan) => loan.status === "requested" || loan.status === "active");
   const currentConversations = conversations.filter((conversation) => hasCurrentActivity(conversation) && !isRecentlyCompleted(conversation));
   const recentlyCompletedConversations = conversations.filter(isRecentlyCompleted);
@@ -229,19 +229,25 @@ export default function MessagesModal({ show, onClose, onContextBack, user, acti
     if (!message.isSystem) return message.content;
     const loan = loans.find((item) => item.book);
     const book = loan?.book;
-    if (message.content?.startsWith("You can now discuss") && book) {
+  if (message.content?.startsWith("You can now discuss") && book) {
+      const ownerName = otherParticipant(active, user.id)?.username || "the owner";
       if (loan?.lender?.id === user.id) {
         return `You can now discuss and arrange a time and place to hand over “${book.title}”.`;
       }
       if (loan?.borrower?.id === user.id) {
-        return `You can now discuss and arrange a time and place to pick up “${book.title}” from the owner.`;
+        return `You can now discuss and arrange a time and place to pick up “${book.title}” from ${ownerName}.`;
       }
     }
     if (message.content?.startsWith("The borrower confirmed receiving the book.")) {
       if (loan?.borrower?.id === user.id) {
-        return "You confirmed that you received the book. Enjoy your reading!\n\nWhen you’ve finished it, use the button below to arrange the return with the owner. Once the owner confirms its return, the book will become available for others to borrow again.";
+        const ownerName = otherParticipant(active, user.id)?.username || "the owner";
+        return `You confirmed that you received the book. Enjoy your reading!\n\nWhen you’ve finished it, use the button below to arrange the return with ${ownerName}. Once ${ownerName} confirms its return, the book will become available for others to borrow again.`;
       }
       return `${loan?.borrower?.username || otherParticipant(active, user.id)?.username || "The borrower"} confirmed receiving your book.`;
+    }
+    if (message.content?.startsWith("The borrowing request was cancelled by the borrower.")) {
+      const borrowerName = loan?.borrower?.username || "The borrower";
+      return loan?.borrower?.id === user.id ? "You cancelled this request." : `${borrowerName} cancelled this request.`;
     }
     if (message.content?.startsWith("You recovered your book")) {
       const recoveredAt = loan?.lenderReceivedBackAt || message.createdAt;
@@ -249,16 +255,17 @@ export default function MessagesModal({ show, onClose, onContextBack, user, acti
       const bookTitle = book?.title || "the book";
       const closing = "This discussion remains available for 24 hours after the loan ends. It will then be archived in “Past loans”.";
       if (loan?.lender?.id === user.id) {
-        return `You recovered “${bookTitle}” on ${date}. The book is available again for borrowing.\n\n${closing}`;
+        return `You recovered “${bookTitle}” on ${date}. The book is available again for borrowing. Thanks for lending books and helping make sharing possible!\n\n${closing}`;
       }
-      return `${loan?.lender?.username || "The owner"} recovered their book “${bookTitle}” on ${date}. The book is available again for borrowing.\n\n${closing}`;
+      const ownerName = loan?.lender?.username || "The owner";
+      return `You gave “${bookTitle}” back to ${ownerName} on ${date}. The book is available again for borrowing. Thanks for helping keep book sharing going!\n\n${closing}`;
     }
     if (!message.content?.startsWith("Borrow request for") || !book) return message.content;
     // This is a historical event. Keep it visible after the request is accepted
     // or refused instead of deriving its text from the loan's current status.
     const bookName = `“${book.title}${book.author ? `” by ${book.author}` : "”"}`;
     if (loan.borrower?.id === user.id) {
-      return `You asked to borrow ${bookName} from the owner.`;
+      return `You asked to borrow ${bookName} from ${otherParticipant(active, user.id)?.username || "the owner"}.`;
     }
     const borrowerName = loan.borrower?.username || otherParticipant(active, user.id)?.username || "the borrower";
     return `${borrowerName} asked to borrow your book ${bookName}.`;
@@ -391,7 +398,7 @@ export default function MessagesModal({ show, onClose, onContextBack, user, acti
                 if (content === null) return null;
                 const handoverLoan = handoverNotice ? loans.find((loan) => loan.book) : null;
                 const handoverConfirmation = handoverLoan?.borrower?.id === user.id
-                  ? "The owner accepted your request."
+                  ? `${handoverLoan?.lender?.username || otherParticipant(active, user.id)?.username || "The owner"} accepted your request.`
                   : handoverLoan?.lender?.id === user.id
                     ? `You accepted ${handoverLoan.borrower?.username || otherParticipant(active, user.id)?.username || "the borrower"}’s request to borrow your book.`
                     : "";
@@ -400,7 +407,6 @@ export default function MessagesModal({ show, onClose, onContextBack, user, acti
                 const canArrangeReturn = borrowerReceiptNotice && !returnAlreadyArranged && loans.some((loan) => loan.status === "active" && loan.borrower?.id === user.id && loan.borrowerReceivedAt && !loan.lenderReceivedBackAt);
                 const [receiptConfirmation, returnGuidance] = borrowerReceiptNotice ? content.split("\n\n") : [];
                 const refusedLoan = loans.find((loan) => loan.status === "refused");
-                const cancelledLoan = loans.find((loan) => loan.status === "cancelled");
                 const refusalArchived = refusedLoan && (refusedLoan.lender?.id === user.id ? active.lenderArchivedAt : active.borrowerArchivedAt);
                 const dayKey = message.createdAt ? new Date(message.createdAt).toDateString() : "";
                 const showDay = dayKey && dayKey !== previousDay;
@@ -410,7 +416,7 @@ export default function MessagesModal({ show, onClose, onContextBack, user, acti
                   <div className={`mb-2 ${handoverNotice || refusalNotice || receiptNotice || completionNotice || requestNotice || cancelledNotice || loanReminderNotice ? "system-notice" : message.sender?.id === user.id ? "text-end" : ""}`}>
                   {handoverNotice || refusalNotice || receiptNotice || completionNotice || requestNotice || cancelledNotice || loanReminderNotice ? <div className={handoverNotice ? (handoverConfirmation ? "handover-notice acceptance-handover-notice" : "handover-notice") : refusalNotice ? "refusal-notice" : completionNotice ? "completion-notice" : requestNotice ? "request-notice" : cancelledNotice ? "cancellation-notice" : loanReminderNotice ? "loan-reminder-notice" : "acceptance-notice"}>
                     {handoverConfirmation && <div className="acceptance-notice-inline">{handoverConfirmation}</div>}
-                    {refusalNotice ? <><div>{refusedLoan?.lender?.id === user.id ? `You declined ${refusedLoan?.borrower?.username || "the requester"}’s loan request. They were notified.` : <strong>Sorry, your loan request wasn’t accepted by the owner. The book may have been reserved or lent to someone else.</strong>}</div>{!refusalArchived && <><small className="refusal-archive-hint">Clicking OK will archive this discussion.</small><button type="button" className="btn btn-sm refusal-confirm-button mt-2" onClick={archiveRefusal}>OK</button></>}</> : null}
+                    {refusalNotice ? <><div>{refusedLoan?.lender?.id === user.id ? `You declined ${refusedLoan?.borrower?.username || "the requester"}’s loan request. They were notified.` : <strong>{`Sorry, your loan request wasn’t accepted by ${refusedLoan?.lender?.username || "the owner"}. The book may have been reserved or lent to someone else.`}</strong>}</div>{!refusalArchived && <><small className="refusal-archive-hint">Clicking OK will archive this discussion.</small><button type="button" className="btn btn-sm refusal-confirm-button mt-2" onClick={archiveRefusal}>OK</button></>}</> : null}
                     {borrowerReceiptNotice ? <>
                       <div className="receipt-confirmation-message">{receiptConfirmation}</div>
                       <div className={`return-guidance-message ${returnAlreadyArranged ? "return-arranged-message" : ""}`}>
@@ -419,7 +425,7 @@ export default function MessagesModal({ show, onClose, onContextBack, user, acti
                           : returnGuidance}
                       </div>
                       {canArrangeReturn && <button type="button" className="btn btn-outline-success btn-sm arrange-return-button" onClick={openReturnComposer}>Arrange the return</button>}
-                    </> : cancelledNotice ? <><div>{content}</div>{cancelledLoan?.lender?.id === user.id && <small className="refusal-archive-hint">This discussion will now be archived.</small>}</> : loanReminderNotice ? renderLoanReminder(content) : !refusalNotice && content}
+                    </> : cancelledNotice ? <div>{content}</div> : loanReminderNotice ? renderLoanReminder(content) : !refusalNotice && content}
                   </div> : <span className={`d-inline-block rounded px-3 py-2 ${message.isSystem ? "bg-light text-muted" : message.sender?.id === user.id ? "message-bubble message-outgoing" : "message-bubble message-incoming"}`}>{content}</span>}
                   {message.createdAt && <small className="message-time">{messageTime(message.createdAt)}</small>}
                   </div>
