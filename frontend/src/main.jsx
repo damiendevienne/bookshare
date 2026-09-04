@@ -11,7 +11,12 @@ const path = window.location.pathname;
 const Root = path === "/reset-password" ? PasswordResetPage : path === "/email-confirmed" ? EmailConfirmedPage : App;
 ReactDOM.createRoot(document.getElementById("root")).render(<Root />);
 const appLoadingStartedAt = performance.now();
+const isInstalledApp = window.matchMedia?.("(display-mode: standalone)").matches || window.navigator.standalone;
 requestAnimationFrame(() => {
+  if (isInstalledApp) {
+    document.getElementById("app-loading")?.remove();
+    return;
+  }
   const minimumDisplayTime = 650;
   const remaining = Math.max(0, minimumDisplayTime - (performance.now() - appLoadingStartedAt));
   window.setTimeout(() => document.getElementById("app-loading")?.remove(), remaining);

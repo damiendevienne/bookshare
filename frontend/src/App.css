@@ -1832,7 +1832,7 @@ footer .btn small {
   font-weight: 600;
   color: var(--bookmybook-navy);
 }
-.settings-account { padding-top: 0.9rem; border-top: 1px solid rgba(49, 90, 115, 0.15); }
+.settings-account { padding-top: 0.1rem; }
 .settings-extra { margin-top: 1rem; padding: 0.75rem; border-radius: 0.5rem; background: rgba(127, 147, 111, 0.1); }
 .theme-dark { background: #1f2933 !important; color: #e8edf1; }
 .theme-dark .site-header,
