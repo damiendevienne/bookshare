@@ -1510,8 +1510,9 @@ footer .btn small {
 
 .book-image-count-badge {
   position: absolute;
-  right: 0.65rem;
+  left: 50%;
   bottom: 0.65rem;
+  transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
