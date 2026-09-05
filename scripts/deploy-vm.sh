@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 APP_DIR="/srv/bookmybook"
-BRANCH="dev"
+BRANCH="main"
 
 cd "$APP_DIR"
 echo "==> Updating source code"

@@ -1,9 +1,8 @@
 # Mettre à jour Maki Books sur la VM Oracle
 
-Le nom public de l’application est Maki Books. Le domaine
-`bookmybook.duckdns.org`, le répertoire `/srv/bookmybook`, le service
-`bookmybook-backend` restent les identifiants de l’installation existante ;
-les commandes ci-dessous les conservent pour continuer à fonctionner.
+Le nom public de l’application est Maki Books. Le site est servi sur
+`makibooks.org` et `www.makibooks.org`. Le répertoire `/srv/bookmybook` et le
+service `bookmybook-backend` restent les identifiants techniques de la VM.
 
 Le dépôt GitHub est désormais `damiendevienne/makibooks`.
 Pour les copies qui utilisent encore l’ancien nom, mettre à jour le remote,
@@ -28,7 +27,7 @@ inclure de secrets ni de données personnelles. Voir [LICENSE](LICENSE).
 ```bash
 git add .
 git commit -m "Description of the change"
-git push origin dev
+git push origin main
 ```
 
 ## 2. Se connecter à la VM
@@ -42,8 +41,8 @@ ssh -i "$HOME/Téléchargements/ssh-key-2026-09-02.key" ubuntu@158.178.197.142
 ## 3. Récupérer la dernière version
 
 ```bash
-cd /srv/bookmybook
-git pull --ff-only origin dev
+    cd /srv/bookmybook
+git pull --ff-only origin main
 ```
 
 Ne jamais faire de `git reset --hard` sur la VM. Le fichier de production `backend/.env` et la base `backend/.tmp/data.db` ne sont pas suivis par Git.
@@ -104,8 +103,8 @@ sudo systemctl reload nginx
 ## 7. Vérifier le site
 
 ```text
-https://bookmybook.duckdns.org
-https://bookmybook.duckdns.org/admin
+https://makibooks.org
+https://makibooks.org/admin
 ```
 
 ## Informations importantes
