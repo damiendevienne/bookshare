@@ -318,6 +318,94 @@ body,
   font-size: 0.6rem;
 }
 
+.filter-menu {
+  position: relative;
+}
+
+.filter-menu-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 42px;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid rgba(49, 90, 115, 0.24);
+  border-radius: 0.6rem;
+  background: #fffdf8;
+  color: var(--maki-books-navy, #315a73);
+  font-size: 0.94rem;
+  text-align: left;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.filter-menu-trigger:hover,
+.filter-menu-trigger.is-open {
+  border-color: var(--maki-books-blue, #6f9caf);
+  box-shadow: 0 0 0 3px rgba(111, 156, 175, 0.14);
+}
+
+.filter-menu-value {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  gap: 0.5rem;
+}
+
+.filter-menu-chevron {
+  margin-left: 0.5rem;
+  color: #7d8790;
+  font-size: 1.15rem;
+  line-height: 0.8;
+  transform: translateY(-2px);
+  transition: transform 160ms ease;
+}
+
+.filter-menu-trigger.is-open .filter-menu-chevron { transform: rotate(180deg) translateY(2px); }
+
+.filter-menu-options {
+  position: absolute;
+  z-index: 1100;
+  top: calc(100% + 0.35rem);
+  right: 0;
+  left: 0;
+  max-height: 245px;
+  overflow-y: auto;
+  padding: 0.35rem;
+  border: 1px solid rgba(49, 90, 115, 0.16);
+  border-radius: 0.7rem;
+  background: #fff;
+  box-shadow: 0 10px 26px rgba(45, 61, 73, 0.18);
+}
+
+.filter-menu-option {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 0.5rem;
+  padding: 0.58rem 0.65rem;
+  border: 0;
+  border-radius: 0.45rem;
+  background: transparent;
+  color: #315a73;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.filter-menu-option:hover,
+.filter-menu-option.is-selected { background: #edf4f4; }
+
+.filter-menu-check {
+  margin-left: auto;
+  color: #5f8967;
+  font-weight: 800;
+}
+
+.filter-language-flag { width: 1.35rem; font-size: 1.12rem; text-align: center; }
+.filter-language-code { margin-left: auto; color: #89939a; font-size: 0.75rem; letter-spacing: 0.06em; }
+.filter-availability-dot { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: #7d8790; }
+.filter-availability-dot.yes { background: #5f8967; }
+.filter-availability-dot.no { background: #c85d55; }
+
 .library-sort-row {
   display: flex;
   align-items: center;
