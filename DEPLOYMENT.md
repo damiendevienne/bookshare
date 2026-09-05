@@ -1,4 +1,27 @@
-# Mettre à jour BookMyBook sur la VM Oracle
+# Mettre à jour Maki Books sur la VM Oracle
+
+Le nom public de l’application est Maki Books. Le domaine
+`bookmybook.duckdns.org`, le répertoire `/srv/bookmybook`, le service
+`bookmybook-backend` restent les identifiants de l’installation existante ;
+les commandes ci-dessous les conservent pour continuer à fonctionner.
+
+Le dépôt GitHub est désormais `damiendevienne/makibooks`.
+Pour les copies qui utilisent encore l’ancien nom, mettre à jour le remote,
+y compris sur la VM :
+
+```bash
+git remote set-url origin git@github.com:damiendevienne/makibooks.git
+```
+
+## Licence et accès au code source
+
+Maki Books est distribué sous AGPLv3 uniquement (`AGPL-3.0-only`). Le footer et
+la fenêtre Legal proposent un lien vers le code source. Pour une version
+modifiée, définir `VITE_SOURCE_URL` dans `frontend/.env.production` avant le
+build afin de pointer vers le code source correspondant à la version servie,
+accessible aux utilisateurs. Publier également les modifications et les
+instructions nécessaires pour construire et installer cette version, sans
+inclure de secrets ni de données personnelles. Voir [LICENSE](LICENSE).
 
 ## 1. Développer et pousser depuis l’ordinateur local
 

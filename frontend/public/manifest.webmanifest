@@ -1,6 +1,6 @@
 {
-  "name": "bookmybook",
-  "short_name": "bookmybook",
+  "name": "Maki Books",
+  "short_name": "Maki Books",
   "description": "Borrow and share physical books with people around you.",
   "start_url": "/",
   "scope": "/",

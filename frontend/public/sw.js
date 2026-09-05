@@ -1,4 +1,4 @@
-const CACHE_NAME = "bookmybook-shell-v2";
+const CACHE_NAME = "maki-books-shell-v1";
 const APP_SHELL = ["/", "/manifest.webmanifest", "/images/app-icon.png"];
 
 self.addEventListener("install", (event) => {
@@ -20,8 +20,8 @@ self.addEventListener("fetch", (event) => {
 
 self.addEventListener("push", (event) => {
   let payload = {};
-  try { payload = event.data?.json() || {}; } catch { payload = { body: event.data?.text() || "You have a new BookMyBook update." }; }
-  const title = payload.title || "BookMyBook";
+  try { payload = event.data?.json() || {}; } catch { payload = { body: event.data?.text() || "You have a new Maki Books update." }; }
+  const title = payload.title || "Maki Books";
   const options = {
     body: payload.body || "You have a new message.",
     icon: "/images/favicon.png",
@@ -30,6 +30,7 @@ self.addEventListener("push", (event) => {
   };
   event.waitUntil(self.registration.showNotification(title, options));
   event.waitUntil(clients.matchAll({ type: "window", includeUncontrolled: true }).then((windows) => {
+    // Keep this event name compatible with tabs opened before the rename.
     windows.forEach((client) => client.postMessage({ type: "bookmybook-push", conversationId: payload.conversationId || null }));
   }));
   if ("setAppBadge" in self.registration) event.waitUntil(self.registration.setAppBadge(Number(payload.badgeCount) || 1));

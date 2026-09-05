@@ -108,9 +108,9 @@ export default function Footer({ isLoggedIn, user = {}, onLoginToggle, onBookCre
               style={{ textDecoration: "none" }}
               onClick={() => setShowMessages(true)}
             >
-              <MessageCircle size={22} color="var(--bookmybook-navy)" />
+              <MessageCircle size={22} color="var(--maki-books-navy)" />
               {unreadMessages > 0 && <span className="position-absolute translate-middle badge rounded-pill bg-danger" style={{ top: "5px", marginLeft: "25px" }}>{unreadMessages > 99 ? "99+" : unreadMessages}</span>}
-              <small style={{ color: "var(--bookmybook-navy)" }}>Discussions</small>
+              <small style={{ color: "var(--maki-books-navy)" }}>Discussions</small>
             </button>
           )}
 
@@ -121,8 +121,8 @@ export default function Footer({ isLoggedIn, user = {}, onLoginToggle, onBookCre
               style={{ textDecoration: "none" }}
               onClick={() => setShowMyBooks(true)}
             >
-              <BookOpen size={22} color="var(--bookmybook-navy)" />
-              <small style={{color:"var(--bookmybook-navy)"}}>My Books</small>
+              <BookOpen size={22} color="var(--maki-books-navy)" />
+              <small style={{color:"var(--maki-books-navy)"}}>My Books</small>
             </button>
           )}
 

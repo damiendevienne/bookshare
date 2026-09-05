@@ -41,22 +41,22 @@ export default {
       for (const templateName of ['email_confirmation', 'reset_password']) {
         const template = emailSettings[templateName];
         if (!template?.options) continue;
-        template.options.from = { name: 'BookMyBook', email: configuredSender };
+        template.options.from = { name: 'Maki Books', email: configuredSender };
         template.options.response_email = process.env.EMAIL_DEFAULT_REPLY_TO || configuredSender;
         if (templateName === 'email_confirmation') {
-          template.options.object = 'Confirm your BookMyBook account';
-          template.options.message = `<p>Welcome to BookMyBook!</p>
+          template.options.object = 'Confirm your Maki Books account';
+          template.options.message = `<p>Welcome to Maki Books!</p>
 <p>Please confirm your email address to activate your account.</p>
 <p><a href="<%= URL %>?confirmation=<%= CODE %>" style="display:inline-block;padding:12px 18px;background:#6bb5f3;color:#111;text-decoration:none;border-radius:6px;font-weight:600">Confirm my email address</a></p>
 <p>If you did not create this account, you can ignore this message.</p>
 <p>Happy reading! 📚</p>`;
         } else if (templateName === 'reset_password') {
-          template.options.object = 'Reset your BookMyBook password';
-          template.options.message = `<p>We received a request to reset your BookMyBook password.</p>
+          template.options.object = 'Reset your Maki Books password';
+          template.options.message = `<p>We received a request to reset your Maki Books password.</p>
 <p>Click the button below to choose a new password.</p>
 <p><a href="<%= URL %>?code=<%= TOKEN %>" style="display:inline-block;padding:12px 18px;background:#6bb5f3;color:#111;text-decoration:none;border-radius:6px;font-weight:600">Choose a new password</a></p>
 <p>If you did not request this, you can ignore this message.</p>
-<p>BookMyBook 📚</p>`;
+<p>Maki Books 📚</p>`;
         }
       }
       await usersPermissionsStore.set({ key: 'email', value: emailSettings });

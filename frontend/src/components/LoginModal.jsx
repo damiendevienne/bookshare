@@ -120,10 +120,10 @@ export default function LoginModal({ show, onClose, onLoginSuccess }) {
           <div className="modal-header">
             <h5 className="modal-title">
               {mode === "login"
-                ? "Login to BookMyBook"
+                ? "Login to Maki Books"
                 : mode === "forgot"
                 ? "Forgot Password"
-                : "Create your BookMyBook account"}
+                : "Create your Maki Books account"}
             </h5>
             <button type="button" className="btn-close" onClick={onClose}></button>
           </div>

@@ -7,7 +7,7 @@ export default {
     const recipient = process.env.FEEDBACK_RECIPIENT || 'damien2vienne@gmail.com';
     await strapi.plugin('email').service('email').send({
       to: recipient,
-      subject: `BookMyBook feedback from ${user.username}`,
+      subject: `Maki Books feedback from ${user.username}`,
       text: `From: ${user.username} (${user.email})\n\n${message}`,
     });
     ctx.body = { data: { sent: true } };

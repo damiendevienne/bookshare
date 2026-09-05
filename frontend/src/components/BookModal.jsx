@@ -172,7 +172,7 @@ export default function BookModal({ selectedBook, showModal, onClose, onFilterBy
                 <small className="owner">
                   Proposed by{" "}
                   <span
-                    style={{ cursor: "pointer", color: "var(--bookmybook-navy)" }}
+                    style={{ cursor: "pointer", color: "var(--maki-books-navy)" }}
                     onClick={() => setShowOwnerModal(true)}
                   >
                     {owner}

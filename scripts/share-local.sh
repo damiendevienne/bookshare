@@ -5,7 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SESSION="bookshare"
 
 if tmux has-session -t "$SESSION" 2>/dev/null; then
-  echo "BookShare services are already running in tmux session '$SESSION'."
+  echo "Maki Books services are already running in tmux session '$SESSION'."
 else
   tmux new-session -d -s "$SESSION" -c "$ROOT_DIR/backend" "npm run develop"
   tmux split-window -h -t "$SESSION" -c "$ROOT_DIR/frontend" "npm run dev"

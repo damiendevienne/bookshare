@@ -6,7 +6,7 @@ import packageJson from './package.json'
 export default defineConfig({
   plugins: [
     {
-      name: 'bookmybook-app-meta',
+      name: 'maki-books-app-meta',
       transformIndexHtml: (html) => html
         .replaceAll('%APP_NAME%', packageJson.appName)
         .replaceAll('%APP_VERSION%', packageJson.version),

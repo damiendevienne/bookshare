@@ -1,8 +1,10 @@
-BookMyBook
-Copyright (c) 2026 Damien Devienne
+Maki Books
+Copyright (c) 2026 Damien de Vienne
 
-This repository contains original BookMyBook code and assets, which are
-proprietary and subject to the accompanying LICENSE file.
+Maki Books is licensed under the GNU Affero General Public License version 3
+only (SPDX-License-Identifier: AGPL-3.0-only). The license covers the original
+source code and project-owned content unless otherwise noted. See LICENSE
+for the full terms, including source availability and warranty provisions.
 
 Third-party components
 ----------------------
@@ -16,5 +18,10 @@ External catalogue and cover images
 -----------------------------------
 Book catalogue metadata and remote cover images may be obtained from Open
 Library. Their use remains subject to Open Library's terms and applicable
-third-party rights. BookMyBook does not claim ownership of those external
+third-party rights. Maki Books does not claim ownership of those external
 materials.
+
+User-submitted content
+----------------------
+User-submitted content remains with its respective rights holders and is not
+relicensed under the AGPL by this notice.

@@ -27,18 +27,17 @@ export default function Header({ isLoggedIn, user, onLoginToggle, activeZone, zo
             <span className="account-icon-circle account-settings-circle"><Settings className="account-settings-icon" size={21} /></span>
           </span>
         </button>
-        {/*<h1 className="fs-3 mb-2">📚 BookShare Heraklion</h1>*/}
         <div className="text-center my-4 logo-stage">
           <button
             type="button"
             className="logo-flip"
             onClick={() => setShowRealisticLogo((current) => !current)}
-            aria-label="Flip between BookMyBook logos"
+            aria-label="Flip between Maki Books logos"
             aria-pressed={showRealisticLogo}
           >
             <span className={`logo-flip-inner ${showRealisticLogo ? "is-flipped" : ""}`}>
-              <img className="logo-flip-face logo-flip-front" src="/images/logomadi-elegant-white.png" alt="bookmybook logo" />
-              <img className="logo-flip-face logo-flip-back" src="/images/logomadi-back-white.png" alt="bookmybook lemur seen from behind" />
+              <img className="logo-flip-face logo-flip-front" src="/images/maki-recto.png" alt="Maki Books logo" />
+              <img className="logo-flip-face logo-flip-back" src="/images/maki-verso.png" alt="Maki Books logo seen from behind" />
             </span>
           </button>
           <div className="logo-tagline">

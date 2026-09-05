@@ -335,7 +335,7 @@ function App() {
         onDismissWelcome={() => setWelcomeMessage("")}
       />
       {showInstallPrompt && <div className="install-app-prompt" role="status">
-        <div><strong>Add BookMyBook to your home screen</strong><small>Open it quickly like an app whenever you want to borrow or share a book.</small></div>
+        <div><strong>Add Maki Books to your home screen</strong><small>Open it quickly like an app whenever you want to borrow or share a book.</small></div>
         <div className="install-app-prompt-actions"><button type="button" className="btn btn-primary btn-sm" onClick={installApp}>Install</button><button type="button" className="btn btn-link btn-sm" onClick={dismissInstallPrompt}>Not now</button></div>
       </div>}
       <div className="catalog-sticky-controls">

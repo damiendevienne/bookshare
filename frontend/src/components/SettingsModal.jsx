@@ -117,7 +117,7 @@ export default function SettingsModal({ show, onClose, isLoggedIn, user, onLogin
 
             {isLoggedIn && <div className="settings-field">
               <div className="settings-account-title"><Mail size={17} /> Feedback</div>
-              <p className="text-muted small mb-2">BookMyBook is under continuous development. If you spot a bug, a problematic behaviour or book, or have an idea for improvement, send us a message.</p>
+              <p className="text-muted small mb-2">Maki Books is under continuous development. If you spot a bug, a problematic behaviour or book, or have an idea for improvement, send us a message.</p>
               <button type="button" className="btn btn-outline-primary btn-sm" onClick={() => { setFeedbackOpen((current) => !current); setFeedbackStatus(""); }}>{feedbackOpen ? "Cancel" : "Report a problem or suggest an improvement"}</button>
               {feedbackOpen && <form className="mt-2" onSubmit={sendFeedback}><textarea className="form-control mb-2" rows="4" maxLength="3000" value={feedback} onChange={(event) => setFeedback(event.target.value)} placeholder="Tell us what happened or what you would like to suggest…" required /><button type="submit" className="btn btn-primary btn-sm" disabled={feedbackSending || !feedback.trim()}>{feedbackSending ? "Sending…" : "Send message"}</button></form>}
               {feedbackStatus && <div className="text-muted small mt-2" role="status">{feedbackStatus}</div>}
@@ -125,7 +125,7 @@ export default function SettingsModal({ show, onClose, isLoggedIn, user, onLogin
             }
             {isLoggedIn && pushNotificationsAvailable() && <div className="settings-field">
               <div className="settings-account-title">🔔 Notifications</div>
-              <p className="text-muted small mb-2">Get a notification when you receive a new message, even when BookMyBook is closed.</p>
+              <p className="text-muted small mb-2">Get a notification when you receive a new message, even when Maki Books is closed.</p>
               <button type="button" className="btn btn-outline-primary btn-sm" onClick={toggleNotifications}>{notificationsEnabled ? "Turn off notifications" : "Enable notifications"}</button>
               {notificationStatus && <div className="text-muted small mt-2" role="status">{notificationStatus}</div>}
             </div>}
