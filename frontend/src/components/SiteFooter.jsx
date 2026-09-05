@@ -12,7 +12,7 @@ export default function SiteFooter({ canInstallApp = false, onInstallApp }) {
         "We started Maki Books in Heraklion after moving to Crete as a French family and realising we couldn’t bring all the books we wanted to keep reading. 📚 Finding books in French was not always easy, so we created a simple way for local readers to lend and borrow books freely.",
         "Today, Maki Books is open to every language. 🌍",
       ],
-      signature: "Made with care by Charlotte, Damien, Jeanne, Madeleine and Marius. ❤️",
+      signature: "Made with care by our family. ❤️",
     },
     help: {
       title: "Help",
@@ -25,21 +25,22 @@ export default function SiteFooter({ canInstallApp = false, onInstallApp }) {
     legal: {
       title: "Legal",
       body: [
-        "Maki Books is an independent, open-source family project. Copyright © 2026 Damien de Vienne. The original code and project-owned content are licensed under the GNU Affero General Public License version 3 (AGPL-3.0-only). You may use, modify and redistribute them under that license, including its source-sharing requirements for modified versions used over a network.",
+        "Maki Books is an independent, open-source family project. The original code and project-owned content are licensed under the GNU Affero General Public License version 3 (AGPL-3.0-only). You may use, modify and redistribute them under that license, including its source-sharing requirements for modified versions used over a network.",
         "Maki Books is provided without warranty, to the extent permitted by law. Third-party software, catalogue metadata and book covers remain subject to their respective licenses and rights. User-submitted content belongs to its respective rights holders and is not relicensed under the AGPL by this notice.",
       ],
       sourceUrl,
+    },
+    charter: {
+      title: "Community Charter",
+      footerLabel: "Charter",
+      body: communityCharterIntro,
+      points: communityCharterPoints,
     },
     support: {
       title: "Want to support Maki Books?",
       footerLabel: "Support ☕",
       body: "If Maki Books is useful to your family and you’d like to help us keep it running, you can support this family-made project. Contributions help with hosting, email delivery and ongoing development. ☕✨",
       supportUrl,
-    },
-    charter: {
-      title: "Community Charter",
-      body: communityCharterIntro,
-      points: communityCharterPoints,
     },
   };
 
@@ -53,7 +54,7 @@ export default function SiteFooter({ canInstallApp = false, onInstallApp }) {
           ))}
         </div>
         <div className="site-footer-copyright">
-          © 2026 Damien de Vienne — Maki Books · <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noreferrer">AGPLv3</a> · <a href={sourceUrl} target="_blank" rel="noreferrer">Source code</a>
+          © 2026 Maki Books · <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noreferrer">AGPLv3</a>
         </div>
         </div>
       </footer>
