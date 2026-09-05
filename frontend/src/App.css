@@ -624,6 +624,11 @@ footer .btn small {
   padding: 0.2rem;
 }
 
+.password-reset-field .password-visibility-toggle {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
 .book-saving-overlay {
   position: fixed;
   inset: 0;
